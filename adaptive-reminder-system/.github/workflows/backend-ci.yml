@@ -1,0 +1,41 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: setup python
+        run: uv python install 3.12
+
+      - name: install deps
+        run: uv pip install --system -r pyproject.toml --extra dev
+
+      - name: lint
+        run: ruff check app tests
+
+      - name: typecheck
+        run: mypy app
+        continue-on-error: true  # tighten later
+
+      - name: test
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+          POSTGRES_HOST: localhost
+          APP_SECRET_KEY: test-secret-at-least-16-chars
+        run: pytest -v
