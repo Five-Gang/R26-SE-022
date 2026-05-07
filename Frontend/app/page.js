@@ -168,7 +168,12 @@ export default function Home() {
           const apiData = await response.json();
           setData((prev) => processApiResponse(apiData, prev));
         } else {
-          console.error("API Error:", response.statusText);
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.detail === "No face detected in the frame") {
+            // Silently handle when the user looks away or face is out of frame
+          } else {
+            console.error("API Error:", response.statusText, errorData);
+          }
         }
       } catch (err) {
         console.error("Error calling detection API:", err);
