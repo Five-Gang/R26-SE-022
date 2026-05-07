@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Learn - Lecture Summarizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎓 AURA Learn</h1>
+                <p>Intelligent Lecture Summarizer & Flashcard Generator</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section card">
+                <h2>📚 Upload Lecture</h2>
+                
+                <div class="form-group">
+                    <label for="module">Select Module:</label>
+                    <select id="module" class="module-select">
+                        <option value="">-- Choose a module --</option>
+                        <option value="IT2040">IT2040 - Database Management Systems</option>
+                        <option value="IT2060">IT2060 - Operating Systems</option>
+                        <option value="IT3010">IT3010 - Network Design & Management</option>
+                        <option value="IT3020">IT3020 - Database Systems</option>
+                        <option value="IT3030">IT3030 - Programming Applications</option>
+                        <option value="IT4070">IT4070 - Professional World</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file-input" class="file-label">
+                        <div class="file-input-wrapper">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span id="file-name">Choose PDF or PPTX file</span>
+                        </div>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="file-input" 
+                        accept=".pdf,.pptx,.ppt"
+                        hidden
+                    >
+                </div>
+
+                <button id="upload-btn" class="btn btn-primary" disabled>
+                    <span>Analyze Lecture</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="results-section" style="display: none;">
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="summary">
+                        📝 Summary
+                    </button>
+                    <button class="tab-btn" data-tab="flashcards">
+                        🎯 Flashcards
+                    </button>
+                    <button class="tab-btn" data-tab="statistics">
+                        📊 Statistics
+                    </button>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="summary-tab" class="tab-content active">
+                    <div class="card">
+                        <h3>Key Sentences</h3>
+                        <div id="summary-content" class="summary-content"></div>
+                    </div>
+                </div>
+
+                <!-- Flashcards Tab -->
+                <div id="flashcards-tab" class="tab-content" style="display: none;">
+                    <div id="flashcards-container" class="flashcards-container"></div>
+                    <div class="flashcard-controls">
+                        <button id="prev-card" class="btn btn-secondary">← Previous</button>
+                        <span id="card-counter">1 / 1</span>
+                        <button id="next-card" class="btn btn-secondary">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div id="statistics-tab" class="tab-content" style="display: none;">
+                    <div class="card">
+                        <h3>Analysis Statistics</h3>
+                        <div id="statistics-content" class="statistics-content"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Message -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state" style="display: none;">
+                <div class="loader"></div>
+                <p>Processing your lecture...</p>
+                <p class="loading-subtitle">Extracting sentences and generating summaries</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>AURA Learn © 2026 | Powered by AI-driven Lecture Analysis</p>
+            <p class="footer-status">API Status: <span id="api-status" class="status-indicator">Checking...</span></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
