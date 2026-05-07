@@ -145,6 +145,24 @@ export default function Dashboard({ data, sessionTime, onStop }) {
           <div className={styles.webcamContainer}>
             <video ref={videoRef} className={styles.webcamVideo} autoPlay playsInline muted />
             {data.capturing && <div className={`${styles.captureFlash} ${styles.show}`}>📸 Frame Captured</div>}
+            
+            {/* Bounding Box Overlay (Mirrored X-axis to match CSS transform: scaleX(-1)) */}
+            {data.boundingBox && (
+              <div 
+                style={{
+                  position: "absolute",
+                  border: "2px solid #22c55e",
+                  borderRadius: "8px",
+                  top: `${data.boundingBox.yMin * 100}%`,
+                  left: `${(1 - data.boundingBox.xMax) * 100}%`,
+                  width: `${(data.boundingBox.xMax - data.boundingBox.xMin) * 100}%`,
+                  height: `${(data.boundingBox.yMax - data.boundingBox.yMin) * 100}%`,
+                  boxShadow: "0 0 15px rgba(34, 197, 94, 0.5)",
+                  pointerEvents: "none",
+                  transition: "all 0.15s ease-out"
+                }}
+              />
+            )}
           </div>
           <div className={styles.webcamFooter}>
             <span>Frames: {data.frameCount || 0}</span>

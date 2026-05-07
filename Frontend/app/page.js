@@ -4,72 +4,49 @@ import Header from "./components/Header";
 import ConsentScreen from "./components/ConsentScreen";
 import Dashboard from "./components/Dashboard";
 
-// Simulates the emotion detection pipeline outputs
-// In production, this would be replaced with actual MediaPipe + ML model calls
-function simulateDetection(prev) {
-  const emotions = ["Focused", "Neutral", "Confused", "Frustrated", "Bored"];
-  const weights = [0.35, 0.25, 0.15, 0.1, 0.15]; // weighted random
+// Helper to process real API responses and maintain state continuity
+function processApiResponse(apiData, prev) {
+  const rawEmotion = apiData.emotion || "Neutral";
+  
+  // Update timeline with the raw emotion
+  const timeline = [...(prev.timeline || []), { emotion: rawEmotion, timestamp: Date.now() }];
+  if (timeline.length > 50) timeline.shift();
 
-  // Pick emotion based on weighted random with some temporal smoothing
-  let emotion = prev.emotion || "Neutral";
-  if (Math.random() < 0.3) {
-    const r = Math.random();
-    let cumulative = 0;
-    for (let i = 0; i < emotions.length; i++) {
-      cumulative += weights[i];
-      if (r < cumulative) {
-        emotion = emotions[i];
-        break;
-      }
+  // TEMPORAL SMOOTHING: Look at the last 5 frames to determine the actual emotion
+  // This prevents jitter/rapid flickering if the model is unsure between two emotions
+  const recentFrames = timeline.slice(-5);
+  const recentCounts = {};
+  recentFrames.forEach(frame => {
+    recentCounts[frame.emotion] = (recentCounts[frame.emotion] || 0) + 1;
+  });
+  
+  // Find the most frequent emotion in the last 5 frames
+  let smoothedEmotion = rawEmotion;
+  let maxRecentCount = 0;
+  Object.entries(recentCounts).forEach(([e, count]) => {
+    if (count > maxRecentCount) {
+      maxRecentCount = count;
+      smoothedEmotion = e;
     }
+  });
+
+  // Use the smoothed emotion for our current state
+  const emotion = smoothedEmotion;
+  
+  // Temporal tracking for metrics
+  const frameCount = (prev.frameCount || 0) + 1;
+  const isBlinking = apiData.features?.is_blinking || false;
+  
+  // Simple blink counter logic based on state change
+  const wasBlinking = prev.wasBlinking || false;
+  let totalBlinks = prev.totalBlinks || 0;
+  if (isBlinking && !wasBlinking) {
+    totalBlinks += 1;
   }
 
-  // Generate probability distribution
-  const rawProbs = {};
-  let sum = 0;
-  emotions.forEach((e) => {
-    const base = e === emotion ? 50 + Math.random() * 30 : Math.random() * 20;
-    rawProbs[e] = base;
-    sum += base;
-  });
-  const probs = {};
-  emotions.forEach((e) => {
-    probs[e] = Math.round((rawProbs[e] / sum) * 100);
-  });
-
-  const confidence = probs[emotion];
-
-  // Eye metrics
-  const ear = 0.2 + Math.random() * 0.2;
-  const blinkRate = Math.floor(10 + Math.random() * 20);
-  const eyeOpenness = Math.round(50 + Math.random() * 50);
+  // Determine fatigue level
   const fatiguePct = emotion === "Bored" ? 60 + Math.random() * 30 : emotion === "Focused" ? 5 + Math.random() * 15 : 20 + Math.random() * 30;
   const fatigueLevel = fatiguePct > 60 ? "High" : fatiguePct > 35 ? "Medium" : "Low";
-
-  // Attention score
-  const attentionBase = { Focused: 85, Neutral: 60, Confused: 45, Frustrated: 35, Bored: 20 };
-  const attentionScore = Math.round(Math.min(100, Math.max(0, attentionBase[emotion] + (Math.random() - 0.5) * 20)));
-
-  // Feature vector
-  const features = {
-    eyeOpenness: ear * 2.5,
-    eyebrowDist: 0.3 + Math.random() * 0.4,
-    mouthOpening: emotion === "Frustrated" ? 0.3 + Math.random() * 0.3 : Math.random() * 0.15,
-    headTilt: (Math.random() - 0.5) * 0.3,
-    blinkRate: blinkRate / 30,
-    earLeft: ear + (Math.random() - 0.5) * 0.05,
-    earRight: ear + (Math.random() - 0.5) * 0.05,
-    gazeDir: (Math.random() - 0.5) * 0.5,
-  };
-
-  // Emotion embedding (5D vector)
-  const embedding = emotions.map((e) => probs[e] / 100);
-
-  // Pipeline step cycles 0-6
-  const pipelineStep = (prev.pipelineStep + 1) % 7;
-
-  const frameCount = (prev.frameCount || 0) + 1;
-  const totalBlinks = (prev.totalBlinks || 0) + (Math.random() < 0.3 ? 1 : 0);
 
   // Dominant emotion tracking
   const emotionCounts = { ...(prev.emotionCounts || {}) };
@@ -80,26 +57,22 @@ function simulateDetection(prev) {
     if (c > maxCount) { maxCount = c; dominantEmotion = e; }
   });
 
-  const attentionHistory = [...(prev.attentionHistory || []), attentionScore];
+  const attentionHistory = [...(prev.attentionHistory || []), apiData.attentionScore || 0];
+  if (attentionHistory.length > 30) attentionHistory.shift(); // Keep last 30 frames
   const avgAttention = Math.round(attentionHistory.reduce((a, b) => a + b, 0) / attentionHistory.length);
 
-  const timeline = [...(prev.timeline || []), { emotion, timestamp: Date.now() }];
+  // Cycle pipeline steps for UI animation 0-6
+  const pipelineStep = (prev.pipelineStep + 1) % 7;
 
   return {
-    emotion,
-    confidence,
-    probs,
-    ear,
-    blinkRate,
-    eyeOpenness,
+    ...apiData,
+    emotion, // Override the raw emotion with our smoothed one
     fatigueLevel,
     fatiguePct: Math.round(fatiguePct),
-    attentionScore,
-    features,
-    embedding,
     pipelineStep,
     frameCount,
     totalBlinks,
+    wasBlinking: isBlinking,
     dominantEmotion,
     avgAttention,
     attentionHistory,
@@ -135,22 +108,91 @@ export default function Home() {
     capturing: false,
   });
 
-  const intervalRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
   const timerRef = useRef(null);
+  const captureIntervalRef = useRef(null);
 
-  const handleStart = useCallback(() => {
-    setStarted(true);
-  }, []);
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 640, height: 480, facingMode: "user" } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      streamRef.current = stream;
+      return true;
+    } catch (err) {
+      console.error("Error accessing webcam: ", err);
+      alert("Could not access webcam. Please ensure permissions are granted.");
+      return false;
+    }
+  };
+
+  const stopWebcam = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const captureAndDetect = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    // Ensure video is playing
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to base64
+      const imageData = canvas.toDataURL("image/jpeg", 0.8);
+      
+      try {
+        const response = await fetch("http://localhost:8000/api/detect-emotion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image: imageData }),
+        });
+        
+        if (response.ok) {
+          const apiData = await response.json();
+          setData((prev) => processApiResponse(apiData, prev));
+        } else {
+          console.error("API Error:", response.statusText);
+        }
+      } catch (err) {
+        console.error("Error calling detection API:", err);
+      }
+    }
+  };
+
+  const handleStart = async () => {
+    const cameraReady = await startWebcam();
+    if (cameraReady) {
+      setStarted(true);
+    }
+  };
 
   const handleStop = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
+    stopWebcam();
     setStarted(false);
     setSessionTime(0);
     setData((d) => ({ ...d, capturing: false }));
   }, []);
 
-  // Simulation loop — every 2 seconds (matches ~30 frames/min)
+  // Main capture loop - roughly 30 frames per minute (every 2 seconds)
   useEffect(() => {
     if (!started) return;
 
@@ -158,13 +200,17 @@ export default function Home() {
       setSessionTime((t) => t + 1);
     }, 1000);
 
-    intervalRef.current = setInterval(() => {
-      setData((prev) => simulateDetection(prev));
+    // Initial capture
+    setTimeout(captureAndDetect, 1000);
+
+    captureIntervalRef.current = setInterval(() => {
+      captureAndDetect();
     }, 2000);
 
     return () => {
-      clearInterval(intervalRef.current);
+      clearInterval(captureIntervalRef.current);
       clearInterval(timerRef.current);
+      stopWebcam();
     };
   }, [started]);
 
@@ -172,6 +218,10 @@ export default function Home() {
     <>
       <Header sessionTime={sessionTime} isRunning={started} />
       <main>
+        {/* Hidden video and canvas elements for background capture */}
+        <video ref={videoRef} style={{ display: "none" }} playsInline muted />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+        
         {!started ? (
           <ConsentScreen onStart={handleStart} />
         ) : (
