@@ -75,6 +75,12 @@ export default function DashboardPage({ onLogout }) {
             >
               Readiness Lab
             </button>
+            <button
+              onClick={() => navigate('/sm2-demo')}
+              className="px-4 py-2 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded transition"
+            >
+              SM-2 Demo
+            </button>
             <span className="text-sm text-gray-600">
               {user?.email}
             </span>

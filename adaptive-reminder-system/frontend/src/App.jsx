@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/Login'
 import DashboardPage from './pages/Dashboard'
 import ReadinessLab from './pages/ReadinessLab'
+import SM2Demo from './pages/SM2Demo'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -53,6 +54,7 @@ function App() {
           element={isAuthenticated ? <DashboardPage onLogout={handleLogout} /> : <Navigate to="/login" />}
         />
         <Route path="/readiness-lab" element={<ReadinessLab />} />
+        <Route path="/sm2-demo" element={<SM2Demo />} />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>

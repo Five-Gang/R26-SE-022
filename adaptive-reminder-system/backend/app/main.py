@@ -7,7 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import settings
 from app.core.jobs import start_scheduler, stop_scheduler
 from app.db.mongo import connect_db, disconnect_db
-from app.api.routes import auth, reminders, schedule, push, dev, readiness
+from app.api.routes import auth, reminders, schedule, push, dev, readiness, sm2
 
 # Create app
 app = FastAPI(
@@ -33,6 +33,7 @@ app.add_middleware(SlowAPIMiddleware)
 # Include routes
 app.include_router(auth.router)
 app.include_router(reminders.router)
+app.include_router(sm2.router)
 app.include_router(schedule.router)
 app.include_router(push.router)
 app.include_router(dev.router)
