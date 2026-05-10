@@ -21,7 +21,6 @@ export default function SchedulerDemo() {
         retention_probability: parseFloat(retention),
         priority_score: parseFloat(priority),
       }
-
       const res = await axios.post(`${API_BASE}/scheduler/decide`, payload)
       setOutput(res.data)
     } catch (err) {
@@ -48,149 +47,209 @@ export default function SchedulerDemo() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <button onClick={() => navigate('/dashboard')} className="text-blue-600 hover:text-blue-700">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
+      <nav className="bg-white shadow-md border-b sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md">
+              SCH
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Model 3</div>
+              <div className="text-xs text-gray-500">Adaptive Scheduling</div>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-4 py-2 text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition font-medium"
+          >
             ← Back to Dashboard
           </button>
-          <h1 className="text-lg font-semibold">Model 3: Adaptive Scheduler</h1>
-          <div className="w-32"></div>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Description */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h2 className="font-semibold text-blue-900 mb-2">Adaptive Reminder Decision Engine</h2>
-          <p className="text-sm text-blue-800">
-            Decides whether to SEND a reminder NOW, DELAY it, or SKIP it based on student readiness, content retention risk, and item priority.
-          </p>
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header Banner */}
+        <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-purple-200 text-sm font-semibold mb-1">DECISION INTELLIGENCE</p>
+              <h1 className="text-4xl font-bold mb-3">Adaptive Reminder Scheduler</h1>
+              <p className="text-purple-100 max-w-2xl text-lg">
+                Decides whether to SEND reminders NOW, DELAY them, or SKIP them by analyzing student readiness, content retention risk, and item priority.
+              </p>
+            </div>
+            <div className="text-5xl">⏰🎯</div>
+          </div>
         </div>
 
-        {/* Presets */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="font-semibold mb-4">Quick Test Scenarios</h3>
+        {/* Preset Scenarios */}
+        <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Test Scenarios</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
               onClick={() => handlePreset('send_now')}
-              className="px-4 py-3 bg-green-100 hover:bg-green-200 border border-green-300 text-green-800 rounded font-medium transition"
+              className="px-4 py-3 bg-green-100 hover:bg-green-200 border-2 border-green-300 text-green-800 rounded-lg font-medium transition flex items-center justify-center gap-2"
             >
-              📤 Perfect Send Moment
+              <span>📤</span> Perfect Send Moment
             </button>
             <button
               onClick={() => handlePreset('delay')}
-              className="px-4 py-3 bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 text-yellow-800 rounded font-medium transition"
+              className="px-4 py-3 bg-yellow-100 hover:bg-yellow-200 border-2 border-yellow-300 text-yellow-800 rounded-lg font-medium transition flex items-center justify-center gap-2"
             >
-              ⏱️ Hold & Monitor
+              <span>⏱️</span> Hold & Monitor
             </button>
             <button
               onClick={() => handlePreset('skip')}
-              className="px-4 py-3 bg-red-100 hover:bg-red-200 border border-red-300 text-red-800 rounded font-medium transition"
+              className="px-4 py-3 bg-red-100 hover:bg-red-200 border-2 border-red-300 text-red-800 rounded-lg font-medium transition flex items-center justify-center gap-2"
             >
-              ❌ Skip This Round
+              <span>❌</span> Skip This Round
             </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Readiness Level</label>
-            <select
-              value={readiness}
-              onChange={(e) => setReadiness(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="HIGH">HIGH - Student is energized & ready to learn</option>
-              <option value="MEDIUM">MEDIUM - Student has moderate focus</option>
-              <option value="LOW">LOW - Student is tired or distracted</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Retention Probability (0-1)</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={retention}
-              onChange={(e) => setRetention(e.target.value)}
-              className="w-full"
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              {retention < 0.4 ? '🔴 HIGH RISK - Content being forgotten' : retention < 0.6 ? '🟡 MODERATE RISK - Student may forget' : '🟢 LOW RISK - Content well remembered'} ({parseFloat(retention).toFixed(2)})
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Priority Score (0+)</label>
-            <input
-              type="number"
-              min="0"
-              max="2"
-              step="0.05"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              {priority >= 0.5 ? '★ HIGH Priority' : priority >= 0.4 ? '◆ MODERATE Priority' : '○ LOW Priority'}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded font-medium transition"
-          >
-            {loading ? 'Deciding...' : 'Get Recommendation'}
-          </button>
-        </form>
-
-        {/* Output */}
-        {output && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-2">Decision Result</h3>
-              <div
-                className={`inline-block px-4 py-2 rounded-lg font-bold text-white ${
-                  output.action === 'SEND_NOW'
-                    ? 'bg-green-500'
-                    : output.action === 'DELAY'
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-                }`}
+        {/* Form Section */}
+        <div className="bg-white rounded-2xl shadow-md p-8 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Decide Reminder Action</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Student Readiness Level</label>
+              <select
+                value={readiness}
+                onChange={(e) => setReadiness(e.target.value)}
+                className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
               >
-                {output.action === 'SEND_NOW'
-                  ? '📤 SEND NOW'
-                  : output.action === 'DELAY'
-                  ? '⏱️ DELAY'
-                  : '❌ SKIP'}
+                <option value="HIGH">🚀 HIGH - Student is energized & ready to learn</option>
+                <option value="MEDIUM">📊 MEDIUM - Student has moderate focus & energy</option>
+                <option value="LOW">😴 LOW - Student is tired or distracted</option>
+              </select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-gray-700">Retention Probability</label>
+                <span className="text-sm font-semibold text-purple-600">{(retention * 100).toFixed(0)}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={retention}
+                onChange={(e) => setRetention(e.target.value)}
+                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              />
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                {retention < 0.4 ? (
+                  <><span className="text-red-500 font-semibold">🔴 HIGH RISK</span> <span className="text-gray-600">Content being forgotten</span></>
+                ) : retention < 0.6 ? (
+                  <><span className="text-yellow-600 font-semibold">🟡 MODERATE RISK</span> <span className="text-gray-600">Student may forget</span></>
+                ) : (
+                  <><span className="text-green-600 font-semibold">🟢 LOW RISK</span> <span className="text-gray-600">Content well remembered</span></>
+                )}
               </div>
             </div>
 
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-gray-700">Priority Score</label>
+                <span className="text-sm font-semibold text-purple-600">{priority.toFixed(2)}</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                max="2"
+                step="0.05"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+              />
+              <div className="mt-3 text-xs text-gray-600">
+                {priority >= 0.5 ? '★ HIGH Priority' : priority >= 0.4 ? '◆ MODERATE Priority' : '○ LOW Priority'}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 px-6 py-3 font-semibold text-white transition shadow-md"
+              >
+                {loading ? '⏳ Deciding...' : '🤔 Get Recommendation'}
+              </button>
+              <span className="text-sm text-gray-600">Calls <code className="bg-gray-100 px-2 py-1 rounded text-purple-600">/scheduler/decide</code></span>
+            </div>
+          </form>
+        </div>
+
+        {/* Result Display */}
+        {output && !output.error && (
+          <div className="bg-white rounded-2xl shadow-md p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Decision & Analysis</h2>
+
+            {/* Action Badge */}
+            <div className="mb-8">
+              <div
+                className={`inline-flex items-center gap-3 px-6 py-4 rounded-xl font-bold text-white shadow-lg ${
+                  output.action === 'SEND_NOW'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                    : output.action === 'DELAY'
+                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500'
+                    : 'bg-gradient-to-r from-red-500 to-pink-500'
+                }`}
+              >
+                {output.action === 'SEND_NOW' ? '📤' : output.action === 'DELAY' ? '⏱️' : '❌'}
+                <span className="text-2xl">
+                  {output.action === 'SEND_NOW' ? 'SEND NOW' : output.action === 'DELAY' ? 'DELAY' : 'SKIP'}
+                </span>
+              </div>
+            </div>
+
+            {/* Reasoning */}
             {output.reasons && output.reasons.length > 0 && (
-              <div className="mb-4">
-                <h4 className="font-semibold mb-2">Reasoning</h4>
-                <ul className="space-y-1 text-sm text-gray-700">
+              <div className="mb-8">
+                <h3 className="font-semibold text-gray-900 mb-4">Decision Factors</h3>
+                <div className="space-y-3">
                   {output.reasons.map((reason, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="mt-0.5">{reason.charAt(0)}</span>
-                      <span>{reason.substring(2)}</span>
-                    </li>
+                    <div key={idx} className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 border border-gray-200">
+                      <span className="text-xl flex-shrink-0">{reason.charAt(0)}</span>
+                      <span className="text-gray-700">{reason.substring(2)}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
-            <div className="bg-gray-50 rounded p-3 mt-4 text-xs">
-              <pre className="overflow-auto">{JSON.stringify(output, null, 2)}</pre>
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+                <p className="text-xs font-semibold text-purple-700 mb-1">READINESS</p>
+                <p className="text-2xl font-bold text-purple-900">{output.readiness_level}</p>
+              </div>
+              <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
+                <p className="text-xs font-semibold text-blue-700 mb-1">RETENTION</p>
+                <p className="text-2xl font-bold text-blue-900">{(output.retention_probability * 100).toFixed(0)}%</p>
+              </div>
+              <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+                <p className="text-xs font-semibold text-amber-700 mb-1">PRIORITY</p>
+                <p className="text-2xl font-bold text-amber-900">{output.priority_score.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-xl bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs font-semibold text-gray-700 mb-2">Raw API Response</p>
+              <pre className="text-xs text-gray-700 overflow-auto max-h-32 font-mono">{JSON.stringify(output, null, 2)}</pre>
             </div>
           </div>
         )}
-      </div>
+
+        {loading && (
+          <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+            <div className="inline-block animate-spin text-5xl mb-4">⏳</div>
+            <p className="text-gray-600 font-semibold text-lg">Making intelligent decision...</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
