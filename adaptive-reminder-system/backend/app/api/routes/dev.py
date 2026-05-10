@@ -4,9 +4,13 @@ from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.db.mongo import get_db
-from app.models.learning_context import ActivityType
-from app.services.scheduler import preview_scheduling_state, run_scheduling_tick
-from app.services.signal_control import signal_control_store
+# from app.models.learning_context import ActivityType  # TODO: rebuild Models 2-5
+# from app.services.scheduler import preview_scheduling_state, run_scheduling_tick  # TODO: rebuild Model 3
+# from app.services.signal_control import signal_control_store  # TODO: rebuild Models 3-5
+
+# Temporary placeholder for ActivityType
+class ActivityType:
+    pass
 
 router = APIRouter(prefix="/api/v1/dev", tags=["dev"])
 

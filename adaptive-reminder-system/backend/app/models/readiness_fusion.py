@@ -3,16 +3,38 @@ from enum import Enum
 
 import numpy as np
 
-from app.models.learning_context import (
-    ACTIVE_LEARNING_ACTIVITIES,
-    CONTENT_CONSUMPTION_ACTIVITIES,
-    DEEP_FOCUS_ACTIVITIES,
-    ActivityType,
-    LearningSignal,
-    activity_learning_score,
-    clamp,
-    clamp_signed_unit,
-)
+# from app.models.learning_context import (  # TODO: rebuild Models 2-5
+#     ACTIVE_LEARNING_ACTIVITIES,
+#     CONTENT_CONSUMPTION_ACTIVITIES,
+#     DEEP_FOCUS_ACTIVITIES,
+#     ActivityType,
+#     LearningSignal,
+#     activity_learning_score,
+#     clamp,
+#     clamp_signed_unit,
+# )
+
+# Temporary inline definitions for compatibility
+class ActivityType:
+    QUIZ = "QUIZ"
+    PRACTICE = "PRACTICE"
+    FLASHCARD = "FLASHCARD"
+    VIDEO = "VIDEO"
+    READING = "READING"
+    LECTURE = "LECTURE"
+
+ACTIVE_LEARNING_ACTIVITIES = {ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD}
+CONTENT_CONSUMPTION_ACTIVITIES = {ActivityType.VIDEO, ActivityType.LECTURE, ActivityType.READING}
+DEEP_FOCUS_ACTIVITIES = {ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD}
+
+def clamp(value, min_val, max_val):
+    return max(min_val, min(max_val, value))
+
+def clamp_signed_unit(value):
+    return clamp(value, -1.0, 1.0)
+
+def activity_learning_score(activity_type):
+    return 0.8  # Placeholder
 
 class ReadinessTier(str, Enum):
     HIGH   = "HIGH"

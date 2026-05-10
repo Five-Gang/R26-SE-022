@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongo import get_db
 from app.api.deps import get_current_student_id
 from app.schemas.schemas import ScheduleTickResponse
-from app.services.scheduler import run_scheduling_tick
+# from app.services.scheduler import run_scheduling_tick  # TODO: rebuild Model 3 (RL Scheduler)
 
 router = APIRouter(prefix="/api/v1/schedule", tags=["schedule"])
 
@@ -13,7 +13,8 @@ async def trigger_tick(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Manually trigger a scheduling tick (for dev/testing)."""
-    result = await run_scheduling_tick(student_id, db)
+    # TODO: Rebuild Model 3 scheduler
+    result = {"reminders_created": 0, "items_processed": 0, "status": "scheduler_not_yet_implemented"}
 
     return ScheduleTickResponse(
         student_id=student_id,

@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongo import get_db
 from app.api.deps import get_current_student_id
 from app.schemas.schemas import ReminderFeedback, ReminderQueueResponse, ReminderResponse
-from app.models.sm2 import item_from_mongo, item_to_mongo_update, update
+# from app.models.sm2 import item_from_mongo, item_to_mongo_update, update  # TODO: rebuild Model 2 (SM-2)
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
