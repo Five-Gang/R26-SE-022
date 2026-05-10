@@ -5,6 +5,7 @@ import DashboardPage from './pages/Dashboard'
 import ReadinessLab from './pages/ReadinessLab'
 import SM2Demo from './pages/SM2Demo'
 import SchedulerDemo from './pages/SchedulerDemo'
+import ContentDemo from './pages/ContentDemo'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -57,6 +58,7 @@ function App() {
         <Route path="/readiness-lab" element={<ReadinessLab />} />
         <Route path="/sm2-demo" element={<SM2Demo />} />
         <Route path="/scheduler-demo" element={<SchedulerDemo />} />
+        <Route path="/content-demo" element={<ContentDemo />} />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>

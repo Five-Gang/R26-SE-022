@@ -87,6 +87,12 @@ export default function DashboardPage({ onLogout }) {
             >
               Scheduler Demo
             </button>
+            <button
+              onClick={() => navigate('/content-demo')}
+              className="px-4 py-2 text-sm bg-orange-50 text-orange-700 hover:bg-orange-100 rounded transition"
+            >
+              Content Demo
+            </button>
             <span className="text-sm text-gray-600">
               {user?.email}
             </span>
