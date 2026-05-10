@@ -8,7 +8,7 @@ export default function SchedulerDemo() {
   const navigate = useNavigate()
   const [readiness, setReadiness] = useState('HIGH')
   const [retention, setRetention] = useState(0.42)
-  const [priority, setPriority] = useState(0.71)
+  const [priority, setPriority] = useState(71)
   const [output, setOutput] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -19,7 +19,7 @@ export default function SchedulerDemo() {
       const payload = {
         readiness_level: readiness,
         retention_probability: parseFloat(retention),
-        priority_score: parseFloat(priority),
+        priority_score: priority / 100,
       }
       const res = await axios.post(`${API_BASE}/scheduler/decide`, payload)
       setOutput(res.data)
@@ -34,15 +34,15 @@ export default function SchedulerDemo() {
     if (preset === 'send_now') {
       setReadiness('HIGH')
       setRetention(0.42)
-      setPriority(0.71)
+      setPriority(71)
     } else if (preset === 'delay') {
       setReadiness('MEDIUM')
       setRetention(0.5)
-      setPriority(0.45)
+      setPriority(45)
     } else if (preset === 'skip') {
       setReadiness('LOW')
       setRetention(0.5)
-      setPriority(0.5)
+      setPriority(50)
     }
   }
 
@@ -153,19 +153,25 @@ export default function SchedulerDemo() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-semibold text-gray-700">Priority Score</label>
-                <span className="text-sm font-semibold text-purple-600">{priority.toFixed(2)}</span>
+                <span className="text-sm font-semibold text-purple-600">{priority}%</span>
               </div>
               <input
-                type="number"
+                type="range"
                 min="0"
-                max="2"
-                step="0.05"
+                max="120"
+                step="1"
                 value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                onChange={(e) => setPriority(parseInt(e.target.value))}
+                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
-              <div className="mt-3 text-xs text-gray-600">
-                {priority >= 0.5 ? '★ HIGH Priority' : priority >= 0.4 ? '◆ MODERATE Priority' : '○ LOW Priority'}
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                {priority >= 60 ? (
+                  <><span className="text-green-600 font-semibold">★ HIGH</span> <span className="text-gray-600">Priority item - important</span></>
+                ) : priority >= 40 ? (
+                  <><span className="text-yellow-600 font-semibold">◆ MEDIUM</span> <span className="text-gray-600">Priority - somewhat important</span></>
+                ) : (
+                  <><span className="text-gray-500 font-semibold">○ LOW</span> <span className="text-gray-600">Priority - optional</span></>
+                )}
               </div>
             </div>
 
