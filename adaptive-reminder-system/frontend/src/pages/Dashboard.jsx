@@ -81,6 +81,12 @@ export default function DashboardPage({ onLogout }) {
             >
               SM-2 Demo
             </button>
+            <button
+              onClick={() => navigate('/scheduler-demo')}
+              className="px-4 py-2 text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 rounded transition"
+            >
+              Scheduler Demo
+            </button>
             <span className="text-sm text-gray-600">
               {user?.email}
             </span>
