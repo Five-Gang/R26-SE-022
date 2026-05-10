@@ -9,6 +9,7 @@ export default function SM2Demo() {
   const [itemId, setItemId] = useState('demo_item')
   const [quality, setQuality] = useState(80)
   const [readiness, setReadiness] = useState('MEDIUM')
+  const [daysSinceLastReview, setDaysSinceLastReview] = useState(2)
   const [output, setOutput] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -20,6 +21,7 @@ export default function SM2Demo() {
         item: { item_id: itemId },
         quality_percentage: Number(quality),
         readiness_level: readiness,
+        days_since_last_review: Number(daysSinceLastReview),
       }
       const res = await axios.post(`${API_BASE}/sm2/process`, payload)
       setOutput(res.data)
@@ -143,6 +145,22 @@ export default function SM2Demo() {
                   <option>MEDIUM</option>
                   <option>LOW</option>
                 </select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-semibold text-gray-700">Days Since Last Review</label>
+                  <span className="text-sm font-bold text-green-600">{daysSinceLastReview}d</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="30"
+                  step="1"
+                  value={daysSinceLastReview}
+                  onChange={(e) => setDaysSinceLastReview(parseInt(e.target.value, 10))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                />
               </div>
             </div>
 

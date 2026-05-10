@@ -10,17 +10,14 @@ MODEL_DIR = BACKEND_ROOT / "models"
 ARTIFACT_DIR = BACKEND_ROOT / "app" / "artifacts"
 
 
+# NOTE: Models were trained using five emotion labels only.
+# Keep this mapping limited to those five to match training labels used by the readiness model.
 EMOTION_HAPPINESS = {
     "focused": 0.85,
-    "motivated": 0.82,
-    "calm": 0.74,
     "neutral": 0.55,
     "frustrated": 0.28,
-    "anxious": 0.32,
     "bored": 0.22,
-    "tired": 0.18,
-    "stressed": 0.26,
-    "happy": 0.90,
+    "confused": 0.40,
 }
 
 TIME_NORMALIZED = {

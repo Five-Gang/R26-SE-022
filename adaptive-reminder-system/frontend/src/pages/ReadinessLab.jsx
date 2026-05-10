@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001/api/v1'
 
-const EMOTIONS = ['Focused', 'Neutral', 'Frustrated', 'Anxious', 'Bored']
+// Restrict emotions to the five labels used in model training
+const EMOTIONS = ['Focused', 'Neutral', 'Frustrated', 'Bored', 'Confused']
 const TIMES = ['Morning', 'Afternoon', 'Evening', 'Night']
 
 export default function ReadinessLab() {
