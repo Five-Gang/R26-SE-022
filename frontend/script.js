@@ -182,7 +182,7 @@ function renderFlashcard() {
 
     const card = flashcards[currentFlashcardIndex];
     flashcardsContainer.innerHTML = `
-        <div class="flashcard ${isFlipped ? 'flipped' : ''}">
+        <div class="flashcard ${isFlipped ? 'answer-side' : ''}">
             <div class="flashcard-hint">Click to flip</div>
             <div class="flashcard-content">
                 <div class="flashcard-label">${isFlipped ? 'Answer' : 'Question'}</div>
@@ -207,10 +207,23 @@ function renderFlashcard() {
     nextCardBtn.disabled = currentFlashcardIndex === flashcards.length - 1;
 }
 
-// Toggle Flashcard
+// Toggle Flashcard — squeeze-flip, swap content at midpoint
 function toggleFlashcard() {
-    isFlipped = !isFlipped;
-    renderFlashcard();
+    const card = flashcardsContainer.querySelector('.flashcard');
+    if (!card) return;
+
+    // Phase 1: squeeze out
+    card.classList.add('flip-out');
+
+    setTimeout(() => {
+        // Swap content at the flat midpoint
+        isFlipped = !isFlipped;
+        renderFlashcard();
+
+        // Phase 2: expand in
+        const newCard = flashcardsContainer.querySelector('.flashcard');
+        if (newCard) newCard.classList.add('flip-in');
+    }, 180);
 }
 
 // Previous Flashcard

@@ -308,15 +308,30 @@ body {
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     color: white;
     position: relative;
 }
 
-.flashcard.flipped {
-    transform: rotateY(180deg);
+/* Squeeze-flip: card collapses to flat, content swaps, then expands back */
+@keyframes flipOut {
+    0%   { transform: scaleX(1);   opacity: 1; }
+    100% { transform: scaleX(0);   opacity: 0.3; }
+}
+@keyframes flipIn {
+    0%   { transform: scaleX(0);   opacity: 0.3; }
+    100% { transform: scaleX(1);   opacity: 1; }
+}
+.flashcard.flip-out {
+    animation: flipOut 0.18s ease-in forwards;
+}
+.flashcard.flip-in {
+    animation: flipIn 0.18s ease-out forwards;
+}
+
+/* Answer side has a distinct background */
+.flashcard.answer-side {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
 }
 
 .flashcard-content {
