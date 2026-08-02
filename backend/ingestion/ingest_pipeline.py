@@ -49,62 +49,55 @@ class IngestionPipeline:
             dict: Pipeline execution results
         """
         try:
-            print("🚀 Starting ingestion pipeline...")
+            print(" Starting ingestion pipeline...")
             
-            # Step 1: Load PDFs
-            print(f"📄 Loading PDF documents from {self.pdf_folder}...")
-            documents = load_all_pdfs(self.pdf_folder)
+            # Step 1: Find PDFs
+            print(f" Loading PDF documents from {self.pdf_folder}...")
             
-            if not documents:
-                error_msg = f"❌ No documents found in {self.pdf_folder}"
+            if not os.path.exists(self.pdf_folder):
+                error_msg = f" Directory {self.pdf_folder} not found"
                 print(error_msg)
-                return {
-                    "status": "failed",
-                    "message": error_msg,
-                    "documents_count": 0,
-                    "chunks_count": 0
-                }
+                return {"status": "failed", "message": error_msg, "documents_count": 0, "chunks_count": 0}
+                
+            pdf_files = [f for f in os.listdir(self.pdf_folder) if f.lower().endswith('.pdf')]
+            if not pdf_files:
+                error_msg = f" No documents found in {self.pdf_folder}"
+                print(error_msg)
+                return {"status": "failed", "message": error_msg, "documents_count": 0, "chunks_count": 0}
             
-            print(f"✅ Loaded {len(documents)} PDF(s).")
+            print(f" Found {len(pdf_files)} PDF(s).")
             
-            # Step 2: Chunk documents
-            print(f"✂️ Chunking documents (size={self.chunk_size}, overlap={self.chunk_overlap})...")
-            chunked_docs = chunk_documents(
-                documents,
+            # Step 3: Initialize embedder
+            print(f" Initializing embedding model ({self.embedding_model})...")
+            self.embedder = Embedder(
+                model_name=self.embedding_model,
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap
             )
             
-            self.total_chunks = len(chunked_docs)
-            print(f"✅ Created {self.total_chunks} chunks.")
-            
-            # Step 3: Initialize embedder
-            print(f"🔧 Initializing embedding model ({self.embedding_model})...")
-            self.embedder = Embedder(
-                model_name=self.embedding_model,
-                persist_directory=self.chroma_dir
-            )
-            
             # Step 4: Add chunks to DB
-            print("💾 Storing embeddings in ChromaDB...")
-            self.embedder.add_chunks_to_db(chunked_docs)
+            print(" Storing embeddings locally...")
+            total_chunks = 0
+            for pdf_file in pdf_files:
+                file_path = os.path.join(self.pdf_folder, pdf_file)
+                result = self.embedder.embed_and_store(file_path)
+                if result.get("status") == "success":
+                    total_chunks += result.get("chunks_processed", 0)
             
-            # Step 5: Persist DB
-            print("💾 Persisting ChromaDB...")
-            self.embedder.persist()
+            self.total_chunks = total_chunks
             
-            result_msg = "🎉 Ingestion pipeline completed successfully!"
+            result_msg = " Ingestion pipeline completed successfully!"
             print(result_msg)
             
             return {
                 "status": "success",
                 "message": result_msg,
-                "documents_count": len(documents),
+                "documents_count": len(pdf_files),
                 "chunks_count": self.total_chunks
             }
             
         except Exception as e:
-            error_msg = f"❌ Ingestion failed: {str(e)}"
+            error_msg = f" Ingestion failed: {str(e)}"
             print(error_msg)
             return {
                 "status": "failed",

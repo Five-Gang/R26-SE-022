@@ -1,102 +1,67 @@
 import os
+import uuid
+import PyPDF2
 from typing import List, Dict
-import numpy as np
 from sentence_transformers import SentenceTransformer
-import chromadb
-from chromadb.config import Settings
-
+from retrieval.retriever import get_retriever
 
 class Embedder:
-    """
-    Handles embedding generation and storage in ChromaDB.
-    """
-
-    def __init__(
-        self,
-        model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
-        persist_directory: str = "data/chroma"
-    ):
-        """
-        Initialize embedding model + ChromaDB client.
-
-        Args:
-            model_name (str): HuggingFace embedding model.
-            persist_directory (str): Directory to store ChromaDB.
-        """
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", chunk_size: int = 500, chunk_overlap: int = 50):
         self.model = SentenceTransformer(model_name)
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
 
-        # Initialize ChromaDB client
-        self.client = chromadb.Client(
-            Settings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory=persist_directory
-            )
-        )
+    def process_pdf(self, file_path: str) -> str:
+        text = ""
+        with open(file_path, "rb") as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+        return text
 
-        # Create or load collection
-        self.collection = self.client.get_or_create_collection(
-            name="course_materials",
-            metadata={"hnsw:space": "cosine"}
-        )
+    def create_chunks(self, text: str) -> List[str]:
+        words = text.split()
+        chunks = []
+        for i in range(0, len(words), self.chunk_size - self.chunk_overlap):
+            chunk = " ".join(words[i:i + self.chunk_size])
+            chunks.append(chunk)
+        return chunks
 
-    def embed_text(self, text: str) -> List[float]:
-        """
-        Generate embedding for a single text chunk.
-        """
-        embedding = self.model.encode(text)
-        # Convert to NumPy array and then to list
-        if isinstance(embedding, np.ndarray):
-            return embedding.tolist()
-        else:
-            # Convert tensor to numpy then to list
-            return np.array(embedding).tolist()
+    def embed_and_store(self, file_path: str) -> Dict:
+        try:
+            filename = os.path.basename(file_path)
+            print(f" Processing {filename}...")
 
-    def add_chunks_to_db(self, chunks: List[Dict]):
-        """
-        Add chunked documents to ChromaDB.
+            text = self.process_pdf(file_path)
+            if not text.strip():
+                return {"status": "error", "message": "No text extracted"}
 
-        Args:
-            chunks (List[Dict]): Output from chunker.chunk_documents()
-        """
-        ids = []
-        texts = []
-        metadatas = []
+            chunks = self.create_chunks(text)
+            print(f" Created {len(chunks)} chunks.")
 
-        for chunk in chunks:
-            ids.append(chunk["chunk_id"])
-            texts.append(chunk["text"])
-            metadatas.append({
-                "filename": chunk["filename"]
-            })
+            embeddings = self.model.encode(chunks, convert_to_numpy=True)
+            
+            retriever = get_retriever()
+            collection_data = retriever.collection
+            
+            for i, (chunk, emb) in enumerate(zip(chunks, embeddings)):
+                collection_data.append({
+                    "id": f"{filename}_{i}_{uuid.uuid4().hex[:8]}",
+                    "text": chunk,
+                    "embedding": emb.tolist(),
+                    "metadata": {"filename": filename, "chunk_index": i}
+                })
+                
+            retriever.save_db(collection_data)
+            print(f" Stored {len(chunks)} embeddings locally.")
 
-        print(f"🔍 Generating embeddings for {len(texts)} chunks...")
-
-        # Encode texts to embeddings
-        embeddings_array = self.model.encode(texts)
-        
-        # Convert embeddings to list format
-        if isinstance(embeddings_array, np.ndarray):
-            embeddings = embeddings_array.tolist()
-        else:
-            # Convert each embedding (tensor) to list
-            embeddings = [np.array(e).tolist() for e in embeddings_array]
-
-        print("💾 Storing embeddings in ChromaDB...")
-
-        self.collection.add(
-            ids=ids,
-            embeddings=embeddings,
-            documents=texts,
-            metadatas=metadatas
-        )
-
-        print("✅ Embeddings successfully stored.")
-
-    def persist(self):
-        """
-        Save ChromaDB to disk.
-        Note: ChromaDB 0.4.13+ automatically persists data to disk.
-        This method is kept for compatibility but does not need explicit persistence.
-        """
-        # ChromaDB automatically persists with duckdb+parquet backend
-        print("💾 ChromaDB data automatically persisted to disk.")
+            return {
+                "status": "success",
+                "filename": filename,
+                "chunks_processed": len(chunks)
+            }
+        except Exception as e:
+            print(f" Error during embedding: {e}")
+            return {"status": "error", "message": str(e)}

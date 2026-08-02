@@ -47,10 +47,17 @@ export default function Home() {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
 
-  // Check system status on mount
+  // Check system status on mount and poll every 10 seconds
   useEffect(() => {
     checkLLMStatus();
     fetchMaterials();
+
+    const interval = setInterval(() => {
+      checkLLMStatus();
+      fetchMaterials();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const checkLLMStatus = async () => {
@@ -171,6 +178,24 @@ export default function Home() {
     }
   };
 
+  // Handle PDF deletion
+  const handleDelete = async (filename: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/materials/${filename}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        fetchMaterials(); // Refresh materials list
+      } else {
+        const data = await res.json();
+        console.error("Delete failed:", data);
+      }
+    } catch (err) {
+      console.error("Could not connect to backend to delete.", err);
+    }
+  };
+
   // New chat
   const handleNewChat = () => {
     setMessages([]);
@@ -202,6 +227,7 @@ export default function Home() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         materials={materials}
         onUpload={handleUpload}
+        onDelete={handleDelete}
         isUploading={isUploading}
         uploadMessage={uploadMessage}
         onNewChat={handleNewChat}

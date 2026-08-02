@@ -11,6 +11,7 @@ interface SidebarProps {
   onToggle: () => void;
   materials: Material[];
   onUpload: (file: File) => void;
+  onDelete: (filename: string) => void;
   isUploading: boolean;
   uploadMessage: string;
   onNewChat: () => void;
@@ -23,6 +24,7 @@ export default function Sidebar({
   onToggle,
   materials,
   onUpload,
+  onDelete,
   isUploading,
   uploadMessage,
   onNewChat,
@@ -126,11 +128,40 @@ export default function Sidebar({
           </div>
         ) : (
           materials.map((mat, idx) => (
-            <div className="material-item" key={idx}>
-              <span className="material-icon">📄</span>
-              <span className="material-name" title={mat.filename}>
-                {mat.filename}
-              </span>
+            <div className="material-item" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                <span className="material-icon">📄</span>
+                <span className="material-name" title={mat.filename}>
+                  {mat.filename}
+                </span>
+              </div>
+              <button 
+                onClick={() => onDelete(mat.filename)}
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  cursor: 'pointer', 
+                  padding: '4px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '24px',
+                  height: '24px'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.color = '#ef4444';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                title="Delete file"
+              >
+                ✕
+              </button>
             </div>
           ))
         )}

@@ -1,325 +1,134 @@
+import os
+import json
+import numpy as np
 from typing import List, Dict, Optional
-import chromadb
-from chromadb.config import Settings
 from retrieval.query_embedder import QueryEmbedder
 from config.settings import settings as app_settings
 
-
 class Retriever:
     """
-    Handles document retrieval from ChromaDB based on semantic similarity.
+    Handles document retrieval from a JSON file based on semantic similarity.
     """
-
     def __init__(
         self,
         persist_directory: str = "data/chroma",
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
-        similarity_threshold: float = 0.5
+        similarity_threshold: float = 0.3
     ):
-        """
-        Initialize the retriever with ChromaDB client and query embedder.
-
-        Args:
-            persist_directory (str): Path to ChromaDB persistence directory.
-            embedding_model (str): HuggingFace model identifier for embeddings.
-            similarity_threshold (float): Minimum similarity score for results.
-        """
         self.persist_directory = persist_directory
-        self.embedding_model = embedding_model
+        self.db_path = os.path.join(persist_directory, "auralearn_docs.json")
         self.similarity_threshold = similarity_threshold
-
-        # Initialize query embedder
         self.query_embedder = QueryEmbedder(model_name=embedding_model)
+        
+        if not os.path.exists(persist_directory):
+            os.makedirs(persist_directory, exist_ok=True)
+            
+        self.collection = self._load_db()
 
-        # Initialize ChromaDB client
-        try:
-            self.client = chromadb.Client(
-                Settings(
-                    chroma_db_impl="duckdb+parquet",
-                    persist_directory=persist_directory
-                )
-            )
+    def _load_db(self):
+        if os.path.exists(self.db_path):
+            try:
+                with open(self.db_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                return []
+        return []
 
-            # Get or create collection
-            self.collection = self.client.get_or_create_collection(
-                name="course_materials",
-                metadata={"hnsw:space": "cosine"}
-            )
-            print(f"✅ ChromaDB loaded with {self.collection.count()} documents")
-
-        except Exception as e:
-            print(f"⚠️ Warning: Could not load ChromaDB: {e}")
-            self.client = None
-            self.collection = None
+    def save_db(self, collection_data):
+        self.collection = collection_data
+        with open(self.db_path, 'w', encoding='utf-8') as f:
+            json.dump(self.collection, f)
 
     def retrieve(self, query: str, top_k: int = 5) -> List[Dict]:
-        """
-        Retrieve the most relevant documents for a given query.
-
-        Args:
-            query (str): The user's query text.
-            top_k (int): Number of top results to return.
-
-        Returns:
-            List[Dict]: List of relevant documents with scores and metadata.
-        """
         if not self.collection:
-            return [{
-                "error": "Vector store not initialized",
-                "message": "Please ingest documents first using /api/ingest"
-            }]
+            return [{"error": "Vector store not initialized or empty", "similarity": 0.0}]
 
         try:
-            # Validate inputs
-            if not query or not query.strip():
-                raise ValueError("Query cannot be empty")
-
-            if top_k < 1:
-                raise ValueError("top_k must be at least 1")
-
-            # Generate query embedding
-            print(f"🔍 Embedding query: {query[:50]}...")
-            query_embedding = self.query_embedder.embed_query(query)
-
-            # Query ChromaDB
-            print(f"📚 Retrieving top {top_k} results...")
-            results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=top_k,
-                include=["documents", "metadatas", "distances"]
-            )
-
-            # Format results
-            formatted_results = []
-
-            if results["documents"] and len(results["documents"]) > 0:
-                documents = results["documents"][0]
-                metadatas = results["metadatas"][0]
-                distances = results["distances"][0]
-
-                for i, (doc, metadata, distance) in enumerate(
-                    zip(documents, metadatas, distances)
-                ):
-                    # Convert distance to similarity (cosine distance to similarity)
-                    # For cosine distance: similarity = 1 - distance
-                    similarity = 1 - distance
-
-                    # Only include results above threshold
-                    if similarity >= self.similarity_threshold:
-                        formatted_results.append({
-                            "rank": i + 1,
-                            "content": doc,
-                            "similarity": round(similarity, 4),
-                            "distance": round(distance, 4),
-                            "source": metadata.get("filename", "unknown"),
-                            "metadata": metadata
-                        })
-
-            if not formatted_results:
-                print(f"⚠️ No results above similarity threshold ({self.similarity_threshold})")
-                return [{
-                    "message": f"No results found above similarity threshold of {self.similarity_threshold}",
-                    "query": query,
-                    "threshold": self.similarity_threshold
-                }]
-
-            print(f"✅ Retrieved {len(formatted_results)} relevant documents")
-            return formatted_results
-
-        except ValueError as e:
-            return [{"error": "Invalid input", "message": str(e)}]
-        except Exception as e:
-            print(f"❌ Retrieval error: {str(e)}")
-            return [{"error": "Retrieval failed", "message": str(e)}]
-
-    def retrieve_with_scores(
-        self,
-        query: str,
-        top_k: int = 5,
-        raw: bool = False
-    ) -> Dict:
-        """
-        Retrieve documents with detailed scoring information.
-
-        Args:
-            query (str): The user's query text.
-            top_k (int): Number of top results to return.
-            raw (bool): If True, return raw ChromaDB results.
-
-        Returns:
-            Dict: Detailed retrieval results with metadata.
-        """
-        if not self.collection:
-            return {
-                "status": "error",
-                "message": "Vector store not initialized",
-                "results": []
-            }
-
-        try:
-            # Generate query embedding
-            query_embedding = self.query_embedder.embed_query(query)
-
-            # Query ChromaDB
-            raw_results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=top_k,
-                include=["documents", "metadatas", "distances"]
-            )
-
-            if raw:
-                return {
-                    "status": "success",
-                    "query": query,
-                    "results": raw_results
-                }
-
-            # Format results
-            formatted_results = []
-            if raw_results["documents"] and len(raw_results["documents"]) > 0:
-                documents = raw_results["documents"][0]
-                metadatas = raw_results["metadatas"][0]
-                distances = raw_results["distances"][0]
-
-                for doc, metadata, distance in zip(documents, metadatas, distances):
-                    similarity = 1 - distance
-                    formatted_results.append({
-                        "content": doc,
-                        "similarity": round(similarity, 4),
-                        "distance": round(distance, 4),
-                        "source": metadata.get("filename", "unknown")
-                    })
-
-            return {
-                "status": "success",
-                "query": query,
-                "count": len(formatted_results),
-                "results": formatted_results
-            }
-
-        except Exception as e:
-            return {
-                "status": "error",
-                "message": str(e),
-                "results": []
-            }
-
-    def search_by_metadata(
-        self,
-        filename: Optional[str] = None,
-        top_k: int = 10
-    ) -> List[Dict]:
-        """
-        Search documents by metadata (e.g., filename).
-
-        Args:
-            filename (str): Filter by filename.
-            top_k (int): Number of results to return.
-
-        Returns:
-            List[Dict]: Documents matching the metadata criteria.
-        """
-        if not self.collection:
-            return []
-
-        try:
-            # Get all documents and filter by metadata
-            all_docs = self.collection.get(
-                include=["documents", "metadatas"]
-            )
-
+            query_emb = self.query_embedder.embed_query(query)
+            query_norm = query_emb / (np.linalg.norm(query_emb) + 1e-8)
+            
             results = []
-            for doc, metadata in zip(all_docs["documents"], all_docs["metadatas"]):
-                if filename is None or metadata.get("filename") == filename:
+            for i, doc in enumerate(self.collection):
+                doc_emb = np.array(doc["embedding"])
+                doc_norm = doc_emb / (np.linalg.norm(doc_emb) + 1e-8)
+                sim = float(np.dot(query_norm, doc_norm))
+                
+                if sim >= self.similarity_threshold:
                     results.append({
-                        "content": doc,
-                        "source": metadata.get("filename", "unknown")
+                        "content": doc["text"],
+                        "metadata": doc["metadata"],
+                        "similarity": sim
                     })
-
-                    if len(results) >= top_k:
-                        break
-
-            return results
-
+                    
+            results.sort(key=lambda x: x["similarity"], reverse=True)
+            return results[:top_k]
+            
         except Exception as e:
-            print(f"❌ Metadata search error: {str(e)}")
+            print(f"Retrieval error: {e}")
+            return [{"content": f"Error during retrieval: {str(e)}", "similarity": 0.0}]
+
+    def retrieve_with_scores(self, query: str, top_k: int = 5, raw: bool = False) -> Dict:
+        if not self.collection:
+            return {"status": "error", "message": "Vector store not initialized or empty", "results": []}
+            
+        try:
+            results = self.retrieve(query, top_k)
+            return {"status": "success", "query": query, "count": len(results), "results": results}
+        except Exception as e:
+            return {"status": "error", "message": str(e), "results": []}
+            
+    def search_by_metadata(self, filename: Optional[str] = None, top_k: int = 10) -> List[Dict]:
+        if not self.collection:
             return []
+            
+        results = []
+        for doc in self.collection:
+            if filename is None or doc.get("metadata", {}).get("filename") == filename:
+                results.append({"content": doc["text"], "source": doc.get("metadata", {}).get("filename", "unknown")})
+                if len(results) >= top_k:
+                    break
+        return results
 
     def get_collection_stats(self) -> Dict:
-        """
-        Get statistics about the current collection.
+        count = len(self.collection)
+        unique_files = set()
+        for doc in self.collection:
+            if "metadata" in doc and "filename" in doc["metadata"]:
+                unique_files.add(doc["metadata"]["filename"])
+                
+        return {
+            "total_chunks": count,
+            "unique_documents": len(unique_files),
+            "documents": list(unique_files),
+            "status": "online" if count > 0 else "offline",
+            "document_count": count,
+            "unique_files": list(unique_files),
+            "file_count": len(unique_files),
+        }
 
-        Returns:
-            Dict: Collection statistics.
-        """
-        if not self.collection:
-            return {
-                "status": "not_initialized",
-                "document_count": 0,
-                "message": "Vector store not initialized"
-            }
+    def delete_by_filename(self, filename: str) -> int:
+        initial_count = len(self.collection)
+        self.collection = [
+            doc for doc in self.collection 
+            if doc.get("metadata", {}).get("filename") != filename
+        ]
+        deleted_count = initial_count - len(self.collection)
+        if deleted_count > 0:
+            self.save_db(self.collection)
+        return deleted_count
 
-        try:
-            count = self.collection.count()
-            
-            return {
-                "status": "success",
-                "document_count": count,
-                "collection_name": "course_materials",
-                "embedding_model": self.embedding_model,
-                "persistence_path": self.persist_directory
-            }
-
-        except Exception as e:
-            return {
-                "status": "error",
-                "message": str(e),
-                "document_count": 0
-            }
-
-
-# Global retriever instance for API use
 _retriever_instance = None
 
-
-def get_retriever(
-    persist_directory: Optional[str] = None,
-    embedding_model: Optional[str] = None,
-    similarity_threshold: Optional[float] = None
-) -> Retriever:
-    """
-    Get or create a global retriever instance.
-
-    Args:
-        persist_directory: ChromaDB persistence directory
-        embedding_model: Embedding model name
-        similarity_threshold: Minimum similarity threshold
-
-    Returns:
-        Retriever: Retriever instance
-    """
+def get_retriever(persist_directory=None, embedding_model=None, similarity_threshold=None):
     global _retriever_instance
-
     if _retriever_instance is None:
         _retriever_instance = Retriever(
             persist_directory=persist_directory or app_settings.vectorstore_path,
             embedding_model=embedding_model or app_settings.embedding_model,
             similarity_threshold=similarity_threshold or app_settings.similarity_threshold
         )
-
     return _retriever_instance
 
-
 def retrieve_documents(query: str, top_k: int = 5) -> List[Dict]:
-    """
-    Convenience function to retrieve documents using the global retriever.
-
-    Args:
-        query (str): The user's query text.
-        top_k (int): Number of top results to return.
-
-    Returns:
-        List[Dict]: List of relevant documents.
-    """
     retriever = get_retriever()
     return retriever.retrieve(query, top_k=top_k)

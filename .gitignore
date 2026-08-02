@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# VScode settings
+.vscode/settings.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -137,3 +140,34 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Python
+__pycache__/
+*.pyc
+
+
+# Chroma database
+backend/data/chroma/
+
+# Uploaded PDFs
+backend/data/pdfs/
+
+# Local AI model
+backend/models/
+
+# Archives
+*.zip
+
+# Python virtual environment
+.venv/
+
+# Runtime data at top level
+data/chroma/
+data/pdfs/
+
+# Research proposal
+R26-SE-022-IT22120120*.pdf
+
+# Model training notebook
+*.ipynb
+Train_AuraLearn_Hallucination_Model.ipynb
