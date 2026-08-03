@@ -351,6 +351,38 @@ async def get_materials():
         }
 
 
+@app.delete("/api/materials/{filename}")
+async def delete_material(filename: str):
+    """Delete a course material by its filename."""
+    try:
+        # Delete from vector store
+        retriever = get_retriever()
+        deleted_count = retriever.delete_by_filename(filename)
+        
+        # Reset retriever to reload collection
+        import retrieval.retriever
+        retrieval.retriever._retriever_instance = None
+        global _confidence_scorer
+        _confidence_scorer = None
+
+        # Delete the physical file from the upload directory if it exists
+        upload_dir = settings.pdf_upload_dir
+        file_path = os.path.join(upload_dir, filename)
+        file_deleted = False
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            file_deleted = True
+            
+        return {
+            "status": "success",
+            "message": f"Successfully deleted {filename}",
+            "deleted_chunks": deleted_count,
+            "file_deleted": file_deleted
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+
 # ============================================================================
 # INGESTION ENDPOINTS
 # ============================================================================
