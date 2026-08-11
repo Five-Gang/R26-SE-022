@@ -81,6 +81,9 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             <ConfidenceBadge
               level={message.confidence.level}
               score={message.confidence.score}
+              retrievalConfidence={message.confidence.retrieval_confidence}
+              groundingScore={message.confidence.grounding_score}
+              selfConsistencyScore={message.confidence.self_consistency_score}
             />
           )}
 
