@@ -1,0 +1,200 @@
+{
+  "code": "SE4030",
+  "name": "Secure Software Development",
+  "description": "This module gives an introduction and hands-on experience on the security aspects of programming. It introduces various security protocols such as OAuth, OpenID Connect, JWT etc. which are heavily used in modern-day software security landscape.",
+  "credits": 4,
+  "year": 2026,
+  "semester": 2,
+  "department": "Software Engineering",
+  "lecturer": "Dr Samith",
+  "assessment_structure": {
+    "midterm_exam": 0.20,
+    "assignment": 0.25,
+    "labs": 0.05,
+    "final_exam": 0.50
+  },
+  "learning_outcomes": [
+    {
+      "lo_code": "LO1",
+      "bloom_level": "Understand",
+      "bloom_verb": "interpret",
+      "text": "Interpret secure software programming practices and apply them in real world to build secure software applications.",
+      "topic_keywords": ["secure programming", "HTTPS", "PKI", "TLS", "hashing", "encryption", "cookies", "HTTP security headers"]
+    },
+    {
+      "lo_code": "LO2",
+      "bloom_level": "Create",
+      "bloom_verb": "design",
+      "text": "Design threat models for identifying security vulnerabilities in applications and formulate mitigation techniques.",
+      "topic_keywords": ["threat modeling", "static analysis", "dynamic analysis", "SAST", "DAST", "security analysis", "vulnerability assessment"]
+    },
+    {
+      "lo_code": "LO3",
+      "bloom_level": "Understand",
+      "bloom_verb": "explain",
+      "text": "Explain the use of standard security protocols in application programming and apply them in real world use cases.",
+      "topic_keywords": ["OAuth 2.0", "OpenID Connect", "JWT", "social login", "OWASP", "third-party vulnerabilities", "token introspection"]
+    },
+    {
+      "lo_code": "LO4",
+      "bloom_level": "Analyze",
+      "bloom_verb": "analyze",
+      "text": "Analyze security vulnerability assessment reports and recommend resolution strategies.",
+      "topic_keywords": ["XSS", "SQL Injection", "CSRF", "Cross-site scripting", "Cross-site request forgery", "vulnerability reports", "real-world attacks"]
+    },
+    {
+      "lo_code": "LO5",
+      "bloom_level": "Create",
+      "bloom_verb": "create",
+      "text": "Create policies and best practices for enterprise security management and governance within an organization.",
+      "topic_keywords": ["API security", "WSO2", "security governance", "enterprise security", "SOC", "responsible disclosure", "micro services"]
+    }
+  ],
+  "weekly_breakdown": [
+    {
+      "week_number": 1,
+      "topic": "Hashing and Encryption",
+      "subtopics": [
+        "Introduction to hashing and real-world use cases",
+        "Weak hashing algorithms",
+        "Symmetric and asymmetric encryption",
+        "Real-world use cases of encryption"
+      ],
+      "lo_coverage": ["LO1"]
+    },
+    {
+      "week_number": 2,
+      "topic": "HTTPS, PKI, X509 Certificates and Transport Layer Security",
+      "subtopics": [
+        "Introduction to HTTP and HTTP methods",
+        "How HTTPS works and Transport Layer Security",
+        "Configuring HTTPS in web servers",
+        "One-way and two-way SSL",
+        "Using X509 certificates and keystores"
+      ],
+      "lo_coverage": ["LO1"]
+    },
+    {
+      "week_number": 3,
+      "topic": "HTTP Browser Security Headers",
+      "subtopics": [
+        "Request and response headers in HTTP communication",
+        "Achieving security through HTTP security headers",
+        "Content Security Policy (CSP)",
+        "HSTS, X-Frame-Options"
+      ],
+      "lo_coverage": ["LO1"]
+    },
+    {
+      "week_number": 4,
+      "topic": "Securing Cookies",
+      "subtopics": [
+        "Introduction to cookies",
+        "Cookie protection mechanisms (Secure, HttpOnly, SameSite)",
+        "Session hijacking with stolen cookies",
+        "Best practices for session management"
+      ],
+      "lo_coverage": ["LO1"]
+    },
+    {
+      "week_number": 5,
+      "topic": "OWASP Top 10 and Managing Third-Party Vulnerabilities",
+      "subtopics": [
+        "Introduction to OWASP security recommendations",
+        "Real-world vulnerabilities in OWASP Top 10",
+        "Secure software development with third-party dependencies",
+        "Software composition analysis (SCA)"
+      ],
+      "lo_coverage": ["LO3"]
+    },
+    {
+      "week_number": 6,
+      "topic": "Cross-Site Scripting (XSS) and SQL Injection",
+      "subtopics": [
+        "Introduction to XSS (Reflected, Stored, DOM-based)",
+        "Introduction to SQL Injection",
+        "Real-world SQL attacks and exploits",
+        "Prevention techniques and input validation"
+      ],
+      "lo_coverage": ["LO4"]
+    },
+    {
+      "week_number": 7,
+      "topic": "Cross-Site Request Forgery (CSRF)",
+      "subtopics": [
+        "Introduction to CSRF",
+        "CSRF prevention techniques",
+        "Synchronizer Token Pattern",
+        "Double Submit Cookies",
+        "SameSite cookie attribute"
+      ],
+      "lo_coverage": ["LO4"]
+    },
+    {
+      "week_number": 8,
+      "topic": "Security Analysis (Static and Dynamic)",
+      "subtopics": [
+        "Static code analysis (SAST)",
+        "Dynamic vulnerability assessment (DAST)",
+        "Tools for security analysis",
+        "Integrating security into CI/CD"
+      ],
+      "lo_coverage": ["LO2"]
+    },
+    {
+      "week_number": 9,
+      "topic": "Introduction to OAuth and Social Login",
+      "subtopics": [
+        "OAuth 2.0 protocol overview",
+        "How social login works (Google, Facebook)",
+        "Implementing social login in websites",
+        "Authorization vs Authentication"
+      ],
+      "lo_coverage": ["LO3"]
+    },
+    {
+      "week_number": 10,
+      "topic": "OAuth Grant Types, Token Introspection and Revocation",
+      "subtopics": [
+        "OAuth grant types (Authorization Code, Client Credentials, Implicit, ROPC)",
+        "OAuth token validation with introspection",
+        "OAuth token revocation",
+        "Refresh tokens and token lifecycle"
+      ],
+      "lo_coverage": ["LO3"]
+    },
+    {
+      "week_number": 11,
+      "topic": "OpenID Connect and JSON Web Tokens (JWT)",
+      "subtopics": [
+        "Authentication over OAuth with OpenID Connect",
+        "Self-contained access tokens (JWT structure)",
+        "Identity propagation with JWT",
+        "JWT signature verification and claims"
+      ],
+      "lo_coverage": ["LO3"]
+    },
+    {
+      "week_number": 12,
+      "topic": "API Security and Introduction to WSO2 API Manager",
+      "subtopics": [
+        "Protecting insecure services with OAuth 2.0",
+        "Introduction to microservices security",
+        "WSO2 API Manager overview",
+        "API gateway patterns and security policies"
+      ],
+      "lo_coverage": ["LO5"]
+    },
+    {
+      "week_number": 13,
+      "topic": "Security Governance and Responsible Vulnerability Disclosure",
+      "subtopics": [
+        "Enterprise security management practices",
+        "Activities of a Security Operations Center (SOC)",
+        "Responsible vulnerability disclosure process",
+        "Bug bounty programs and CVE reporting"
+      ],
+      "lo_coverage": ["LO5"]
+    }
+  ]
+}
