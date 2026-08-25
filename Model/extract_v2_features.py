@@ -4,13 +4,19 @@ import csv
 import sys
 import numpy as np
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Backend'))
+# Add Backend and Backend/services to sys.path so that feature_extractor.py
+# can resolve its own internal 'from services.ear_calculator import' correctly
+_BACKEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'Backend')
+sys.path.insert(0, _BACKEND_DIR)
+sys.path.insert(0, os.path.join(_BACKEND_DIR, 'services'))
+# pyrefly: ignore [missing-import]
 from services.feature_extractor import FeatureExtractor
 
 def extract_dataset():
     print("Initializing V2 7-Feature Extractor...")
     extractor = FeatureExtractor()
-    dataset_path = "Data/archive"
+    # Use absolute path so this works regardless of the current working directory
+    dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'Model', 'Data', 'archive')
     output_csv = "extracted_features_v2.csv"
     
     EMOTION_MAP = {

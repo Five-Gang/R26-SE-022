@@ -144,3 +144,5 @@ Model/Data/
 *.zip
 extracted_features.csv
 proposal_extracted.txt
+extracted_features*.csv
+*.pkl

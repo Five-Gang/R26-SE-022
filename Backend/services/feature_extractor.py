@@ -120,11 +120,9 @@ class FeatureExtractor:
             "mouth_opening": mouth_opening_ratio,
             "head_tilt": head_tilt,
             "eyebrow_distance": avg_eyebrow_dist,
-            # NEW V2 FEATURES:
             "mouth_width": mouth_width / w,
             "mouth_height": mouth_height / h,
             "eyebrow_asymmetry": eyebrow_asymmetry,
-            # Approximating blink (EAR < 0.2 usually indicates a blink, but threshold might vary)
             "is_blinking": bool(avg_ear < 0.21),
             "bounding_box": bbox
         }

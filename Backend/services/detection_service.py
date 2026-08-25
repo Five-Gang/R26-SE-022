@@ -10,11 +10,11 @@ class DetectionService:
     def __init__(self):
         self.feature_extractor = FeatureExtractor()
         
-        # Path to the trained model
+        # Path to the trained first version Random Forest model
         model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 
                                 "Model", "emotion_rf_model.pkl")
         encoder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 
-                                "Model", "label_encoder.pkl")
+                                "Model", "label_encoder_v1_backup.pkl")
         self.emotion_classifier = EmotionClassifier(model_path, encoder_path)
         
     def _apply_hybrid_fusion(self, cnn_probs, features):
@@ -56,7 +56,7 @@ class DetectionService:
             for k in adjusted:
                 adjusted[k] = (adjusted[k] / total) * 100.0
                 
-        dominant = max(adjusted, key=adjusted.get)
+        dominant = max(adjusted, key=lambda k: adjusted[k])
         confidence = adjusted[dominant]
         
         return dominant, confidence, adjusted
@@ -82,7 +82,7 @@ class DetectionService:
         features = self.feature_extractor.extract_features(image)
         if features is None: return {"error": "No face detected in the frame"}
             
-        # 3. Prepare numerical feature vector for the Random Forest
+        # 3. Prepare numerical feature vector for the first version Random Forest (4 dimensions)
         feature_vector = [
             features["eye_openness"],
             features["eyebrow_distance"],
