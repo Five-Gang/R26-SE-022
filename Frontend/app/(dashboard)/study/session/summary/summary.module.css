@@ -1,0 +1,124 @@
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btnOutline {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btnOutline:hover {
+  background-color: #FAFAFA;
+}
+
+.btnPrimary {
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnPrimary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.conceptList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.conceptCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 2rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  transition: var(--transition);
+}
+
+.conceptCard:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  min-width: 65px;
+  text-align: center;
+}
+
+.badgeHigh {
+  background-color: #FEF2F2;
+  color: #DC2626;
+}
+
+.badgeMedium {
+  background-color: #FFFBEB;
+  color: #D97706;
+}
+
+.badgeLow {
+  background-color: #F8FAFC;
+  color: #64748B;
+}
+
+.conceptContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.conceptTitle {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.conceptDesc {
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}

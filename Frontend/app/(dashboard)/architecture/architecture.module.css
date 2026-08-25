@@ -1,0 +1,170 @@
+.container {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.headerBlock {
+  margin-bottom: 3rem;
+}
+
+.pageTitle {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.modulesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.moduleCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--color-border);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+}
+
+.moduleCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.iconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.iconBlue { background-color: #F1F5F9; }
+.iconPurple { background-color: #F3E8FF; }
+.iconRed { background-color: #FEF2F2; }
+.iconTeal { background-color: #F0FDF4; }
+
+.moduleTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.textBlue { color: var(--color-primary); }
+.textPurple { color: #7E22CE; }
+.textRed { color: #DC2626; }
+.textTeal { color: #0D9488; }
+
+.studentId {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.featureItem {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  position: relative;
+  padding-left: 1.25rem;
+  line-height: 1.4;
+}
+
+.featureItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.bulletBlue .featureItem::before { background-color: var(--color-primary); }
+.bulletPurple .featureItem::before { background-color: #7E22CE; }
+.bulletRed .featureItem::before { background-color: #DC2626; }
+.bulletTeal .featureItem::before { background-color: #0D9488; }
+
+.dataFlowBanner {
+  background-color: var(--color-surface);
+  border-radius: 40px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  padding: 1.25rem 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.flowLabel {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+}
+
+.flowContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.flowBadge {
+  background-color: #F8FAFC;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid #E2E8F0;
+}
+
+.flowArrow {
+  color: #CBD5E1;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1200px) {
+  .modulesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .modulesGrid {
+    grid-template-columns: 1fr;
+  }
+  .dataFlowBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: var(--radius-md);
+  }
+}

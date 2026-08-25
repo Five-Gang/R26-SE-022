@@ -1,0 +1,102 @@
+.container {
+  display: flex;
+  height: calc(100vh - 64px); /* Subtract header height */
+  background-color: var(--color-background);
+}
+
+.sidebar {
+  width: 280px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sessionInfo {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sessionLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.sessionTitle {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.sessionMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+.progressContainer {
+  margin-top: 1rem;
+}
+
+.progressBar {
+  height: 6px;
+  background-color: #E2E8F0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 3px;
+  width: 35%;
+}
+
+.progressText {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.nav {
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  border-left: 3px solid transparent;
+}
+
+.navLink:hover {
+  background-color: #F8FAFC;
+  color: var(--color-primary);
+}
+
+.navLink.active {
+  background-color: #F0F9FF; /* Very light blue */
+  color: var(--color-primary);
+  border-left-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.navIcon {
+  font-size: 1.25rem;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 2rem 4rem;
+  overflow-y: auto;
+}
