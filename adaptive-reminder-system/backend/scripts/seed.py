@@ -24,20 +24,21 @@ async def seed():
     client = AsyncIOMotorClient(settings.MONGODB_URL)
     db = client[settings.MONGODB_DB]
 
-    student_id = str(uuid.uuid4())
-    await db.students.insert_one(
-        {
-            "_id": student_id,
-            "email": "kavya@demo.com",
-            "password_hash": hash_password("demo1234"),
-            "name": "Kavya",
-            "consent_at": datetime.now(timezone.utc),
-            "quiet_hours": {"start": 22, "end": 8},
-            "timezone": "UTC",
-            "created_at": datetime.now(timezone.utc),
-        }
-    )
-    print(f"Created demo student: kavya@demo.com (ID: {student_id})")
+    student_filter = {"email": "kavya@demo.com"}
+    existing_student = await db.students.find_one(student_filter)
+    student_id = existing_student["_id"] if existing_student else str(uuid.uuid4())
+    student_doc = {
+        "_id": student_id,
+        "email": "kavya@demo.com",
+        "password_hash": hash_password("demo1234"),
+        "name": "Kavya",
+        "consent_at": datetime.now(timezone.utc),
+        "quiet_hours": {"start": 22, "end": 8},
+        "timezone": "UTC",
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.students.update_one(student_filter, {"$set": student_doc}, upsert=True)
+    print(f"Ready demo student: kavya@demo.com (ID: {student_id})")
 
     now = datetime.now(timezone.utc)
     items_data = [
@@ -52,19 +53,23 @@ async def seed():
     ]
 
     for item_key, topic, title in items_data:
-        await db.review_items.insert_one(
+        await db.review_items.update_one(
+            {"student_id": student_id, "item_key": item_key},
             {
-                "student_id": student_id,
-                "item_key": item_key,
-                "topic": topic,
-                "title": title,
-                "repetitions": 2,
-                "interval_days": 6.0,
-                "easiness": 2.5,
-                "difficulty": 0.5,
-                "last_reviewed": now - timedelta(days=3),
-                "created_at": now,
-            }
+                "$set": {
+                    "student_id": student_id,
+                    "item_key": item_key,
+                    "topic": topic,
+                    "title": title,
+                    "repetitions": 2,
+                    "interval_days": 6.0,
+                    "easiness": 2.5,
+                    "difficulty": 0.5,
+                    "last_reviewed": now - timedelta(days=3),
+                    "created_at": now,
+                }
+            },
+            upsert=True,
         )
     print("Created 8 demo review items")
 
