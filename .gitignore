@@ -149,3 +149,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Python & Data (Do not push heavy datasets)
+__pycache__/
+Model/Data/
+*.zip
+extracted_features.csv
+proposal_extracted.txt
+extracted_features*.csv
+*.pkl
