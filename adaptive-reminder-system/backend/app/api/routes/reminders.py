@@ -5,6 +5,8 @@ from app.api.deps import get_current_student_id
 from app.schemas.schemas import ReminderFeedback, ReminderQueueResponse, ReminderResponse
 from app.models.sm2 import item_from_mongo, item_to_mongo_update, update_sm2 as update
 from datetime import datetime, timezone
+from bson import ObjectId
+from bson.errors import InvalidId
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
 
@@ -51,16 +53,21 @@ async def submit_feedback(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Submit feedback for a reminder and update SM-2."""
-    from bson import ObjectId
-    
-    reminder = await db.reminders.find_one({"_id": ObjectId(reminder_id), "student_id": student_id})
+    try:
+        reminder_object_id = ObjectId(reminder_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid reminder ID")
+
+    reminder = await db.reminders.find_one({"_id": reminder_object_id, "student_id": student_id})
     if not reminder:
         raise HTTPException(status_code=404, detail="Reminder not found")
+    if reminder.get("status") != "SENT":
+        raise HTTPException(status_code=409, detail="Reminder has already been answered")
     
     # Update reminder status
     now = datetime.now(timezone.utc)
     await db.reminders.update_one(
-        {"_id": ObjectId(reminder_id)},
+        {"_id": reminder_object_id},
         {"$set": {
             "status": feedback.status,
             "responded_at": now,
@@ -84,7 +91,18 @@ async def submit_feedback(
     # Update bandit reward
     if feedback.status in ["ACCEPTED", "SNOOZED", "DISMISSED"]:
         reward = {"ACCEPTED": 1.0, "SNOOZED": 0.0, "DISMISSED": -1.0}[feedback.status]
-        # In production, extract context from reminder and feed to bandit
-        # For now: TODO
+        await db.user_feedback.insert_one({
+            "student_id": student_id,
+            "reminder_id": reminder_object_id,
+            "item_key": reminder["item_key"],
+            "emotion": reminder.get("emotion"),
+            "readiness": reminder.get("readiness_tier"),
+            "priority": reminder.get("priority_score"),
+            "action": reminder.get("bandit_action"),
+            "user_response": feedback.status,
+            "grade": feedback.grade,
+            "reward": reward,
+            "timestamp": now,
+        })
     
     return {"status": "ok"}
