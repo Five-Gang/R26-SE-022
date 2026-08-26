@@ -37,6 +37,16 @@ class ReminderFeedback(BaseModel):
     status: Literal["ACCEPTED", "SNOOZED", "DISMISSED"]
     grade: int = Field(0, ge=0, le=5)
 
+class ReminderGenerateRequest(BaseModel):
+    emotion: str
+    topic_id: str
+    time_of_day: str | None = None
+
+class ScheduleTickRequest(BaseModel):
+    emotion: str = "Focused"
+    time_of_day: str | None = None
+    topic_id: str | None = None
+
 class ReminderResponse(BaseModel):
     reminder_id: str
     item_key: str

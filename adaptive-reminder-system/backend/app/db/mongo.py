@@ -15,6 +15,8 @@ async def connect_db() -> None:
     await db.reminders.create_index("student_id")
     await db.reminders.create_index([("student_id", 1), ("status", 1)])
     await db.push_subscriptions.create_index("student_id")
+    await db.user_feedback.create_index("student_id")
+    await db.user_feedback.create_index("reminder_id", unique=True)
 
 async def disconnect_db() -> None:
     if _client:
