@@ -271,10 +271,10 @@ def item_from_mongo(doc: dict) -> StudyItem:
             last_reviewed = last_reviewed.replace(tzinfo=timezone.utc)
     
     return StudyItem(
-        item_id=doc["item_id"],
+        item_id=doc.get("item_id") or doc["item_key"],
         repetitions=doc.get("repetitions", 0),
         interval_days=doc.get("interval_days", 1.0),
-        easiness_factor=doc.get("easiness_factor", 2.5),
+        easiness_factor=doc.get("easiness_factor", doc.get("easiness", 2.5)),
         difficulty=doc.get("difficulty", 0.5),
         last_reviewed=last_reviewed,
         quality_scores=doc.get("quality_scores", []),
