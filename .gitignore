@@ -171,3 +171,8 @@ R26-SE-022-IT22120120*.pdf
 # Model training notebook
 *.ipynb
 Train_AuraLearn_Hallucination_Model.ipynb
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3

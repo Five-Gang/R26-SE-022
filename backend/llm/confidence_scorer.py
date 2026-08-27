@@ -119,17 +119,23 @@ class ConfidenceScorer:
                 # Combine all retrieved texts into one context block
                 context = " ".join(retrieved_texts)
                 
-                # Cross-Encoder format: "Context </s></s> Response" 
-                # (For some models it's separate inputs, we pass as a single string for simplicity or let pipeline handle it)
-                # But pipeline('text-classification') can accept {"text": context, "text_pair": response_text}
+                # HuggingFace pipeline('text-classification') always returns a LIST even for
+                # a single input. We must index [0] to get the result dict.
+                # We also pass truncation=True to safely handle very long context strings.
+                raw = self.ml_pipeline(
+                    {"text": context, "text_pair": response_text},
+                    truncation=True
+                )
+                result = raw[0]  # ✅ FIX: index the list to get the single result dict
                 
-                result = self.ml_pipeline({"text": context, "text_pair": response_text})
-                
-                # Assume LABEL_1 is "Grounded/Entailment" and LABEL_0 is "Hallucination/Contradiction"
+                # LABEL_1 = Grounded/Entailment, LABEL_0 = Hallucination/Contradiction
                 label = result['label']
                 score = result['score']
                 
-                # If the model predicts LABEL_1, score is confidence. If LABEL_0, confidence is 1 - score.
+                print(f"🤖 ML Hallucination Model → label={label}, score={score:.4f}")
+                
+                # If the model predicts LABEL_1 (grounded), return score as-is.
+                # If LABEL_0 (hallucination), invert the score so LOW score = LOW confidence.
                 if label == "LABEL_1" or label == 1:
                     return float(score)
                 else:

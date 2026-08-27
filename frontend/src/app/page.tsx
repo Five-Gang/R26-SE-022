@@ -34,6 +34,7 @@ export default function Home() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [llmStatus, setLlmStatus] = useState("checking");
   const [dbCount, setDbCount] = useState(0);
+  const [selfConsistency, setSelfConsistency] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -107,6 +108,7 @@ export default function Home() {
           query,
           conversation_history: conversationHistory,
           top_k: 5,
+          enable_self_consistency: selfConsistency,
         }),
       });
 
@@ -233,6 +235,8 @@ export default function Home() {
         onNewChat={handleNewChat}
         llmStatus={llmStatus}
         dbCount={dbCount}
+        selfConsistency={selfConsistency}
+        onToggleSelfConsistency={() => setSelfConsistency((prev) => !prev)}
       />
 
       {/* Chat Area */}

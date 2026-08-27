@@ -26,6 +26,7 @@ from config.settings import Settings
 from llm.llm_engine import LLMEngine
 from llm.confidence_scorer import ConfidenceScorer
 from llm.adaptive_responder import AdaptiveResponder
+from database.query_logger import get_query_logger
 
 # Load environment variables
 load_dotenv()
@@ -128,6 +129,9 @@ class ChatRequest(BaseModel):
     query: str
     conversation_history: List[ConversationMessage] = []
     top_k: int = 5
+    # Per-request override: if provided, overrides the global ENABLE_SELF_CONSISTENCY setting.
+    # This allows the frontend UI toggle to control the feature live without restarting the server.
+    enable_self_consistency: Optional[bool] = None
 
 
 class ChatResponse(BaseModel):
@@ -229,9 +233,15 @@ async def chat(request: ChatRequest):
         )
 
         # Step 5: Generate multiple responses for self-consistency (if enabled)
+        # Per-request flag takes priority; falls back to the global settings value.
+        use_self_consistency = (
+            request.enable_self_consistency
+            if request.enable_self_consistency is not None
+            else settings.enable_self_consistency
+        )
         multiple_responses = None
-        if settings.enable_self_consistency and has_real_results:
-            print(" Running self-consistency check...")
+        if use_self_consistency and has_real_results:
+            print(" Running self-consistency check (3 LLM calls)...")
             multiple_responses = llm_engine.generate_multiple(
                 query=request.query,
                 context=context,
@@ -264,6 +274,22 @@ async def chat(request: ChatRequest):
 
         print(f" Response type: {adaptive_result['response_type']}")
         print(f"{'='*60}\n")
+
+        # Step 9: Log interaction to SQLite for research evaluation
+        try:
+            logger = get_query_logger()
+            logger.log(
+                query=request.query,
+                response=adaptive_result["response"],
+                response_type=adaptive_result["response_type"],
+                confidence=confidence,
+                sources=sources,
+                self_consistency_used=use_self_consistency,
+                llm_model=settings.llm_model
+            )
+        except Exception as log_err:
+            # Logging failure must NEVER break the chat response
+            print(f"⚠️ Logging failed (non-fatal): {log_err}")
 
         return {
             "response": adaptive_result["response"],
@@ -384,6 +410,57 @@ async def delete_material(filename: str):
 
 
 # ============================================================================
+# ANALYTICS & LOGGING ENDPOINTS
+# ============================================================================
+
+@app.get("/api/analytics")
+async def get_analytics():
+    """
+    Returns aggregate research metrics computed over all logged interactions.
+
+    Metrics returned (per proposal Section 3.5 — Validation Strategy):
+      - total_queries
+      - hallucination_rate_pct   (LOW-confidence queries as % of total)
+      - avg_confidence_score     (composite, 0–1)
+      - avg_grounding_score      (grounding signal, 0–1)
+      - avg_retrieval_confidence (retrieval signal, 0–1)
+      - confidence_distribution  (HIGH / MEDIUM / LOW counts)
+      - response_type_distribution (direct_answer / guided_hint / clarification_request counts)
+      - confidence_response_alignment (% where system chose the correct mode per level)
+      - self_consistency_queries  (how many queries used 3-signal mode)
+    """
+    try:
+        logger = get_query_logger()
+        return logger.get_analytics()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+
+@app.get("/api/logs")
+async def get_logs(limit: int = 50, offset: int = 0):
+    """
+    Retrieve recent query-response log entries (newest first).
+
+    Args:
+        limit:  Maximum number of entries to return (default 50, max 200).
+        offset: Pagination offset for large log sets.
+    """
+    try:
+        limit = min(limit, 200)  # cap at 200 to prevent large payloads
+        logger = get_query_logger()
+        logs = logger.get_logs(limit=limit, offset=offset)
+        total = logger.get_total_count()
+        return {
+            "logs": logs,
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Log retrieval failed: {str(e)}")
+
+
+# ============================================================================
 # INGESTION ENDPOINTS
 # ============================================================================
 
@@ -458,6 +535,8 @@ async def root():
             "ingest": "/api/ingest (POST)",
             "retrieve": "/api/retrieve (POST)",
             "query": "/api/query (POST)",
+            "analytics": "/api/analytics (GET)",
+            "logs": "/api/logs (GET)",
             "docs": "/docs"
         }
     }
@@ -487,6 +566,14 @@ async def startup_event():
     print(f" Vector DB Path: {settings.vectorstore_path}")
     print(f" LLM Model: {settings.llm_model} (via Ollama at {settings.ollama_url})")
     print(f" Confidence Thresholds: HIGH≥{settings.confidence_high_threshold}, LOW<{settings.confidence_low_threshold}")
+    # Initialise the SQLite query logger at startup so the DB file and table
+    # are created before any requests arrive.
+    try:
+        logger = get_query_logger()
+        count = logger.get_total_count()
+        print(f" QueryLogger: Ready - {count} interactions logged so far.")
+    except Exception as e:
+        print(f" QueryLogger: Init warning - {e}")
 
 
 @app.on_event("shutdown")
