@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import ConfidenceBadge from "./ConfidenceBadge";
 import SourcePanel from "./SourcePanel";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface Source {
   filename: string;
@@ -27,6 +29,7 @@ export interface Message {
   response_type?: string;
   response_label?: string;
   sources?: Source[];
+  log_id?: number | null; // SQLite row ID — used to submit feedback
 }
 
 interface ChatMessageProps {
@@ -60,6 +63,68 @@ function formatContent(content: string): React.ReactNode {
   return elements;
 }
 
+// ── Feedback button component ──────────────────────────────────────────────────
+type FeedbackState = "none" | "thumbs_up" | "thumbs_down" | "sending" | "done";
+
+function FeedbackButtons({ logId }: { logId: number }) {
+  const [state, setState] = useState<FeedbackState>("none");
+
+  const submit = async (value: "thumbs_up" | "thumbs_down") => {
+    if (state !== "none") return; // already voted
+    setState("sending");
+    try {
+      await fetch(`${API_URL}/api/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ log_id: logId, feedback: value }),
+      });
+      setState(value);
+    } catch {
+      // Silently revert — feedback is non-critical
+      setState("none");
+    }
+  };
+
+  if (state === "thumbs_up" || state === "thumbs_down") {
+    return (
+      <div className="feedback-done" id={`feedback-done-${logId}`}>
+        {state === "thumbs_up" ? (
+          <span className="feedback-thankyou thumbs-up">👍 Thanks for the rating!</span>
+        ) : (
+          <span className="feedback-thankyou thumbs-down">👎 Feedback noted — we'll improve.</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="feedback-buttons" id={`feedback-${logId}`}>
+      <span className="feedback-label">Was this helpful?</span>
+      <button
+        id={`thumbs-up-${logId}`}
+        className={`feedback-btn thumbs-up ${state === "sending" ? "disabled" : ""}`}
+        onClick={() => submit("thumbs_up")}
+        disabled={state === "sending"}
+        title="This response was helpful"
+        aria-label="Thumbs up — helpful"
+      >
+        👍
+      </button>
+      <button
+        id={`thumbs-down-${logId}`}
+        className={`feedback-btn thumbs-down ${state === "sending" ? "disabled" : ""}`}
+        onClick={() => submit("thumbs_down")}
+        disabled={state === "sending"}
+        title="This response was not helpful"
+        aria-label="Thumbs down — not helpful"
+      >
+        👎
+      </button>
+    </div>
+  );
+}
+
+// ── Main ChatMessage component ─────────────────────────────────────────────────
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
   const timeStr = message.timestamp.toLocaleTimeString([], {
@@ -91,6 +156,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             <span className="response-type-badge">{message.response_label}</span>
           )}
         </div>
+
+        {/* Feedback buttons — only on assistant messages with a valid log_id */}
+        {!isUser && message.log_id != null && (
+          <FeedbackButtons logId={message.log_id} />
+        )}
 
         {message.sources && message.sources.length > 0 && (
           <SourcePanel sources={message.sources} />

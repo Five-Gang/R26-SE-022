@@ -276,9 +276,10 @@ async def chat(request: ChatRequest):
         print(f"{'='*60}\n")
 
         # Step 9: Log interaction to SQLite for research evaluation
+        log_id = None
         try:
             logger = get_query_logger()
-            logger.log(
+            log_id = logger.log(
                 query=request.query,
                 response=adaptive_result["response"],
                 response_type=adaptive_result["response_type"],
@@ -289,7 +290,7 @@ async def chat(request: ChatRequest):
             )
         except Exception as log_err:
             # Logging failure must NEVER break the chat response
-            print(f"⚠️ Logging failed (non-fatal): {log_err}")
+            print(f" Logging failed (non-fatal): {log_err}")
 
         return {
             "response": adaptive_result["response"],
@@ -297,7 +298,8 @@ async def chat(request: ChatRequest):
             "response_label": adaptive_result["response_label"],
             "confidence": confidence,
             "sources": sources,
-            "conversation_history": updated_history
+            "conversation_history": updated_history,
+            "log_id": log_id  # Used by frontend to submit thumbs-up/down feedback
         }
 
     except HTTPException:
@@ -458,6 +460,51 @@ async def get_logs(limit: int = 50, offset: int = 0):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Log retrieval failed: {str(e)}")
+
+
+class FeedbackRequest(BaseModel):
+    log_id: int
+    feedback: str  # 'thumbs_up' or 'thumbs_down'
+
+
+@app.post("/api/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    """
+    Record a student's thumbs-up / thumbs-down rating for a specific response.
+
+    This human-in-the-loop signal is used to:
+      - Compute user satisfaction rate (proposal Page 15 evaluation metric)
+      - Detect HIGH-confidence false positives (machine said HIGH, student said BAD)
+      - Build a labelled dataset for future ML retraining
+
+    Args:
+        log_id:   ID of the query_logs row to rate (returned by /api/chat as 'log_id').
+        feedback: 'thumbs_up' or 'thumbs_down'.
+    """
+    if request.feedback not in ("thumbs_up", "thumbs_down"):
+        raise HTTPException(
+            status_code=400,
+            detail="feedback must be 'thumbs_up' or 'thumbs_down'"
+        )
+    try:
+        logger = get_query_logger()
+        success = logger.submit_feedback(
+            log_id=request.log_id,
+            feedback=request.feedback
+        )
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Log entry {request.log_id} not found")
+        return {
+            "status": "ok",
+            "log_id": request.log_id,
+            "feedback": request.feedback
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Feedback submission failed: {str(e)}")
+
+
 
 
 # ============================================================================

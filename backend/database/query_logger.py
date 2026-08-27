@@ -61,7 +61,7 @@ class QueryLogger:
         return conn
 
     def _init_db(self):
-        """Create the query_logs table if it does not already exist."""
+        """Create the query_logs table and apply column migrations if needed."""
         conn = self._get_conn()
         try:
             conn.execute("""
@@ -79,9 +79,15 @@ class QueryLogger:
                     sources_count           INTEGER DEFAULT 0,
                     sources_json            TEXT    DEFAULT '[]',
                     self_consistency_used   INTEGER DEFAULT 0,
-                    llm_model               TEXT    DEFAULT 'unknown'
+                    llm_model               TEXT    DEFAULT 'unknown',
+                    feedback                TEXT    DEFAULT NULL
                 )
             """)
+            # Migration: add feedback column to existing databases that predate it
+            try:
+                conn.execute("ALTER TABLE query_logs ADD COLUMN feedback TEXT DEFAULT NULL")
+            except Exception:
+                pass  # Column already exists — safe to ignore
             conn.commit()
             print(f"[QueryLogger] Database ready at {self.db_path}")
         except Exception as e:
@@ -163,6 +169,47 @@ class QueryLogger:
         except Exception as e:
             print(f"[QueryLogger] WARNING: Failed to log query: {e}")
             return None
+
+    def submit_feedback(
+        self,
+        log_id: int,
+        feedback: str
+    ) -> bool:
+        """
+        Record a student's thumbs-up or thumbs-down on a specific logged response.
+
+        This is the human-in-the-loop validation signal that allows the research
+        evaluation to compare machine-computed confidence against human judgment.
+
+        Args:
+            log_id:   The query_logs row ID returned by log().
+            feedback: 'thumbs_up' or 'thumbs_down'.
+
+        Returns:
+            bool: True on success, False on failure.
+        """
+        if feedback not in ("thumbs_up", "thumbs_down"):
+            print(f"[QueryLogger] WARNING: Invalid feedback value '{feedback}'")
+            return False
+
+        conn = self._get_conn()
+        try:
+            result = conn.execute(
+                "UPDATE query_logs SET feedback = ? WHERE id = ?",
+                (feedback, log_id)
+            )
+            conn.commit()
+            if result.rowcount == 0:
+                print(f"[QueryLogger] WARNING: No row found for log_id={log_id}")
+                return False
+            label = "GOOD" if feedback == "thumbs_up" else "BAD"
+            print(f"[QueryLogger] Feedback #{log_id} -> {label}")
+            return True
+        except Exception as e:
+            print(f"[QueryLogger] WARNING: Failed to submit feedback: {e}")
+            return False
+        finally:
+            conn.close()
 
     def get_logs(self, limit: int = 100, offset: int = 0) -> List[Dict]:
         """
@@ -268,6 +315,33 @@ class QueryLogger:
                 FROM query_logs ORDER BY id DESC LIMIT 10
             """).fetchall()
 
+            # — Feedback / User Satisfaction —
+            feedback_stats = conn.execute("""
+                SELECT
+                    SUM(CASE WHEN feedback = 'thumbs_up'   THEN 1 ELSE 0 END) AS thumbs_up,
+                    SUM(CASE WHEN feedback = 'thumbs_down' THEN 1 ELSE 0 END) AS thumbs_down,
+                    COUNT(feedback) AS total_with_feedback
+                FROM query_logs
+            """).fetchone()
+
+            thumbs_up_count   = feedback_stats["thumbs_up"]   or 0
+            thumbs_down_count = feedback_stats["thumbs_down"]  or 0
+            total_feedback    = feedback_stats["total_with_feedback"] or 0
+            satisfaction_rate = round((thumbs_up_count / total_feedback) * 100, 1) if total_feedback > 0 else None
+
+            # — False Positive Rate: HIGH confidence but student gave thumbs_down —
+            # This is the key research metric that validates whether the machine confidence
+            # score actually predicts response quality from the student's perspective.
+            fp_count = conn.execute("""
+                SELECT COUNT(*) FROM query_logs
+                WHERE confidence_level = 'HIGH' AND feedback = 'thumbs_down'
+            """).fetchone()[0]
+            high_with_feedback = conn.execute("""
+                SELECT COUNT(*) FROM query_logs
+                WHERE confidence_level = 'HIGH' AND feedback IS NOT NULL
+            """).fetchone()[0]
+            false_positive_rate = round((fp_count / high_with_feedback) * 100, 1) if high_with_feedback > 0 else None
+
             return {
                 "total_queries": total,
 
@@ -304,6 +378,15 @@ class QueryLogger:
                 # Self-consistency stats
                 "self_consistency_queries": sc_used,
                 "self_consistency_pct":     round((sc_used / total) * 100, 1) if total > 0 else 0,
+
+                # Human feedback stats (user evaluation — proposal Page 15)
+                "user_feedback": {
+                    "thumbs_up":          thumbs_up_count,
+                    "thumbs_down":        thumbs_down_count,
+                    "total_rated":        total_feedback,
+                    "satisfaction_rate_pct": satisfaction_rate,
+                    "false_positive_rate_pct": false_positive_rate,
+                },
 
                 # Recent activity
                 "recent_queries": [dict(r) for r in recent],

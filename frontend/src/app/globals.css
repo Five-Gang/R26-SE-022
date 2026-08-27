@@ -973,3 +973,99 @@ a:hover { text-decoration: underline; }
     max-width: 95%;
   }
 }
+
+/* ============================================================================
+   Feedback Buttons (thumbs up / thumbs down)
+   ============================================================================ */
+
+.feedback-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  animation: fadeIn 0.3s ease;
+}
+
+.feedback-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  user-select: none;
+  margin-right: 2px;
+}
+
+.feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  line-height: 1;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.feedback-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.feedback-btn.thumbs-up:hover {
+  border-color: var(--success);
+  background: var(--success-bg);
+  transform: scale(1.12) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.feedback-btn.thumbs-down:hover {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+  transform: scale(1.12) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.feedback-btn:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.feedback-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Confirmation state */
+.feedback-done {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  animation: fadeIn 0.25s ease;
+}
+
+.feedback-thankyou {
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feedback-thankyou.thumbs-up {
+  color: var(--success);
+}
+
+.feedback-thankyou.thumbs-down {
+  color: var(--warning);
+}

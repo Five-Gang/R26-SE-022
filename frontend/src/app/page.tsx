@@ -129,6 +129,7 @@ export default function Home() {
         response_type: data.response_type,
         response_label: data.response_label,
         sources: data.sources,
+        log_id: data.log_id ?? null,
       };
       setMessages((prev) => [...prev, assistantMsg]);
 
