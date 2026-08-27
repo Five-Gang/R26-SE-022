@@ -266,7 +266,9 @@ def item_from_mongo(doc: dict) -> StudyItem:
     """Convert MongoDB document to StudyItem."""
     last_reviewed = None
     if doc.get("last_reviewed"):
-        last_reviewed = datetime.fromisoformat(doc["last_reviewed"])
+        last_reviewed = doc["last_reviewed"]
+        if isinstance(last_reviewed, str):
+            last_reviewed = datetime.fromisoformat(last_reviewed)
         if last_reviewed.tzinfo is None:
             last_reviewed = last_reviewed.replace(tzinfo=timezone.utc)
     

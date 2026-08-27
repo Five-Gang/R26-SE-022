@@ -43,7 +43,7 @@ class ReminderGenerateRequest(BaseModel):
     time_of_day: str | None = None
 
 class ScheduleTickRequest(BaseModel):
-    emotion: str = "Focused"
+    emotion: str | None = None
     time_of_day: str | None = None
     topic_id: str | None = None
 

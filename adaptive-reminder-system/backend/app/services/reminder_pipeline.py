@@ -8,6 +8,7 @@ from app.models.sm2 import (
 )
 from app.services.content_personalization_service import ContentPersonalizationService
 from app.services.predict_readiness import predict_readiness
+from app.services.emotion_adapter import normalize_emotion
 
 
 _scheduler = AdaptiveScheduler()
@@ -23,6 +24,7 @@ def run_reminder_pipeline(
 ) -> dict:
     """Run readiness, memory, scheduling, and activity recommendation together."""
     now = now or datetime.now(timezone.utc)
+    emotion = normalize_emotion(emotion)
     readiness_level = predict_readiness(emotion, time_of_day)
     metrics = process_item(item, readiness_level, now)
     priority_score = min(metrics["priority_score"], 1.2)

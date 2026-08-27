@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # App
     ENV: str = "dev"
-    EMOTION_PROVIDER: str = "mock"      # mock | replay | http
+    EMOTION_PROVIDER: str = "http"      # http | replay | mock (offline tests only)
     REPLAY_CSV: str = "app/artifacts/daisee_embeddings.csv"
     EMOTION_SERVICE_URL: str = ""       # Mihiraj's URL — fill in at integration
 
@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:8000",
         "http://localhost:3000",
         "http://127.0.0.1:3000",

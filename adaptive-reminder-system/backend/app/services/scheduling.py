@@ -4,7 +4,20 @@ from app.models.sm2 import item_from_mongo
 from app.services.reminder_pipeline import run_reminder_pipeline
 
 
-async def schedule_for_student(db, student_id: str, emotion: str = "Focused", time_of_day: str | None = None, topic_id: str | None = None) -> dict:
+async def schedule_for_student(db, student_id: str, emotion: str | None = None, time_of_day: str | None = None, topic_id: str | None = None) -> dict:
+    if not emotion:
+        return {
+            "reminders_created": 0,
+            "items_processed": 0,
+            "status": "waiting_for_live_emotion",
+            "decision": None,
+            "decision_reason": "A live emotion result from Mihiraj is required.",
+            "activity_type": None,
+            "readiness_score": None,
+            "readiness_tier": None,
+            "content_type": None,
+        }
+
     query = {"student_id": student_id}
     if topic_id:
         query["item_key"] = topic_id
@@ -57,6 +70,6 @@ async def schedule_for_student(db, student_id: str, emotion: str = "Focused", ti
     }
 
 
-async def schedule_for_all_students(db) -> None:
+async def schedule_for_all_students(db, emotion: str | None = None) -> None:
     async for student in db.students.find({}, {"_id": 1}):
         await schedule_for_student(db, str(student["_id"]))

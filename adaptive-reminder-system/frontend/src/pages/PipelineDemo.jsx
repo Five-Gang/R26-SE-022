@@ -1,38 +1,29 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import LiveEmotionPipeline from '../components/LiveEmotionPipeline'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001/api/v1'
 
 export default function PipelineDemo() {
   const navigate = useNavigate()
-  const [emotion, setEmotion] = useState('focused')
+  const [emotion, setEmotion] = useState('')
   const [quality, setQuality] = useState(80)
   const [difficulty, setDifficulty] = useState('medium')
   const [daysSinceLastReview, setDaysSinceLastReview] = useState(2)
   const [output, setOutput] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const emotions = ['focused', 'neutral', 'frustrated', 'bored', 'confused']
-
-  const handlePreset = (preset) => {
-    if (preset === 'ideal') {
-      setEmotion('focused')
-      setQuality(95)
-      setDifficulty('hard')
-    } else if (preset === 'moderate') {
-      setEmotion('neutral')
-      setQuality(70)
-      setDifficulty('medium')
-    } else if (preset === 'struggling') {
-      setEmotion('frustrated')
-      setQuality(30)
-      setDifficulty('medium')
-    }
+  const handleLiveEmotion = (detectedEmotion) => {
+    setEmotion(detectedEmotion.toLowerCase())
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!emotion) {
+      setOutput({ error: 'Start Mihiraj live emotion detection before running the pipeline.' })
+      return
+    }
     setLoading(true)
     try {
       const payload = {
@@ -73,6 +64,7 @@ export default function PipelineDemo() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <LiveEmotionPipeline onEmotion={handleLiveEmotion} />
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl p-8 mb-8 shadow-lg">
           <div className="flex items-start justify-between">
             <div>
@@ -93,17 +85,14 @@ export default function PipelineDemo() {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Input Parameters</h2>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Current Emotion</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Live Emotion From Mihiraj</label>
                   <select
                     value={emotion}
-                    onChange={(e) => setEmotion(e.target.value)}
+                    disabled
                     className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                   >
-                    {emotions.map((e) => (
-                      <option key={e} value={e}>
-                        {e.charAt(0).toUpperCase() + e.slice(1)}
-                      </option>
-                    ))}
+                    <option value="">Start live feed first</option>
+                    {emotion && <option value={emotion}>{emotion}</option>}
                   </select>
                 </div>
 
@@ -153,36 +142,13 @@ export default function PipelineDemo() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !emotion}
                   className="w-full rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 px-6 py-3 font-semibold text-white transition shadow-md"
                 >
                   {loading ? '⏳ Running Pipeline...' : '▶️ Run Complete Pipeline'}
                 </button>
               </form>
 
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm">Quick Scenarios</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => handlePreset('ideal')}
-                    className="w-full px-3 py-2 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200 transition font-medium"
-                  >
-                    Ideal Conditions
-                  </button>
-                  <button
-                    onClick={() => handlePreset('moderate')}
-                    className="w-full px-3 py-2 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition font-medium"
-                  >
-                    Moderate State
-                  </button>
-                  <button
-                    onClick={() => handlePreset('struggling')}
-                    className="w-full px-3 py-2 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200 transition font-medium"
-                  >
-                    Struggling
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 

@@ -5,7 +5,8 @@ from app.services.scheduling import schedule_for_all_students
 _scheduler = AsyncIOScheduler()
 
 async def _run_scheduling_job() -> None:
-    await schedule_for_all_students(get_db())
+    # Camera emotion is supplied by the frontend; never invent a default here.
+    await schedule_for_all_students(get_db(), emotion=None)
 
 def start_scheduler() -> None:
     if _scheduler.running:
