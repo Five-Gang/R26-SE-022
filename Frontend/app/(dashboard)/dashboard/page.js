@@ -13,7 +13,9 @@ export default function DashboardPage() {
     { name: 'Study', path: '/study', icon: '📚' },
     { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
     { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/reminders', icon: '⏰' },
+    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
+    { name: 'Analytics', path: '/analytics', icon: '📈' },
+    { name: 'Rewards', path: '/rewards', icon: '🏆' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
   ];
 
@@ -40,9 +42,26 @@ export default function DashboardPage() {
       {/* Main Content Area */}
       <main className={styles.main}>
         
-        <div className={styles.header}>
-          <h1 className={styles.greeting}>Good evening, Mihiraj 👋</h1>
-          <p className={styles.subgreeting}>You have 2 topics due for review today.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+          <div>
+            <h1 className={styles.pageTitle}>Welcome back, Mihiraj!</h1>
+            <p className={styles.pageSubtitle}>Ready for today's session? You have 3 tasks pending.</p>
+          </div>
+          
+          {/* Gamification Widget on Dashboard */}
+          <Link href="/rewards" style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: 'var(--color-surface)', padding: '0.75rem 1.5rem', borderRadius: '30px', border: '1px solid var(--color-border)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🔥</span>
+                <span style={{ fontWeight: '700', color: '#B45309' }}>3 Days</span>
+              </div>
+              <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem', color: '#1D4ED8' }}>✨</span>
+                <span style={{ fontWeight: '700', color: '#1E3A8A' }}>Level 5</span>
+              </div>
+            </div>
+          </Link>
         </div>
 
         <div className={styles.statsGrid}>
