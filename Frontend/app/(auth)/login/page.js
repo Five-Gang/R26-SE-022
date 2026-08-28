@@ -2,9 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import styles from './login.module.css';
 
 export default function LoginPage() {
+  const router = useRouter();
   const features = [
     "Upload your lecture slides or PDF",
     "AI builds a personalised study plan",
@@ -53,7 +55,7 @@ export default function LoginPage() {
           <h2 className={styles.cardTitle}>Sign in to AuraLearn</h2>
           <p className={styles.cardSubtitle}>Welcome back — your study plan is waiting.</p>
           
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => { e.preventDefault(); router.push('/dashboard'); }}>
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.label}>Email address</label>
               <input 
@@ -80,7 +82,7 @@ export default function LoginPage() {
               <button type="submit" className={styles.primaryBtn}>
                 Sign in
               </button>
-              <button type="button" className={styles.secondaryBtn}>
+              <button type="button" className={styles.secondaryBtn} onClick={() => router.push('/study')}>
                 Upload new lecture →
               </button>
             </div>

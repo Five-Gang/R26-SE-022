@@ -1,4 +1,5 @@
 import "./globals.css";
+import ReminderToast from "../components/reminders/ReminderToast";
 
 export const metadata = {
   title: "EmotiSense — Affect & Attention-Aware Emotion Detection",
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ReminderToast />
+      </body>
     </html>
   );
 }

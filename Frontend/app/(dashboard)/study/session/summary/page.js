@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './summary.module.css';
 
 export default function SummaryPage() {
+  const router = useRouter();
   const concepts = [
     {
       priority: 'HIGH',
@@ -45,7 +47,7 @@ export default function SummaryPage() {
         </div>
         <div className={styles.actions}>
           <button className={styles.btnOutline}>Save Notes</button>
-          <button className={styles.btnPrimary}>Start Quiz →</button>
+          <button className={styles.btnPrimary} onClick={() => router.push('/study/quiz')}>Start Quiz →</button>
         </div>
       </div>
 

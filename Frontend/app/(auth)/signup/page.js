@@ -2,9 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import styles from './signup.module.css';
 
 export default function SignupPage() {
+  const router = useRouter();
   const features = [
     "No configuration needed",
     "Works with any lecture material",
@@ -50,7 +52,7 @@ export default function SignupPage() {
           <h2 className={styles.cardTitle}>Create your account</h2>
           <p className={styles.cardSubtitle}>Join the AuraLearn research cohort.</p>
           
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => { e.preventDefault(); router.push('/dashboard'); }}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="fullName" className={styles.label}>Full name</label>

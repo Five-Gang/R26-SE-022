@@ -17,12 +17,12 @@ export default function SettingsPage() {
   };
 
   const navItems = [
-    { name: 'Profile', icon: '👤', active: true },
-    { name: 'Notifications', icon: '🔔', active: false },
-    { name: 'Focus Settings', icon: '🎯', active: false },
-    { name: 'Study Preferences', icon: '📊', active: false },
-    { name: 'Privacy & Data', icon: '🔒', active: false },
-    { name: 'Appearance', icon: '🎨', active: false },
+    { name: 'Profile', icon: '👤', path: '/settings', active: true },
+    { name: 'Notifications', icon: '🔔', path: '/settings', active: false },
+    { name: 'Focus Settings', icon: '🎯', path: '/study/focus-consent', active: false },
+    { name: 'Study Preferences', icon: '📊', path: '/study', active: false },
+    { name: 'Privacy & Data', icon: '🔒', path: '/settings', active: false },
+    { name: 'Appearance', icon: '🎨', path: '/settings', active: false },
   ];
 
   return (
@@ -33,7 +33,7 @@ export default function SettingsPage() {
         {navItems.map((item, idx) => (
           <Link 
             key={idx} 
-            href="#"
+            href={item.path}
             className={`${styles.navLink} ${item.active ? styles.active : ''}`}
           >
             <span className={styles.navIcon}>{item.icon}</span>

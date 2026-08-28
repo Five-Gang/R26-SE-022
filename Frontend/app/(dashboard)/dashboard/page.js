@@ -45,7 +45,7 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
           <div>
             <h1 className={styles.pageTitle}>Welcome back, Mihiraj!</h1>
-            <p className={styles.pageSubtitle}>Ready for today's session? You have 3 tasks pending.</p>
+            <p className={styles.pageSubtitle}>Ready for today&apos;s session? You have 3 tasks pending.</p>
           </div>
           
           {/* Gamification Widget on Dashboard */}
@@ -111,7 +111,7 @@ export default function DashboardPage() {
                   <div className={styles.sessionTitle}>Cell Division</div>
                   <div className={styles.sessionMeta}>BIO2012 · Yesterday</div>
                 </div>
-                <Link href="#" className={styles.reviewLink}>
+                <Link href="/study/session/summary" className={styles.reviewLink}>
                   Review →
                 </Link>
               </div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                   <div className={styles.sessionTitle}>Data Structures</div>
                   <div className={styles.sessionMeta}>CS2041 · 2 days ago</div>
                 </div>
-                <Link href="#" className={styles.reviewLink}>
+                <Link href="/study/session/summary" className={styles.reviewLink}>
                   Review →
                 </Link>
               </div>

@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './consent.module.css';
 
 export default function FocusConsentPage() {
+  const router = useRouter();
+
   return (
     <div className={styles.overlayContainer}>
       <div className={styles.modal}>
@@ -50,11 +53,11 @@ export default function FocusConsentPage() {
           </div>
         </div>
 
-        <button className={styles.btnAccept}>
+        <button className={styles.btnAccept} onClick={() => router.push('/study/session/summary')}>
           ✓ Enable Focus Monitoring
         </button>
         
-        <button className={styles.btnDecline}>
+        <button className={styles.btnDecline} onClick={() => router.push('/study/session/summary')}>
           No thanks, continue without
         </button>
 

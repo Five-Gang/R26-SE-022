@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './quiz.module.css';
 
 export default function QuizPage() {
+  const router = useRouter();
   const [selectedOption, setSelectedOption] = useState('B');
 
   const options = [
@@ -64,8 +66,8 @@ export default function QuizPage() {
 
       {/* Bottom Navigation */}
       <div className={styles.bottomNav}>
-        <button className={styles.btnPrev}>← Previous</button>
-        <button className={styles.btnNext}>Confirm & Next →</button>
+        <button className={styles.btnPrev} onClick={() => router.push('/study/session/summary')}>← Previous</button>
+        <button className={styles.btnNext} onClick={() => router.push('/study/complete')}>Confirm & Next →</button>
       </div>
     </div>
   );

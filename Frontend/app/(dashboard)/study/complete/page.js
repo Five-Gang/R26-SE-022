@@ -13,7 +13,7 @@ export default function SessionCompletePage() {
         
         <h1 className={styles.heading}>Session Complete!</h1>
         <p className={styles.subheading}>
-          Great work on Integration Methods — you're building strong recall.
+           Great work on Integration Methods — you&apos;re building strong recall.
         </p>
 
         <div className={styles.statsRow}>
@@ -43,7 +43,7 @@ export default function SessionCompletePage() {
         </div>
 
         <div className={styles.actionsRow}>
-          <button className={styles.btnOutline}>Review Mistakes</button>
+          <Link href="/study/quiz" className={styles.btnOutline}>Review Mistakes</Link>
           <Link href="/dashboard" className={styles.btnPrimary}>
             Go to Dashboard →
           </Link>

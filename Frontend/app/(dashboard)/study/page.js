@@ -1,14 +1,17 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './study.module.css';
 
 export default function StudyPage() {
+  const router = useRouter();
+
   return (
     <div className={styles.container}>
       <div className={styles.uploadCard}>
         <h1 className={styles.heading}>What are you studying today?</h1>
-        <p className={styles.subheading}>Upload your lecture and we'll build a personalised study plan in seconds.</p>
+        <p className={styles.subheading}>Upload your lecture and we&apos;ll build a personalised study plan in seconds.</p>
 
         <div className={styles.dropzone}>
           <div className={styles.iconWrapper}>
@@ -20,7 +23,7 @@ export default function StudyPage() {
           </div>
           <h3 className={styles.dropTitle}>Drop your lecture file here</h3>
           <p className={styles.dropSubtitle}>PDF, PPTX · up to 50 MB</p>
-          <button className={styles.browseBtn}>Browse files</button>
+          <button className={styles.browseBtn} onClick={() => router.push('/study/processing')}>Browse files</button>
         </div>
       </div>
 
@@ -41,7 +44,7 @@ export default function StudyPage() {
               <div className={styles.demoSubtitle}>Demo · 24 slides</div>
             </div>
           </div>
-          <button className={styles.useBtn}>Use this →</button>
+          <button className={styles.useBtn} onClick={() => router.push('/study/processing')}>Use this →</button>
         </div>
       </div>
     </div>
