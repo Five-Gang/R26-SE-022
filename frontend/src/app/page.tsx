@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ChatMessage, { Message } from "./components/ChatMessage";
 import Sidebar from "./components/Sidebar";
+import AnalyticsPanel from "./components/AnalyticsPanel";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -35,6 +36,7 @@ export default function Home() {
   const [llmStatus, setLlmStatus] = useState("checking");
   const [dbCount, setDbCount] = useState(0);
   const [selfConsistency, setSelfConsistency] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -259,6 +261,40 @@ export default function Home() {
               </div>
             </div>
           </div>
+          {/* Analytics trigger button */}
+          <button
+            id="open-analytics-btn"
+            onClick={() => setAnalyticsOpen(true)}
+            title="View research analytics"
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,92,252,0.15) 0%, rgba(56,189,248,0.15) 100%)',
+              border: '1px solid rgba(124,92,252,0.3)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-secondary)',
+              padding: '7px 14px',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              transition: 'all 0.18s ease',
+              fontFamily: 'var(--font-sans)',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseOver={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(124,92,252,0.6)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 12px rgba(124,92,252,0.2)';
+            }}
+            onMouseOut={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(124,92,252,0.3)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+            }}
+          >
+            📊 Analytics
+          </button>
         </div>
 
         {/* Messages */}
@@ -347,6 +383,12 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Analytics Panel */}
+      <AnalyticsPanel
+        isOpen={analyticsOpen}
+        onClose={() => setAnalyticsOpen(false)}
+      />
     </div>
   );
 }
