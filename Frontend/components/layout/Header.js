@@ -13,7 +13,7 @@ export default function Header() {
     { name: 'Study', path: '/study' },
     { name: 'AI Tutor', path: '/tutor' },
     { name: 'Materials', path: '/materials' },
-    { name: 'Reminders', path: '/reminders' },
+    { name: 'Reminders', path: '/study/queue' },
   ];
 
   return (

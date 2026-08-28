@@ -10,9 +10,9 @@ export default function SessionLayout({ children }) {
 
   const navItems = [
     { name: 'Summary', path: '/study/session/summary', icon: '📋' },
-    { name: 'Quiz', path: '/study/session/quiz', icon: '❓' },
-    { name: 'Flashcards', path: '/study/session/flashcards', icon: '🃏' },
-    { name: 'Progress', path: '/study/session/progress', icon: '📊' },
+    { name: 'Quiz', path: '/study/quiz', icon: '❓' },
+    { name: 'Flashcards', path: '/study/flashcards', icon: '🃏' },
+    { name: 'Progress', path: '/dashboard', icon: '📊' },
   ];
 
   return (
