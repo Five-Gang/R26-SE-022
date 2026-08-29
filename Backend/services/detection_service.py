@@ -29,27 +29,28 @@ class DetectionService:
         tilt = abs(features["head_tilt"])
         eyebrow = features["eyebrow_distance"]
         
-        # 1. Boredom / Fatigue Override (Heavy eyelids or head heavily tilted)
-        if ear < 0.22 or tilt > 15:
-            adjusted["Bored"] += 40.0
-            adjusted["Focused"] -= 20.0
+        # 1. Boredom / Severe Drowsiness Override (Eyelids heavily closed EAR < 0.12 or extreme head drop)
+        if ear < 0.12 or tilt > 20:
+            adjusted["Bored"] += 45.0
+            adjusted["Focused"] -= 30.0
             
-        # 2. Confusion Override (Mouth slightly open, eyes wide)
-        if mouth > 0.08 and ear > 0.27:
+        # 2. Confusion Override (Mouth slightly agape, asymmetric eyebrows/wide eyes)
+        if mouth > 0.09 and ear > 0.26:
             adjusted["Confused"] += 35.0
             
-        # 3. Frustrated Override (Tight mouth, low/furrowed eyebrows)
-        if mouth < 0.02 and eyebrow < 0.22:
+        # 3. Frustrated Override (Tight mouth, furrowed eyebrows)
+        if mouth < 0.02 and eyebrow < 0.20:
             adjusted["Frustrated"] += 30.0
             
-        # 4. Focused Override (Head perfectly straight, normal eyes, mouth fully closed)
-        if tilt < 5 and 0.25 < ear < 0.32 and mouth < 0.03:
-            adjusted["Focused"] += 25.0
-            adjusted["Neutral"] -= 10.0 # CNN frequently confuses focused with neutral
+        # 4. Focused State (Normal open eyes, upright head, calm mouth)
+        if tilt < 12 and ear >= 0.18 and mouth < 0.05:
+            adjusted["Focused"] += 35.0
+            adjusted["Neutral"] -= 15.0
             
         # 5. Normalize back to 100%
         for k in adjusted:
-            if adjusted[k] < 0: adjusted[k] = 0.0
+            if adjusted[k] < 0: 
+                adjusted[k] = 0.0
                 
         total = sum(adjusted.values())
         if total > 0:
@@ -99,37 +100,55 @@ class DetectionService:
             features
         )
         
-        # 6. Compute Attention Score
-        eye_penalty = max(0, 100 - (features["eye_openness"] * 300))
-        tilt_penalty = min(50, abs(features["head_tilt"]))
-        attention_base = {"Focused": 95, "Neutral": 70, "Confused": 50, "Frustrated": 40, "Bored": 20}
-        base_score = attention_base.get(dominant_emotion, 50)
-        attention_score = max(0, min(100, int(base_score - eye_penalty - tilt_penalty)))
+        # 6. Compute Accurate Attention Score (0-100)
+        # Normal open eyes EAR: 0.18 - 0.35, Upright head tilt: < 10 deg
+        eye_openness = features["eye_openness"]
+        tilt = abs(features["head_tilt"])
         
-        # Formatting the response exactly how the mock frontend expected it
+        # Calculate eye alertness (0-100%)
+        eye_alertness = min(100.0, max(0.0, (eye_openness - 0.10) / (0.28 - 0.10) * 100.0))
+        
+        # Head posture penalty only if significantly tilted
+        posture_factor = max(0.0, 1.0 - (max(0.0, tilt - 10.0) / 30.0))
+        
+        # Emotion base weighting
+        emotion_weights = {
+            "Focused": 95,
+            "Neutral": 80,
+            "Confused": 65,
+            "Frustrated": 50,
+            "Bored": 25
+        }
+        base_weight = emotion_weights.get(dominant_emotion, 70)
+        
+        # Blended Attention Score
+        raw_attention = (0.50 * base_weight) + (0.35 * eye_alertness) + (0.15 * (posture_factor * 100))
+        attention_score = int(min(100, max(0, round(raw_attention))))
+        
+        # Gaze stability estimate (Direct Screen vs Looking Away)
+        gaze_status = "Direct Screen Focus" if tilt < 15 and eye_openness > 0.14 else "Looking Away"
+        
         processing_time_ms = int((time.time() - start_time) * 1000)
         
-        # CamelCase features for the frontend
         formatted_features = {
-            "eyeOpenness": features["eye_openness"],
+            "eyeOpenness": eye_openness,
             "eyebrowDist": features["eyebrow_distance"],
             "mouthOpening": features["mouth_opening"],
             "headTilt": features["head_tilt"],
-            "blinkRate": 0, 
             "earLeft": features["ear_left"],
             "earRight": features["ear_right"],
-            "gazeDir": 0.0, 
+            "gazeStatus": gaze_status,
             "is_blinking": features["is_blinking"]
         }
         
         response = {
             "emotion": dominant_emotion,
-            "confidence": int(final_confidence),
-            "probs": {k: int(v) for k, v in final_probs.items()},
-            "ear": features["eye_openness"],
-            "eyeOpenness": int(features["eye_openness"] * 300),
-            "blinkRate": 0, 
+            "confidence": int(round(final_confidence)),
+            "probs": {k: int(round(v)) for k, v in final_probs.items()},
+            "ear": round(eye_openness, 2),
+            "eyeOpenness": int(round(eye_alertness)),
             "attentionScore": attention_score,
+            "gazeStatus": gaze_status,
             "features": formatted_features,
             "boundingBox": features["bounding_box"],
             "embedding": emotion_result["embedding"],
