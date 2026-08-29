@@ -11,7 +11,7 @@ export default function Header() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Study', path: '/study' },
-    { name: 'Focus Monitor', path: '/emotion-demo' },
+    { name: 'Focus Monitor', path: '/focus-monitor' },
     { name: 'AI Tutor', path: '/tutor' },
     { name: 'Materials', path: '/materials' },
   ];
