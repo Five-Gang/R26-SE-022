@@ -1,0 +1,233 @@
+.container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 64px);
+  background-color: var(--color-background);
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 300px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.newChatBtn {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.8rem;
+  margin: 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.newChatBtn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.historyHeader {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.historyItem {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.historyItem:hover {
+  background-color: #F8FAFC;
+}
+
+.historyItem.active {
+  background-color: #F0F9FF;
+  border-left-color: var(--color-accent);
+}
+
+.historyTitle {
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.historyItem.active .historyTitle {
+  font-weight: 600;
+}
+
+.historyTime {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.mainArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #FAFAFA;
+}
+
+.chatArea {
+  flex: 1;
+  padding: 2.5rem 3rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.messageRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.messageRowUser {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.avatarUser {
+  background-color: var(--color-accent);
+}
+
+.avatarAI {
+  background-color: var(--color-primary);
+}
+
+.messageBubble {
+  padding: 1.25rem 1.5rem;
+  max-width: 75%;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.bubbleUser {
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: 16px 4px 16px 16px;
+}
+
+.bubbleAI {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  border-radius: 4px 16px 16px 16px;
+}
+
+.mathBlock {
+  background-color: #F8FAFC;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--color-primary);
+  border: 1px solid #E2E8F0;
+  margin: 1.25rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.inputArea {
+  padding: 1.5rem 3rem;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.inputField {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  padding-right: 4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 30px;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
+  background-color: #FAFAFA;
+}
+
+.inputField:focus {
+  border-color: var(--color-accent);
+  background-color: var(--color-surface);
+}
+
+.sendBtn {
+  position: absolute;
+  right: 0.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.sendBtn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .chatArea {
+    padding: 1.5rem;
+  }
+  .inputArea {
+    padding: 1rem;
+  }
+  .messageBubble {
+    max-width: 85%;
+  }
+}

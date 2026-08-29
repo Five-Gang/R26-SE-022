@@ -1,0 +1,176 @@
+.container {
+  padding: 3rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+
+.cardMeta {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.flashcard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  min-height: 400px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.flashcard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+}
+
+.badge {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.question {
+  color: var(--color-primary);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  max-width: 85%;
+}
+
+.hintText {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin-top: auto;
+}
+
+.actionsContainer {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+
+.btnAgain {
+  background-color: #FEF2F2;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+
+.btnAgain:hover {
+  background-color: #FEE2E2;
+}
+
+.btnHard {
+  background-color: #FEF9C3;
+  border-color: #FDE047;
+  color: #D97706;
+}
+
+.btnHard:hover {
+  background-color: #FEF08A;
+}
+
+.btnEasy {
+  background-color: #F0FDF4;
+  border-color: #86EFAC;
+  color: #16A34A;
+}
+
+.btnEasy:hover {
+  background-color: #DCFCE7;
+}
+
+.progressSection {
+  margin-top: 3rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background-color: #E2E8F0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 3px;
+  width: 28%; /* 5/18 approx */
+}
+
+.progressStats {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 600px) {
+  .actionsContainer {
+    flex-direction: column;
+  }
+  .flashcard {
+    min-height: 350px;
+    padding: 1.5rem;
+  }
+  .question {
+    font-size: 1.25rem;
+    max-width: 100%;
+  }
+}

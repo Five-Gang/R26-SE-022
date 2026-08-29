@@ -1,0 +1,289 @@
+.container {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  background-color: var(--color-background);
+}
+
+.sidebar {
+  width: 260px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  border-left: 3px solid transparent;
+}
+
+.navLink:hover {
+  background-color: #F8FAFC;
+  color: var(--color-primary);
+}
+
+.navLink.active {
+  background-color: #F0F9FF;
+  color: var(--color-primary);
+  border-left-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.navIcon {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+}
+
+.main {
+  flex: 1;
+  padding: 3rem 4rem;
+  overflow-y: auto;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Hero Progress Section */
+.heroCard {
+  background: linear-gradient(135deg, #1E3A8A 0%, #312E81 100%);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);
+}
+
+.levelInfo {
+  flex: 1;
+  max-width: 500px;
+}
+
+.levelLabel {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #93C5FD;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.levelTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.progressContainer {
+  width: 100%;
+}
+
+.progressStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #DBEAFE;
+  font-weight: 600;
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: #FBBF24; /* Golden yellow */
+  border-radius: 6px;
+  transition: width 1s ease-out;
+}
+
+.streakBox {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1.5rem 2.5rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.streakIcon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
+}
+
+.streakValue {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #FBBF24;
+}
+
+.streakLabel {
+  font-size: 0.9rem;
+  color: #DBEAFE;
+  font-weight: 500;
+}
+
+/* Badges Section */
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+
+.badgesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.badgeCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.badgeCard.unlocked {
+  border-color: #FBBF24;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1);
+}
+
+.badgeCard.unlocked:hover {
+  transform: translateY(-5px);
+}
+
+.badgeCard.locked {
+  opacity: 0.6;
+  filter: grayscale(100%);
+}
+
+.badgeIcon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.badgeCard.unlocked .badgeIcon {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.badgeTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.badgeDesc {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Weekly Tracker Section */
+.trackerCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+}
+
+.daysGrid {
+  display: flex;
+  justify-content: space-between;
+  max-width: 600px;
+  margin-top: 1.5rem;
+}
+
+.dayItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dayLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.dayCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  background-color: #F1F5F9;
+  color: var(--color-text-muted);
+}
+
+.dayCircle.active {
+  background-color: #FBBF24;
+  color: #92400E;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .heroCard {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .streakBox {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .main {
+    padding: 2rem 1.5rem;
+  }
+}

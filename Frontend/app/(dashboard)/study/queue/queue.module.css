@@ -1,0 +1,171 @@
+.container {
+  padding: 3rem 4rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+}
+
+.filters {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.filterBtn {
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filterActive {
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+}
+
+.filterInactive {
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.filterInactive:hover {
+  background-color: #F8FAFC;
+  color: var(--color-primary);
+}
+
+.tableContainer {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.th {
+  padding: 1.25rem 1.5rem;
+  background-color: #F8FAFC;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.td {
+  padding: 1.25rem 1.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tr {
+  transition: var(--transition);
+}
+
+.tr:last-child .td {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background-color: #F8FAFC;
+}
+
+.topicTitle {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.dueToday {
+  color: #DC2626; /* Red for urgent/due today */
+  font-weight: 600;
+}
+
+.dueLater {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.btnAction {
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  border: none;
+  width: 120px;
+  text-align: center;
+}
+
+.btnReview {
+  background-color: var(--color-accent);
+  color: white;
+  cursor: pointer;
+}
+
+.btnReview:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.btnScheduled {
+  background-color: #F1F5F9;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    padding: 2rem;
+  }
+  .tableContainer {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .container {
+    padding: 1.5rem;
+  }
+}

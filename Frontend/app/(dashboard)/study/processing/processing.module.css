@@ -1,0 +1,187 @@
+.container {
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.processingCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 4rem 3rem;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topIcon {
+  width: 64px;
+  height: 64px;
+  background-color: var(--color-primary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 24px rgba(15, 118, 110, 0.3);
+}
+
+.brainIcon {
+  width: 32px;
+  height: 32px;
+  fill: #F472B6; /* Pink color */
+}
+
+.heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.subheading {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  margin-bottom: 3.5rem;
+  text-align: center;
+}
+
+.progressList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 2rem;
+}
+
+.progressItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+/* States */
+.iconCompleted {
+  width: 28px;
+  height: 28px;
+  background-color: #DCFCE7;
+  color: #22C55E;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.textCompleted {
+  color: #22C55E;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+.iconActive {
+  width: 28px;
+  height: 28px;
+  background-color: rgba(15, 118, 110, 0.1);
+  color: var(--color-accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(15, 118, 110, 0.3);
+  border-left-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.contentActive {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2px;
+}
+
+.titleActive {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.barTrack {
+  flex: 1;
+  height: 6px;
+  background-color: #E2E8F0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 3px;
+  width: 68%; /* Hardcoded for demo */
+  transition: width 1s ease-out;
+}
+
+.progressText {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.iconPending {
+  width: 28px;
+  height: 28px;
+  background-color: #F1F5F9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dotPending {
+  width: 8px;
+  height: 8px;
+  background-color: #CBD5E1;
+  border-radius: 50%;
+}
+
+.textPending {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .progressList {
+    padding: 0;
+  }
+  .processingCard {
+    padding: 3rem 1.5rem;
+  }
+}
