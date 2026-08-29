@@ -36,31 +36,146 @@ interface ChatMessageProps {
   message: Message;
 }
 
+function formatInline(text: string): string {
+  let processed = text;
+  // Bold & Italic
+  processed = processed.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
+  // Bold
+  processed = processed.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // Italic
+  processed = processed.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  // Inline Code
+  processed = processed.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  return processed;
+}
+
 function formatContent(content: string): React.ReactNode {
-  // Simple markdown-like rendering
-  const lines = content.split("\n");
+  if (!content) return null;
+
+  // Split content by fenced code blocks (```lang ... ```)
+  const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
   const elements: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    const preText = content.substring(lastIndex, match.index);
+    if (preText.trim()) {
+      elements.push(renderTextBlocks(preText, `pre-${lastIndex}`));
+    }
+
+    const language = match[1] || "code";
+    const codeContent = match[2];
+    elements.push(
+      <div key={`code-${match.index}`} className="code-block-wrapper">
+        <div className="code-block-header">
+          <span className="code-lang-tag">{language}</span>
+        </div>
+        <pre className="code-block-pre">
+          <code>{codeContent}</code>
+        </pre>
+      </div>
+    );
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  const remainingText = content.substring(lastIndex);
+  if (remainingText) {
+    elements.push(renderTextBlocks(remainingText, `post-${lastIndex}`));
+  }
+
+  return elements;
+}
+
+function renderTextBlocks(text: string, keyPrefix: string): React.ReactNode {
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let currentList: { type: "ul" | "ol"; items: string[] } | null = null;
+
+  const flushList = (idx: number) => {
+    if (!currentList) return;
+    if (currentList.type === "ul") {
+      nodes.push(
+        <ul key={`${keyPrefix}-ul-${idx}`} className="chat-ul">
+          {currentList.items.map((item, liIdx) => (
+            <li key={liIdx} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+          ))}
+        </ul>
+      );
+    } else {
+      nodes.push(
+        <ol key={`${keyPrefix}-ol-${idx}`} className="chat-ol">
+          {currentList.items.map((item, liIdx) => (
+            <li key={liIdx} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+          ))}
+        </ol>
+      );
+    }
+    currentList = null;
+  };
 
   lines.forEach((line, i) => {
-    let processed = line;
+    const trimmed = line.trim();
 
-    // Bold
-    processed = processed.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    // Italic
-    processed = processed.replace(/\*(.*?)\*/g, "<em>$1</em>");
-    // Code
-    processed = processed.replace(/`(.*?)`/g, "<code>$1</code>");
+    // Headers
+    if (trimmed.startsWith("### ")) {
+      flushList(i);
+      nodes.push(
+        <h4 key={`${keyPrefix}-h4-${i}`} className="chat-h4" dangerouslySetInnerHTML={{ __html: formatInline(trimmed.substring(4)) }} />
+      );
+      return;
+    }
+    if (trimmed.startsWith("## ")) {
+      flushList(i);
+      nodes.push(
+        <h3 key={`${keyPrefix}-h3-${i}`} className="chat-h3" dangerouslySetInnerHTML={{ __html: formatInline(trimmed.substring(3)) }} />
+      );
+      return;
+    }
+    if (trimmed.startsWith("# ")) {
+      flushList(i);
+      nodes.push(
+        <h2 key={`${keyPrefix}-h2-${i}`} className="chat-h2" dangerouslySetInnerHTML={{ __html: formatInline(trimmed.substring(2)) }} />
+      );
+      return;
+    }
 
-    if (processed.trim() === "") {
-      elements.push(<br key={i} />);
+    // Unordered List (- or *)
+    const ulMatch = line.match(/^(\s*)[-*]\s+(.+)/);
+    if (ulMatch) {
+      if (!currentList || currentList.type !== "ul") {
+        flushList(i);
+        currentList = { type: "ul", items: [] };
+      }
+      currentList.items.push(ulMatch[2]);
+      return;
+    }
+
+    // Ordered List (1. 2. etc)
+    const olMatch = line.match(/^(\s*)\d+\.\s+(.+)/);
+    if (olMatch) {
+      if (!currentList || currentList.type !== "ol") {
+        flushList(i);
+        currentList = { type: "ol", items: [] };
+      }
+      currentList.items.push(olMatch[2]);
+      return;
+    }
+
+    // Regular line / paragraph
+    flushList(i);
+    if (trimmed === "") {
+      nodes.push(<div key={`${keyPrefix}-br-${i}`} className="chat-spacing" />);
     } else {
-      elements.push(
-        <p key={i} dangerouslySetInnerHTML={{ __html: processed }} />
+      nodes.push(
+        <p key={`${keyPrefix}-p-${i}`} className="chat-p" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
       );
     }
   });
 
-  return elements;
+  flushList(lines.length);
+  return <React.Fragment key={keyPrefix}>{nodes}</React.Fragment>;
 }
 
 // ── Feedback button component ──────────────────────────────────────────────────
@@ -127,10 +242,10 @@ function FeedbackButtons({ logId }: { logId: number }) {
 // ── Main ChatMessage component ─────────────────────────────────────────────────
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
-  const timeStr = message.timestamp.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timestampObj = message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp);
+  const timeStr = !isNaN(timestampObj.getTime())
+    ? timestampObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
 
   return (
     <div className={`message ${message.role}`}>

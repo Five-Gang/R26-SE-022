@@ -19,6 +19,7 @@ interface SidebarProps {
   dbCount: number;
   selfConsistency: boolean;
   onToggleSelfConsistency: () => void;
+  deletingFile?: string | null;
 }
 
 export default function Sidebar({
@@ -34,6 +35,7 @@ export default function Sidebar({
   dbCount,
   selfConsistency,
   onToggleSelfConsistency,
+  deletingFile,
 }: SidebarProps) {
   const [showScInfo, setShowScInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -225,43 +227,66 @@ export default function Sidebar({
             Upload PDFs to get started.
           </div>
         ) : (
-          materials.map((mat, idx) => (
-            <div className="material-item" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-                <span className="material-icon">📄</span>
-                <span className="material-name" title={mat.filename}>
-                  {mat.filename}
-                </span>
-              </div>
-              <button
-                onClick={() => onDelete(mat.filename)}
+          materials.map((mat, idx) => {
+            const isDeletingThis = deletingFile === mat.filename;
+            return (
+              <div
+                className="material-item"
+                key={idx}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  borderRadius: '4px',
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '24px',
-                  height: '24px'
+                  opacity: isDeletingThis ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
                 }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.color = '#ef4444';
-                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.color = 'var(--text-muted)';
-                  e.currentTarget.style.background = 'transparent';
-                }}
-                title="Delete file"
               >
-                ✕
-              </button>
-            </div>
-          ))
+                <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                  <span className="material-icon">{isDeletingThis ? "⏳" : "📄"}</span>
+                  <span className="material-name" title={mat.filename}>
+                    {mat.filename}
+                  </span>
+                </div>
+                {isDeletingThis ? (
+                  <span style={{ fontSize: 11, color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px' }}>
+                    <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => onDelete(mat.filename)}
+                    disabled={!!deletingFile}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: deletingFile ? 'not-allowed' : 'pointer',
+                      padding: '4px',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '24px',
+                      height: '24px',
+                      transition: 'all 0.15s'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!deletingFile) {
+                        e.currentTarget.style.color = '#ef4444';
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                    title="Delete file"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 

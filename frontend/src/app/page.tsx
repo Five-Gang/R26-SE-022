@@ -37,9 +37,50 @@ export default function Home() {
   const [dbCount, setDbCount] = useState(0);
   const [selfConsistency, setSelfConsistency] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load chat history from localStorage on initial mount
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem("auralearn_chat_messages");
+      const savedHistory = localStorage.getItem("auralearn_conv_history");
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed)) {
+          const restored: Message[] = parsed.map((m: any) => ({
+            ...m,
+            timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+          }));
+          setMessages(restored);
+        }
+      }
+      if (savedHistory) {
+        const parsedHist = JSON.parse(savedHistory);
+        if (Array.isArray(parsedHist)) {
+          setConversationHistory(parsedHist);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load chat history from localStorage:", err);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save chat history to localStorage whenever messages or conversationHistory change
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem("auralearn_chat_messages", JSON.stringify(messages));
+      localStorage.setItem("auralearn_conv_history", JSON.stringify(conversationHistory));
+    } catch (err) {
+      console.warn("Failed to save chat to localStorage:", err);
+    }
+  }, [messages, conversationHistory, isLoaded]);
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
@@ -183,29 +224,39 @@ export default function Home() {
     }
   };
 
-  // Handle PDF deletion
+  // Handle PDF deletion with loading state
   const handleDelete = async (filename: string) => {
+    if (deletingFile) return;
+    setDeletingFile(filename);
     try {
       const res = await fetch(`${API_URL}/api/materials/${filename}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        fetchMaterials(); // Refresh materials list
+        await fetchMaterials(); // Refresh materials list
       } else {
         const data = await res.json();
         console.error("Delete failed:", data);
       }
     } catch (err) {
       console.error("Could not connect to backend to delete.", err);
+    } finally {
+      setDeletingFile(null);
     }
   };
 
-  // New chat
+  // New chat — clears state and localStorage
   const handleNewChat = () => {
     setMessages([]);
     setConversationHistory([]);
     setInput("");
+    try {
+      localStorage.removeItem("auralearn_chat_messages");
+      localStorage.removeItem("auralearn_conv_history");
+    } catch (e) {
+      console.warn("Could not clear localStorage:", e);
+    }
   };
 
   // Handle Enter key
@@ -240,6 +291,7 @@ export default function Home() {
         dbCount={dbCount}
         selfConsistency={selfConsistency}
         onToggleSelfConsistency={() => setSelfConsistency((prev) => !prev)}
+        deletingFile={deletingFile}
       />
 
       {/* Chat Area */}
