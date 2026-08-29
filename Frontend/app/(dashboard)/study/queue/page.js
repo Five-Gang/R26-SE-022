@@ -12,22 +12,15 @@ function vapidKeyToBuffer(key) {
   return Uint8Array.from(window.atob(base64), (character) => character.charCodeAt(0));
 }
 
-const demoQueue = [
-  { reminder_id: 'demo-1', item_key: 'integration-by-parts', item_title: 'Integration by Parts', interval: '1 day', ease: '2.50', nextDue: 'Today', reps: '1x', reminderMeta: 'HIGH readiness · 42% retention', status: 'review' },
-  { reminder_id: 'demo-2', item_key: 'liate-rule', item_title: 'LIATE Rule', interval: '1 day', ease: '2.50', nextDue: 'Today', reps: '1x', reminderMeta: 'MEDIUM readiness · 38% retention', status: 'review' },
-  { reminder_id: 'demo-3', item_key: 'substitution-method', item_title: 'Substitution Method', interval: '6 days', ease: '2.60', nextDue: 'Today', reps: '2x', reminderMeta: 'MEDIUM readiness · 34% retention', status: 'review' },
-  { reminder_id: 'demo-4', item_key: 'cell-membrane', item_title: 'Cell Membrane Structure', interval: '3 days', ease: '2.36', nextDue: 'Today', reps: '2x', reminderMeta: 'LOW readiness · 31% retention', status: 'review' },
-  { reminder_id: 'demo-5', item_key: 'atp-synthesis', item_title: 'ATP Synthesis', interval: '7 days', ease: '2.70', nextDue: 'Today', reps: '3x', reminderMeta: 'HIGH readiness · 28% retention', status: 'review' },
-  { reminder_id: 'demo-6', item_key: 'binary-search-tree', item_title: 'Binary Search Tree', interval: '21 days', ease: '2.80', nextDue: 'Tomorrow', reps: '5x', reminderMeta: 'MEDIUM readiness · 76% retention', status: 'scheduled' },
-  { reminder_id: 'demo-7', item_key: 'recursion-base-case', item_title: 'Recursion Base Case', interval: '14 days', ease: '2.65', nextDue: 'In 2 days', reps: '4x', reminderMeta: 'MEDIUM readiness · 82% retention', status: 'scheduled' },
-  { reminder_id: 'demo-8', item_key: 'newtons-first-law', item_title: "Newton's First Law", interval: '3 days', ease: '2.50', nextDue: 'In 3 days', reps: '1x', reminderMeta: 'HIGH readiness · 88% retention', status: 'scheduled' },
-];
-
 function mapReminder(reminder) {
   const scheduledAt = reminder.scheduled_at ? new Date(reminder.scheduled_at) : null;
-  const nextDue = scheduledAt && !Number.isNaN(scheduledAt.getTime())
-    ? scheduledAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-    : 'Today';
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const scheduledStart = scheduledAt && !Number.isNaN(scheduledAt.getTime())
+    ? new Date(scheduledAt.getFullYear(), scheduledAt.getMonth(), scheduledAt.getDate())
+    : null;
+  const daysUntilDue = scheduledStart ? Math.round((scheduledStart - todayStart) / 86400000) : 0;
+  const nextDue = daysUntilDue <= 0 ? 'Today' : daysUntilDue === 1 ? 'Tomorrow' : `In ${daysUntilDue} days`;
 
   return {
     ...reminder,
@@ -39,16 +32,15 @@ function mapReminder(reminder) {
     reminderMeta: reminder.readiness_tier
       ? `${reminder.readiness_tier} readiness · ${Math.round((reminder.retention_probability || 0) * 100)}% retention`
       : 'Adaptive schedule',
-    status: 'review',
+    status: reminder.status === 'SENT' ? 'review' : 'scheduled',
   };
 }
 
 export default function StudyQueuePage() {
   const router = useRouter();
-  const [queueData, setQueueData] = useState(demoQueue);
+  const [queueData, setQueueData] = useState([]);
   const [activeFilter, setActiveFilter] = useState('due');
   const [loading, setLoading] = useState(true);
-  const [usingDemo, setUsingDemo] = useState(true);
   const [message, setMessage] = useState('');
   const [schedulerStatus, setSchedulerStatus] = useState('');
   const [notificationStatus, setNotificationStatus] = useState('default');
@@ -61,8 +53,8 @@ export default function StudyQueuePage() {
     const token = window.localStorage.getItem('access_token');
 
     if (!token) {
-      setQueueData(demoQueue);
-      setUsingDemo(true);
+      setQueueData([]);
+      setMessage('Sign in to view your live reminders.');
       setLoading(false);
       return;
     }
@@ -75,31 +67,42 @@ export default function StudyQueuePage() {
       const result = await response.json();
       const reminders = (result.reminders || []).map(mapReminder);
       setQueueData(reminders);
-      setUsingDemo(false);
     } catch (error) {
-      setQueueData(demoQueue);
-      setUsingDemo(true);
-      setMessage('Live reminders are unavailable. Showing demo reminders.');
+      setQueueData([]);
+      setMessage('Live reminders are unavailable. Check that the backend is running and try again.');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const loadPreferences = useCallback(async () => {
+    const token = window.localStorage.getItem('access_token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/reminder-preferences`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Unable to load reminder preferences');
+      const result = await response.json();
+      setPreferences({
+        frequency: String(result.reminder_frequency),
+        quietStart: String(result.quiet_hours_start),
+        quietEnd: String(result.quiet_hours_end),
+      });
+    } catch (error) {
+      setMessage('Reminder preferences could not be loaded from the backend.');
     }
   }, []);
 
   useEffect(() => {
     const loadTask = window.setTimeout(() => {
       loadReminders();
-      const savedPreferences = window.localStorage.getItem('reminder_preferences');
-      if (savedPreferences) {
-        try {
-          setPreferences(JSON.parse(savedPreferences));
-        } catch (error) {
-          window.localStorage.removeItem('reminder_preferences');
-        }
-      }
+      loadPreferences();
       if ('Notification' in window) setNotificationStatus(Notification.permission);
     }, 0);
     return () => window.clearTimeout(loadTask);
-  }, [loadReminders]);
+  }, [loadPreferences, loadReminders]);
 
   useEffect(() => {
     if (!settingsOpen) return undefined;
@@ -122,12 +125,12 @@ export default function StudyQueuePage() {
   const upcomingCount = queueData.length - dueCount;
 
   const sendFeedback = async (reminderId, status, grade) => {
-    if (usingDemo || reminderId.startsWith('demo-')) {
-      setQueueData((items) => items.filter((item) => item.reminder_id !== reminderId));
+    const token = window.localStorage.getItem('access_token');
+    if (!token) {
+      setMessage('Sign in to update reminders.');
       return;
     }
 
-    const token = window.localStorage.getItem('access_token');
     try {
       const response = await fetch(`${API_URL}/api/v1/reminders/${reminderId}/feedback`, {
         method: 'POST',
@@ -141,10 +144,29 @@ export default function StudyQueuePage() {
     }
   };
 
-  const savePreferences = (nextPreferences) => {
+  const savePreferences = async (nextPreferences) => {
     setPreferences(nextPreferences);
-    window.localStorage.setItem('reminder_preferences', JSON.stringify(nextPreferences));
-    setMessage('Reminder preferences saved on this device.');
+    const token = window.localStorage.getItem('access_token');
+    if (!token) {
+      setMessage('Sign in to save reminder preferences.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/reminder-preferences`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          reminder_frequency: Number(nextPreferences.frequency),
+          quiet_hours_start: Number(nextPreferences.quietStart),
+          quiet_hours_end: Number(nextPreferences.quietEnd),
+        }),
+      });
+      if (!response.ok) throw new Error('Unable to save reminder preferences');
+      setMessage('Reminder preferences saved.');
+    } catch (error) {
+      setMessage('Reminder preferences could not be saved.');
+    }
   };
 
   const enableNotifications = async () => {
@@ -187,7 +209,7 @@ export default function StudyQueuePage() {
   const runSchedulerTick = async () => {
     const token = window.localStorage.getItem('access_token');
     if (!token) {
-      setSchedulerStatus('Demo mode: sign in to run the live adaptive scheduler.');
+      setSchedulerStatus('Sign in to run the live adaptive scheduler.');
       return;
     }
 
@@ -294,8 +316,8 @@ export default function StudyQueuePage() {
         </div>
         <div className={`${styles.summaryCard} ${styles.summaryMode}`}>
           <span className={styles.summaryLabel}>Scheduling mode</span>
-          <strong className={styles.summaryModeValue}>{usingDemo ? 'Demo preview' : 'Live adaptive'}</strong>
-          <span className={styles.summaryHint}>{usingDemo ? 'Connect your account for live data' : 'Synced with Reminder One'}</span>
+          <strong className={styles.summaryModeValue}>Live adaptive</strong>
+          <span className={styles.summaryHint}>Synced with Reminder One</span>
         </div>
       </section>
 

@@ -87,6 +87,9 @@
   font-size: 0.875rem;
   cursor: pointer;
   transition: var(--transition);
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .avatar:hover {

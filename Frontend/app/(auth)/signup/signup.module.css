@@ -208,6 +208,16 @@
   transform: translateY(-1px);
 }
 
+.errorMessage {
+  margin-top: 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-sm);
+  background: #FEF2F2;
+  color: #B91C1C;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 900px) {
   .leftPane {
     display: none;

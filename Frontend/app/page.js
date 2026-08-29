@@ -7,8 +7,6 @@ import styles from './landing.module.css';
 export default function LandingPage() {
   return (
     <div className={styles.container}>
-      
-      {/* Navigation */}
       <nav className={styles.nav}>
         <div className={styles.logo}>
           <span style={{ backgroundColor: 'var(--color-accent)', color: 'white', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '1rem' }}>AL</span>
@@ -21,7 +19,6 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <header className={styles.hero}>
         <div className={styles.badge}>R26-SE-022 Research Project</div>
         <h1 className={styles.title}>
@@ -36,10 +33,8 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Features Section */}
       <section className={styles.featuresSection}>
         <div className={styles.featuresGrid}>
-          
           <div className={styles.featureCard}>
             <div className={`${styles.iconWrapper} ${styles.iconBlue}`}>📄</div>
             <h3 className={styles.featureTitle}>AI Summarisation</h3>
@@ -71,10 +66,8 @@ export default function LandingPage() {
               SM-2 spaced repetition algorithms schedule your reviews at the exact right moment for long-term retention.
             </p>
           </div>
-
         </div>
       </section>
-
     </div>
   );
 }

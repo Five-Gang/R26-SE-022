@@ -2,8 +2,8 @@ import "./globals.css";
 import ReminderToast from "../components/reminders/ReminderToast";
 
 export const metadata = {
-  title: "EmotiSense — Affect & Attention-Aware Emotion Detection",
-  description: "Lightweight privacy-preserving emotion detection system for student study sessions using facial landmark detection and eye behavior analysis.",
+  title: "AuraLearn | Emotion-Aware Learning Platform",
+  description: "Adaptive study reminder and emotion-aware learning experience for student focus and retention.",
 };
 
 export default function RootLayout({ children }) {
@@ -13,6 +13,3 @@ export default function RootLayout({ children }) {
         {children}
         <ReminderToast />
       </body>
-    </html>
-  );
-}

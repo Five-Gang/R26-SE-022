@@ -1,12 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './signup.module.css';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+
 export default function SignupPage() {
   const router = useRouter();
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const features = [
     "No configuration needed",
     "Works with any lecture material",
@@ -52,7 +58,30 @@ export default function SignupPage() {
           <h2 className={styles.cardTitle}>Create your account</h2>
           <p className={styles.cardSubtitle}>Join the AuraLearn research cohort.</p>
           
-          <form onSubmit={(e) => { e.preventDefault(); router.push('/dashboard'); }}>
+          <form onSubmit={async (event) => {
+            event.preventDefault();
+            if (form.password !== confirmPassword) {
+              setError('Passwords do not match.');
+              return;
+            }
+            setSubmitting(true);
+            setError('');
+            try {
+              const response = await fetch(`${API_URL}/api/v1/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+              });
+              const result = await response.json();
+              if (!response.ok) throw new Error(result.detail || 'Unable to create account.');
+              window.localStorage.setItem('access_token', result.access_token);
+              router.push('/dashboard');
+            } catch (submitError) {
+              setError(submitError.message);
+            } finally {
+              setSubmitting(false);
+            }
+          }}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="fullName" className={styles.label}>Full name</label>
@@ -60,7 +89,9 @@ export default function SignupPage() {
                   type="text" 
                   id="fullName" 
                   className={styles.input} 
-                  placeholder="K.K.G.Y. Mihiraj" 
+                  placeholder="K.K.G.Y. Mihiraj"
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
                   required 
                 />
               </div>
@@ -82,7 +113,9 @@ export default function SignupPage() {
                 type="email" 
                 id="email" 
                 className={styles.input} 
-                placeholder="mihiraj@sliit.lk" 
+                placeholder="mihiraj@sliit.lk"
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
                 required 
               />
             </div>
@@ -93,7 +126,9 @@ export default function SignupPage() {
                 type="password" 
                 id="password" 
                 className={styles.input} 
-                placeholder="••••••••" 
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
                 required 
               />
             </div>
@@ -104,7 +139,9 @@ export default function SignupPage() {
                 type="password" 
                 id="confirmPassword" 
                 className={styles.input} 
-                placeholder="••••••••" 
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 required 
               />
             </div>
@@ -117,9 +154,10 @@ export default function SignupPage() {
             </div>
             
             <button type="submit" className={styles.primaryBtn}>
-              Create Account & Start Studying
+              {submitting ? 'Creating account...' : 'Create Account & Start Studying'}
             </button>
           </form>
+          {error && <p role="alert" className={styles.errorMessage}>{error}</p>}
         </div>
       </div>
     </div>

@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useSession } from '../../../components/auth/SessionGuard';
 import styles from './settings.module.css';
 
 export default function SettingsPage() {
+  const { student } = useSession();
   const [toggles, setToggles] = useState({
     daily: true,
     focus: true,
@@ -53,25 +55,25 @@ export default function SettingsPage() {
             
             <div className={styles.formGroup}>
               <label className={styles.label}>Full Name</label>
-              <input type="text" className={styles.input} defaultValue="K.K.G.Y. Mihiraj" />
+              <input type="text" className={styles.input} value={student.name} readOnly />
             </div>
 
             <div className={styles.formGroup}>
               <label className={styles.label}>Student ID</label>
-              <input type="text" className={styles.input} defaultValue="IT22224552" />
+              <input type="text" className={styles.input} value={student.student_id} readOnly />
             </div>
 
             <div className={styles.formGroup}>
               <label className={styles.label}>Email</label>
-              <input type="email" className={styles.input} defaultValue="mihiraj@sliit.lk" />
+              <input type="email" className={styles.input} value={student.email} readOnly />
             </div>
 
             <div className={styles.formGroup}>
               <label className={styles.label}>Course</label>
-              <input type="text" className={styles.input} defaultValue="BSc (Hons) IT" />
+              <input type="text" className={styles.input} value="AuraLearn research student" readOnly />
             </div>
 
-            <button className={styles.btnSave}>Save Changes</button>
+            <p className={styles.profileStatus} role="status">Profile synced to your student account</p>
 
           </div>
 

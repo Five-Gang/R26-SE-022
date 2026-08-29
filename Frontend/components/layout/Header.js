@@ -3,10 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from '../auth/SessionGuard';
 import styles from './Header.module.css';
 
 export default function Header() {
   const pathname = usePathname();
+  const { student } = useSession();
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard' },
@@ -43,9 +45,9 @@ export default function Header() {
       </nav>
 
       <div className={styles.rightSection}>
-        <div className={styles.avatar}>
-          KM
-        </div>
+        <Link className={styles.avatar} href="/settings" aria-label="Open your profile" title="Open profile">
+          {(student?.name || student?.email || 'Student').slice(0, 2).toUpperCase()}
+        </Link>
       </div>
     </header>
   );

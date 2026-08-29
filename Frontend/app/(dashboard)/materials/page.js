@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './materials.module.css';
@@ -18,16 +18,29 @@ export default function MaterialsPage() {
     { name: 'Settings', path: '/settings', icon: '⚙️' },
   ];
 
-  const materials = [
-    { id: 1, name: 'Integration Methods Lecture 3', subject: 'CS3042 - Mathematics', date: '2 days ago', status: 'Processed', icon: '📄', type: 'PDF' },
-    { id: 2, name: 'Cell Membrane Structure & Transport', subject: 'BIO2012 - Biology', date: '5 days ago', status: 'Processed', icon: '📽️', type: 'PPTX' },
-    { id: 3, name: 'Binary Search Trees and Graphs', subject: 'CS2041 - Data Structures', date: '1 week ago', status: 'Processed', icon: '📄', type: 'PDF' },
-    { id: 4, name: 'Newton\'s Laws of Motion', subject: 'PHY101 - Physics', date: '2 weeks ago', status: 'Processed', icon: '📽️', type: 'PPTX' },
-    { id: 5, name: 'Operating Systems - Scheduling Algorithms', subject: 'CS3011 - OS', date: '3 weeks ago', status: 'Processed', icon: '📄', type: 'PDF' },
-    { id: 6, name: 'Introduction to Psychology', subject: 'PSY100', date: '1 month ago', status: 'Processed', icon: '📄', type: 'PDF' },
-  ];
-
+  const [materials, setMaterials] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('access_token');
+    if (!token) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/v1/materials`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load materials');
+        return response.json();
+      })
+      .then((result) => setMaterials((result.materials || []).map((material) => ({
+        ...material,
+        date: material.date ? new Date(material.date).toLocaleDateString() : 'Recently added',
+        icon: '📄',
+      }))))
+      .catch(() => setError('Your materials could not be loaded.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredMaterials = materials.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -85,7 +98,10 @@ export default function MaterialsPage() {
         </div>
 
         <div className={styles.grid}>
-          {filteredMaterials.map(mat => (
+          {loading && <p>Loading your materials...</p>}
+          {!loading && error && <p role="alert">{error}</p>}
+          {!loading && !error && filteredMaterials.length === 0 && <p>No materials have been added to your account yet.</p>}
+          {!loading && !error && filteredMaterials.map(mat => (
             <div key={mat.id} className={styles.card}>
               <div className={styles.cardTop}>
                 <div className={styles.fileIcon}>{mat.icon}</div>
