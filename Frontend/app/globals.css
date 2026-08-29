@@ -48,6 +48,18 @@ body {
   font-family: var(--font);
   background: var(--color-background);
   color: var(--color-text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 

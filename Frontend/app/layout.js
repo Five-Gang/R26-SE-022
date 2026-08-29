@@ -13,3 +13,6 @@ export default function RootLayout({ children }) {
         {children}
         <ReminderToast />
       </body>
+    </html>
+  );
+}
