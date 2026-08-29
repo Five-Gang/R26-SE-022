@@ -204,10 +204,36 @@ export default function FocusMonitorPage() {
     if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
     stopWebcam();
+    
+    // Save finished session summary into localStorage for Analytics
+    if (sessionSeconds >= 3) {
+      try {
+        const existingSessions = JSON.parse(localStorage.getItem('auralearn_focus_sessions') || '[]');
+        const newSessionRecord = {
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          label: `Session ${existingSessions.length + 1} (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+          durationSeconds: sessionSeconds,
+          avgAttention: data.attentionScore || 85,
+          fatigueLevel: data.fatigueLevel || "Low",
+          fatiguePct: data.fatiguePct || 20,
+          blinkRate: data.blinkRate || 18,
+          dominantEmotion: data.emotion || "Focused",
+          probs: data.probs || { Focused: 85, Neutral: 15, Confused: 0, Bored: 0 }
+        };
+        existingSessions.push(newSessionRecord);
+        // Keep last 15 sessions
+        if (existingSessions.length > 15) existingSessions.shift();
+        localStorage.setItem('auralearn_focus_sessions', JSON.stringify(existingSessions));
+      } catch (err) {
+        console.error("Failed to save session to localStorage:", err);
+      }
+    }
+
     setStarted(false);
     setSessionSeconds(0);
     setData((d) => ({ ...d, capturing: false, boundingBox: null }));
-  }, []);
+  }, [sessionSeconds, data]);
 
   // When active session starts, bind stream to visible videoRef
   useEffect(() => {
