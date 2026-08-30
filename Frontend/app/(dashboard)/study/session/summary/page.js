@@ -14,28 +14,55 @@ const BLOOM_COLORS = {
 
 export default function SummaryPage() {
   const router = useRouter();
-  const concepts = [
-    {
-      priority: 'HIGH',
-      title: 'Substitution Method',
-      description: 'The substitution method replaces a complex expression with a single variable u. Identify a function and its derivative within the integrand, substitute, integrate, then back-substitute.',
-    },
-    {
-      priority: 'HIGH',
-      title: 'Integration by Parts',
-      description: 'Based on the product rule: ∫u dv = uv - ∫v du. Choose u to be easily differentiable and dv to be easily integrable (LIATE rule). Particularly useful for products of functions.',
-    },
-    {
-      priority: 'MEDIUM',
-      title: 'Trigonometric Integrals',
-      description: 'Involves powers of sin, cos, tan and their combinations. Use Pythagorean identities and half-angle formulas to simplify before integrating. Systematic approach required.',
-    },
-    {
-      priority: 'LOW',
-      title: 'Partial Fractions',
-      description: 'Decompose rational functions into simpler fractions before integrating. Factor the denominator, set up the partial fraction form, solve for coefficients, then integrate each term.',
-    },
-  ];
+  const searchParams = useSearchParams();
+  const contentRef = useRef(null);
+
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
+  const [summaryId, setSummaryId] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [rated, setRated] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [displayedContent, setDisplayedContent] = useState('');
+
+  useEffect(() => {
+    const id = searchParams.get('summary') || searchParams.get('id');
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    setSummaryId(id);
+
+    const fetchSummary = async () => {
+      try {
+        const data = await summariesApi.get(id);
+        setSummary(data);
+        // Simulate streaming render of summary text
+        const text = data.summary_text || data.content || '';
+        if (text) {
+          setStreaming(true);
+          let i = 0;
+          const step = () => {
+            i += 12;
+            setDisplayedContent(text.slice(0, i));
+            if (i < text.length) {
+              requestAnimationFrame(step);
+            } else {
+              setDisplayedContent(text);
+              setStreaming(false);
+            }
+          };
+          requestAnimationFrame(step);
+        }
+      } catch {
+        setSummary(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, [searchParams]);
 
   const submitRating = async (stars) => {
     setRating(stars);

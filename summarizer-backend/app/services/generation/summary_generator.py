@@ -69,8 +69,8 @@ class SummaryGenerationOrchestrator:
             learning_outcomes=learning_outcomes,
             module_code=module_code,
             week_number=week_number,
-            top_k_per_lo=5,
-            top_k_query=15,
+            top_k_per_lo=3,
+            top_k_query=8,
         )
 
         # ── Step 2: Re-rank ──
@@ -132,11 +132,11 @@ class SummaryGenerationOrchestrator:
         )
 
         # ── Step 5: Generate via LLM ──
-        # Low temperature = faithful, precise synthesis; high tokens = comprehensive output
+        # Low temperature = faithful, precise synthesis
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.15,
-            max_tokens=max_length or 6000,
+            max_tokens=max_length or 2000,
         )
 
         # ── Step 6: Validate ──
@@ -228,7 +228,7 @@ class SummaryGenerationOrchestrator:
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.5,
-            max_tokens=8000,
+            max_tokens=3000,
             json_mode=True,
         )
 
@@ -315,7 +315,7 @@ class SummaryGenerationOrchestrator:
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.7,
-            max_tokens=8000,
+            max_tokens=3000,
             json_mode=True,
         )
 

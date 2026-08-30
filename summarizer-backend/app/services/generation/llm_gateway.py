@@ -137,7 +137,12 @@ class LLMGateway:
                 config=config,
             )
         except Exception as api_err:
-            print(f"⚠️ Gemini API call failed ({api_err}). Generating structured fallback response.")
+            import traceback
+            print(f"❌ Gemini API call FAILED — model={self.settings.gemini_model}")
+            print(f"   Error type : {type(api_err).__name__}")
+            print(f"   Error msg  : {api_err}")
+            traceback.print_exc()
+            print("⚠️  Returning fallback response (NOT real LLM output).")
             return self._generate_fallback(messages, json_mode)
 
         generation_time = int((time.time() - start_time) * 1000)

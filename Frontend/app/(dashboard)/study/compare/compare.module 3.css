@@ -1,0 +1,80 @@
+.page { padding: 2.5rem 3rem; max-width: 1300px; margin: 0 auto; }
+
+.pageHeader { margin-bottom: 1.75rem; }
+.title { font-size: 1.65rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem; }
+.subtitle { color: var(--color-text-secondary); font-size: 0.92rem; }
+
+/* ── Form Card ───────────────────────────────────────── */
+.formCard {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 2rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.formRow { display: flex; gap: 1rem; flex-wrap: wrap; }
+.formGroup { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 200px; }
+.formLabel { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); }
+.formSelect, .queryInput {
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 0.6rem 0.8rem; font-family: var(--font); font-size: 0.875rem;
+  background: var(--color-surface); color: var(--color-text-primary); outline: none;
+}
+.queryInput { resize: vertical; width: 100%; }
+.formSelect:focus, .queryInput:focus { border-color: var(--color-accent); }
+
+.errorBox { background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 0.7rem 1rem; color: #991b1b; font-size: 0.875rem; }
+
+.btnRun {
+  background: var(--color-accent); color: white; border: none;
+  border-radius: var(--radius-md); padding: 0.75rem 1.75rem;
+  font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  align-self: flex-start; transition: background 0.2s;
+}
+.btnRun:hover:not(:disabled) { background: var(--color-accent-hover); }
+.btnRun:disabled { opacity: 0.6; cursor: not-allowed; }
+.running { background: #0f766e; }
+.btnSpinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Banner ──────────────────────────────────────────── */
+.banner {
+  display: flex; align-items: center; gap: 1.5rem;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.bannerStat { display: flex; flex-direction: column; gap: 0.2rem; }
+.bannerLabel { font-size: 0.75rem; color: var(--color-text-muted); font-weight: 500; }
+.bannerVal { font-size: 1.3rem; font-weight: 800; }
+.bannerDivider { font-size: 1rem; font-weight: 700; color: var(--color-text-muted); padding: 0 0.5rem; }
+.bannerTime { margin-left: auto; font-size: 0.78rem; color: var(--color-text-muted); }
+
+/* ── Split View ──────────────────────────────────────── */
+.splitView { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
+
+.pane {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--color-surface); overflow: hidden;
+}
+.paneHighlight { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+
+.paneHeader { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--color-border); }
+.paneTitle { font-weight: 700; font-size: 0.95rem; color: var(--color-primary); margin-bottom: 0.2rem; }
+.paneSubtitle { font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.paneMeta { display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.72rem; font-weight: 600; color: var(--color-text-secondary); }
+
+.paneContent {
+  padding: 1.25rem 1.5rem; font-size: 0.875rem;
+  line-height: 1.7; color: var(--color-text-primary);
+  max-height: 600px; overflow-y: auto;
+}
+
+.mdH1 { font-size: 1.05rem; font-weight: 700; color: var(--color-primary); margin: 0.9rem 0 0.3rem; }
+.mdH2 { font-size: 0.95rem; font-weight: 600; color: var(--color-primary); margin: 0.75rem 0 0.25rem; }
+.mdP  { margin: 0.2rem 0; }
+.mdLi { margin-left: 1.1rem; list-style: disc; margin-bottom: 0.15rem; }
+
+@media (max-width: 900px) {
+  .splitView { grid-template-columns: 1fr; }
+  .page { padding: 1.5rem 1rem; }
+}
