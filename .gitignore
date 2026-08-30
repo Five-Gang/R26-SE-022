@@ -138,11 +138,105 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Python & Data (Do not push heavy datasets)
+# Python / Bytecode & Caches
 __pycache__/
-Model/Data/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Linting / Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.pytype/
+.ruff_cache/
+
+# IDE & Editors
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Environment variables & secrets (Never push secrets)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node.js & Frontend dependencies/build
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+dist/
+.turbo
+.eslintcache
+
+# Logs
+logs/
+*.log
+
+# Heavy archives, datasets & large experimental models (>100MB)
 *.zip
-extracted_features.csv
+*.tar.gz
+*.rar
+*.7z
+*.docx
+*.doc
+*.pptx
+*.pdf
 proposal_extracted.txt
+Model/Data/
 extracted_features*.csv
-*.pkl
+*.csv.bak
+Model/emotion_rf_model_v2.pkl
+Model/emotion_rf_model_v3.pkl
+Model/label_encoder_v2.pkl
+Model/label_encoder_v3.pkl
