@@ -1,0 +1,120 @@
+{
+  "code": "SE4040",
+  "name": "Secure Software Development",
+  "description": "Covers principles and practices of building secure software systems, from threat modeling to enterprise security governance.",
+  "credits": 4,
+  "year": 2026,
+  "semester": 2,
+  "department": "Software Engineering",
+  "lecturer": "Dr Samith",
+  "assessment_structure": {
+    "assignments": 0.20,
+    "midterm": 0.20,
+    "final_exam": 0.50,
+    "lab": 0.10
+  },
+  "learning_outcomes": [
+    {
+      "lo_code": "LO1",
+      "bloom_level": "Understand",
+      "bloom_verb": "interpret",
+      "text": "Interpret secure software programming practices and apply them in real world to build secure software applications.",
+      "topic_keywords": ["secure programming", "software security", "secure applications", "programming practices", "OWASP"]
+    },
+    {
+      "lo_code": "LO2",
+      "bloom_level": "Create",
+      "bloom_verb": "design",
+      "text": "Design threat models for identifying security vulnerabilities in applications and formulate mitigation techniques.",
+      "topic_keywords": ["threat modeling", "STRIDE", "DREAD", "vulnerabilities", "mitigation", "attack trees"]
+    },
+    {
+      "lo_code": "LO3",
+      "bloom_level": "Understand",
+      "bloom_verb": "explain",
+      "text": "Explain the use of standard security protocols in application programming and apply them in real world use cases.",
+      "topic_keywords": ["security protocols", "TLS", "OAuth", "OpenID Connect", "authentication", "cryptography", "SAML"]
+    },
+    {
+      "lo_code": "LO4",
+      "bloom_level": "Analyze",
+      "bloom_verb": "analyze",
+      "text": "Analyze security vulnerability assessment reports and recommend resolution strategies.",
+      "topic_keywords": ["vulnerability assessment", "SAST", "DAST", "penetration testing", "CVE", "CVSS", "security reports"]
+    },
+    {
+      "lo_code": "LO5",
+      "bloom_level": "Create",
+      "bloom_verb": "create",
+      "text": "Create policies and best practices for enterprise security management and governance within an organization.",
+      "topic_keywords": ["security policy", "governance", "risk management", "enterprise security", "ISO 27001", "incident response"]
+    }
+  ],
+  "weekly_breakdown": [
+    {
+      "week_number": 1,
+      "topic": "Introduction to Software Security",
+      "subtopics": ["Security principles", "CIA triad (Confidentiality, Integrity, Availability)", "Attack surfaces", "Security mindset", "Why security matters"]
+    },
+    {
+      "week_number": 2,
+      "topic": "Threat Modeling",
+      "subtopics": ["STRIDE model", "DREAD scoring", "Attack trees", "Data flow diagrams", "Threat identification process"]
+    },
+    {
+      "week_number": 3,
+      "topic": "Secure Software Development Lifecycle (SSDLC)",
+      "subtopics": ["Security requirements", "Design reviews", "Security gates", "OWASP SAMM", "DevSecOps"]
+    },
+    {
+      "week_number": 4,
+      "topic": "Input Validation and Output Encoding",
+      "subtopics": ["SQL Injection", "Cross-Site Scripting (XSS)", "Input sanitisation", "Parameterised queries", "OWASP Top 10"]
+    },
+    {
+      "week_number": 5,
+      "topic": "Authentication and Session Management",
+      "subtopics": ["Password hashing (bcrypt, Argon2)", "Multi-factor authentication", "Session tokens", "JWT", "OAuth 2.0 flows"]
+    },
+    {
+      "week_number": 6,
+      "topic": "Authorisation and Access Control",
+      "subtopics": ["Role-Based Access Control (RBAC)", "Attribute-Based Access Control (ABAC)", "Principle of least privilege", "IDOR vulnerabilities"]
+    },
+    {
+      "week_number": 7,
+      "topic": "Cryptography in Applications",
+      "subtopics": ["Symmetric vs asymmetric encryption", "TLS/SSL", "Key management", "Hashing algorithms", "Digital signatures"]
+    },
+    {
+      "week_number": 8,
+      "topic": "Secure API Design",
+      "subtopics": ["REST security principles", "API authentication", "Rate limiting", "OWASP API Top 10", "API gateway security"]
+    },
+    {
+      "week_number": 9,
+      "topic": "Vulnerability Assessment",
+      "subtopics": ["Static analysis (SAST)", "Dynamic analysis (DAST)", "Penetration testing methodology", "CVE and CVSS scoring", "Vulnerability lifecycle"]
+    },
+    {
+      "week_number": 10,
+      "topic": "Secure Coding Practices",
+      "subtopics": ["Memory safety", "Buffer overflow prevention", "Secure error handling", "Dependency management", "Code review for security"]
+    },
+    {
+      "week_number": 11,
+      "topic": "Security Protocols and Standards",
+      "subtopics": ["OAuth 2.0", "OpenID Connect", "SAML 2.0", "ISO 27001", "NIST Cybersecurity Framework"]
+    },
+    {
+      "week_number": 12,
+      "topic": "Enterprise Security Management",
+      "subtopics": ["Security policies", "Incident response planning", "Security governance frameworks", "Risk management", "Business continuity"]
+    },
+    {
+      "week_number": 13,
+      "topic": "Case Studies and Exam Review",
+      "subtopics": ["SolarWinds supply chain attack", "Equifax data breach", "Log4Shell vulnerability", "Exam preparation", "Research discussion"]
+    }
+  ]
+}

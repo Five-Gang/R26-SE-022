@@ -22,14 +22,14 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.container}>
-      
+
       {/* Sidebar specific to main layout areas */}
       <aside className={styles.sidebar}>
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
-            <Link 
-              key={item.name} 
+            <Link
+              key={item.name}
               href={item.path}
               className={`${styles.navLink} ${isActive ? styles.active : ''}`}
             >
@@ -42,13 +42,13 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <main className={styles.main}>
-        
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
           <div>
             <h1 className={styles.pageTitle}>Welcome back, Mihiraj!</h1>
             <p className={styles.pageSubtitle}>Ready for today&apos;s session? You have 3 tasks pending.</p>
           </div>
-          
+
           {/* Gamification Widget on Dashboard */}
           <Link href="/rewards" style={{ textDecoration: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: 'var(--color-surface)', padding: '0.75rem 1.5rem', borderRadius: '30px', border: '1px solid var(--color-border)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -89,12 +89,12 @@ export default function DashboardPage() {
         </div>
 
         <div className={styles.bottomGrid}>
-          
+
           {/* Recent Study Sessions */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Recent Study Sessions</h2>
             <div className={styles.sessionList}>
-              
+
               <div className={styles.sessionRow}>
                 <div className={`${styles.scoreBadge} ${styles.scoreGreen}`}>87%</div>
                 <div className={styles.sessionInfo}>
@@ -135,7 +135,7 @@ export default function DashboardPage() {
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Upcoming Reminders</h2>
             <div className={styles.reminderList}>
-              
+
               <div className={styles.reminderRow}>
                 <div className={styles.reminderTitle}>Integration Methods</div>
                 <div className={styles.reminderTime}>

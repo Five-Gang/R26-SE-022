@@ -1,0 +1,394 @@
+.page {
+  padding: 2.5rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  max-width: 520px;
+}
+
+.headerRight {
+  display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  min-width: 240px;
+  box-shadow: var(--shadow-sm);
+}
+
+.searchIcon { font-size: 0.9rem; color: var(--color-text-muted); }
+
+.searchInput {
+  border: none; outline: none; background: transparent;
+  font-family: var(--font); font-size: 0.9rem;
+  color: var(--color-text-primary); width: 100%;
+}
+
+.btnAddModule {
+  background: var(--color-accent);
+  color: white; border: none;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(15,118,110,0.25);
+}
+.btnAddModule:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── States ─────────────────────────────────────────── */
+.stateCenter {
+  text-align: center; padding: 5rem 2rem;
+  color: var(--color-text-secondary);
+}
+
+.emptyState {
+  text-align: center; padding: 5rem 2rem;
+  color: var(--color-text-secondary);
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.emptyIcon { font-size: 3rem; margin-bottom: 0.75rem; }
+.emptyText { font-size: 1.1rem; font-weight: 600; color: var(--color-text-primary); }
+.emptyHint { font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 1.5rem; }
+
+.btnAddModuleEmpty {
+  background: var(--color-accent); color: white; border: none;
+  border-radius: var(--radius-md); padding: 0.7rem 1.5rem;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btnAddModuleEmpty:hover { opacity: 0.88; }
+
+.errorBox {
+  display: flex; align-items: flex-start; gap: 1rem;
+  background: #fff5f5; border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  color: #991b1b; font-size: 0.9rem;
+}
+.errorBox > span { font-size: 1.5rem; flex-shrink: 0; }
+.errorBox strong { display: block; margin-bottom: 0.25rem; font-size: 1rem; }
+
+/* ── Grid ────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Module Card ─────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem; text-decoration: none;
+  color: var(--color-text-primary);
+  display: flex; flex-direction: column; gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition); cursor: pointer;
+}
+.card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.cardBadges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.codeBadge {
+  background: #f0f9ff; color: #0369a1;
+  border: 1px solid #bae6fd;
+  font-size: 0.75rem; font-weight: 700;
+  padding: 0.2rem 0.6rem; border-radius: 6px; letter-spacing: 0.04em;
+}
+.deptBadge {
+  background: #f0fdf4; color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: 0.75rem; font-weight: 500;
+  padding: 0.2rem 0.6rem; border-radius: 6px;
+}
+.outlineReadyBadge {
+  background: #f0fdf4; color: #0f766e;
+  border: 1px solid #86efac;
+  font-size: 0.72rem; font-weight: 600;
+  padding: 0.2rem 0.6rem; border-radius: 6px;
+}
+.outlinePendingBadge {
+  background: #fffbeb; color: #92400e;
+  border: 1px solid #fcd34d;
+  font-size: 0.72rem; font-weight: 600;
+  padding: 0.2rem 0.6rem; border-radius: 6px;
+}
+
+.cardName {
+  font-size: 1rem; font-weight: 600;
+  line-height: 1.4; color: var(--color-primary); flex: 1;
+}
+.cardMeta {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  font-size: 0.8rem; color: var(--color-text-muted);
+}
+
+.loRow { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.loLabel {
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--color-text-muted); letter-spacing: 0.05em; margin-right: 0.1rem;
+}
+.loDot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0; transition: transform 0.15s;
+}
+.loDot:hover { transform: scale(1.5); }
+.loMore { font-size: 0.72rem; color: var(--color-text-muted); font-weight: 500; }
+
+.cardArrow {
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--color-accent); margin-top: 0.25rem;
+}
+
+/* ── Add Module Card ─────────────────────────────────── */
+.addCard {
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem; background: #fafbfc;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.5rem; cursor: pointer;
+  transition: all 0.2s; color: var(--color-text-muted);
+  min-height: 160px;
+}
+.addCard:hover {
+  border-color: var(--color-accent);
+  background: #f0fdf4; color: var(--color-accent);
+}
+.addCardIcon { font-size: 1.75rem; font-weight: 300; }
+.addCardLabel { font-size: 0.875rem; font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════
+   CREATE MODULE MODAL
+   ═══════════════════════════════════════════════════════ */
+.modalOverlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: white; border-radius: 20px;
+  width: 100%; max-width: 560px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+  max-height: 92vh; overflow-y: auto;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Modal header with steps */
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.modalSteps { display: flex; align-items: center; gap: 0.5rem; }
+.modalStep {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; font-weight: 600;
+  color: #94a3b8; transition: color 0.2s;
+}
+.modalStepActive { color: var(--color-accent); }
+.modalStepNum {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #e2e8f0; color: #64748b;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.modalStepActive .modalStepNum {
+  background: var(--color-accent); color: white;
+}
+.modalStepLine {
+  width: 2rem; height: 2px; background: #e2e8f0; border-radius: 1px;
+}
+.modalClose {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; color: #94a3b8; padding: 0.25rem;
+  border-radius: 6px; transition: color 0.15s;
+}
+.modalClose:hover { color: #ef4444; }
+
+/* Modal body */
+.modalBody { padding: 1.75rem 1.75rem 1.5rem; }
+.modalTitle {
+  font-size: 1.2rem; font-weight: 800; color: #0f172a;
+  margin: 0 0 0.35rem 0;
+}
+.modalDesc {
+  font-size: 0.85rem; color: var(--color-text-secondary);
+  margin: 0 0 1.5rem 0; line-height: 1.5;
+}
+
+/* Form grid */
+.formGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.formGroup { display: flex; flex-direction: column; gap: 0.3rem; }
+.spanFull { grid-column: 1 / -1; }
+.formLabel {
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.req { color: #ef4444; }
+.formInput {
+  border: 1.5px solid #e2e8f0; border-radius: 9px;
+  padding: 0.6rem 0.85rem; font-size: 0.875rem;
+  font-family: var(--font); color: #1e293b;
+  background: #f8fafc; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.formInput:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(15,118,110,0.1);
+  background: white;
+}
+.formTextarea { resize: vertical; min-height: 60px; }
+.formError {
+  background: #fff5f5; border: 1px solid #fecaca;
+  border-radius: 8px; padding: 0.65rem 0.9rem;
+  font-size: 0.83rem; color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+/* Modal actions */
+.modalActions {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;
+}
+.btnPrimary {
+  background: var(--color-accent); color: white;
+  border: none; border-radius: 10px;
+  padding: 0.7rem 1.5rem; font-size: 0.875rem;
+  font-weight: 700; cursor: pointer;
+  transition: opacity 0.15s; white-space: nowrap;
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btnSecondary {
+  background: #f1f5f9; color: var(--color-text-secondary);
+  border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 0.7rem 1.25rem; font-size: 0.875rem;
+  font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.btnSecondary:hover { background: #e2e8f0; }
+.btnSkip {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.8rem; color: var(--color-text-muted);
+  text-decoration: underline; padding: 0.5rem;
+}
+.btnSkip:hover { color: var(--color-text-secondary); }
+
+/* Step 2 — Module created badge */
+.moduleCreatedBadge {
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 10px; padding: 0.65rem 1rem;
+  font-size: 0.85rem; color: #166534;
+  margin-bottom: 1.25rem;
+}
+
+/* Outline drop zone (step 2, big) */
+.outlineDropBig {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px; padding: 3rem 2rem;
+  text-align: center; cursor: pointer;
+  background: #f8fafc; transition: all 0.2s;
+  margin-bottom: 0.75rem;
+}
+.outlineDropBig:hover { border-color: var(--color-accent); background: #f0fdf4; }
+.dropActive {
+  border-color: var(--color-accent) !important;
+  background: #ecfdf5 !important;
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(15,118,110,0.1);
+}
+.dropUploading { pointer-events: none; opacity: 0.75; }
+
+.dropInner { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.dropBigIcon { font-size: 3rem; margin-bottom: 0.35rem; }
+.dropBigTitle { font-size: 1rem; font-weight: 700; color: var(--color-primary); }
+.dropBigSub { font-size: 0.83rem; color: var(--color-text-secondary); }
+.dropBigFormats {
+  margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted);
+  background: #f1f5f9; border-radius: 20px; padding: 0.2rem 0.9rem;
+}
+
+/* Uploading state */
+.uploadingState { display: flex; align-items: center; gap: 1rem; justify-content: center; }
+.uploadSpinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid #e2e8f0; border-top-color: var(--color-accent);
+  animation: spin 0.8s linear infinite; flex-shrink: 0;
+}
+.uploadingLabel { font-size: 0.9rem; font-weight: 600; color: var(--color-primary); }
+.uploadingFile { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.2rem; }
+
+/* Outline success box */
+.outlineSuccessBox {
+  display: flex; gap: 1rem; align-items: flex-start;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 12px; padding: 1.25rem; margin-bottom: 0.5rem;
+}
+.successIcon { font-size: 1.75rem; flex-shrink: 0; }
+.successTitle { font-size: 0.95rem; font-weight: 700; color: #0f766e; margin-bottom: 0.2rem; }
+.successFile { font-size: 0.8rem; color: #166534; margin-bottom: 0.4rem; }
+.successNote { font-size: 0.78rem; color: #15803d; line-height: 1.5; }
+
+@media (max-width: 640px) {
+  .page { padding: 1.5rem 1rem; }
+  .formGrid { grid-template-columns: 1fr; }
+  .pageHeader { flex-direction: column; }
+  .headerRight { width: 100%; }
+  .searchBox { min-width: unset; flex: 1; }
+}

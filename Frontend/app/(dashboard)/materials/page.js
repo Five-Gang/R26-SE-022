@@ -1,22 +1,29 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { modulesApi, documentsApi } from '../../../lib/summarizer-api';
 import styles from './materials.module.css';
 
-export default function MaterialsPage() {
-  const pathname = usePathname();
+const STATUS_META = {
+  pending: { label: 'Pending', color: '#f59e0b' },
+  processing: { label: 'Processing', color: '#0ea5e9' },
+  completed: { label: 'Processed', color: '#0f766e' },
+  failed: { label: 'Failed', color: '#ef4444' },
+};
 
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
-  ];
+export default function MaterialsPage() {
+  const [modules, setModules] = useState([]);
+  const [docs, setDocs] = useState([]);
+  const [selectedModule, setSelectedModule] = useState('all');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [uploadModuleId, setUploadModuleId] = useState('');
+  const [uploadType, setUploadType] = useState('lecture_slide');
+  const [uploadError, setUploadError] = useState(null);
+  const fileRef = useRef();
 
   const [materials, setMaterials] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,66 +49,95 @@ export default function MaterialsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredMaterials = materials.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredMaterials = materials.filter(m =>
+    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className={styles.container}>
-      
-      <aside className={styles.sidebar}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link 
-              key={item.name} 
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </aside>
-
       <main className={styles.main}>
-        
         <div className={styles.headerRow}>
           <div>
             <h1 className={styles.pageTitle}>Study Materials</h1>
-            <p className={styles.pageSubtitle}>Your uploaded files, AI summaries, and flashcard decks.</p>
+            <p className={styles.pageSubtitle}>
+              Your uploaded lecture files — PDFs, PowerPoints, and their processing status.
+            </p>
           </div>
-          <Link href="/study" className={styles.btnUpload}>
+          <button className={styles.btnUpload} onClick={() => setShowUpload(true)}>
             <span>+</span> Upload New
-          </Link>
+          </button>
         </div>
 
+        {/* Upload Modal */}
+        {showUpload && (
+          <div className={styles.modalOverlay} onClick={() => setShowUpload(false)}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <h2 className={styles.modalTitle}>Upload Document</h2>
+
+              <label className={styles.formLabel}>Module</label>
+              <select
+                className={styles.formSelect}
+                value={uploadModuleId}
+                onChange={(e) => setUploadModuleId(e.target.value)}
+              >
+                {modules.map((m) => (
+                  <option key={m.id} value={m.id}>{m.code} — {m.name}</option>
+                ))}
+              </select>
+
+              <label className={styles.formLabel}>Document Type</label>
+              <select
+                className={styles.formSelect}
+                value={uploadType}
+                onChange={(e) => setUploadType(e.target.value)}
+              >
+                <option value="lecture_slide">Lecture Slides (PDF/PPTX)</option>
+                <option value="lecture_note">Lecture Notes (PDF)</option>
+                <option value="module_outline">Module Outline</option>
+              </select>
+
+              <label className={styles.formLabel}>File (PDF or PPTX)</label>
+              <input ref={fileRef} type="file" accept=".pdf,.pptx,.ppt" className={styles.fileInput} />
+
+              {uploadError && <div className={styles.uploadError}>{uploadError}</div>}
+
+              <div className={styles.modalActions}>
+                <button className={styles.btnCancel} onClick={() => setShowUpload(false)}>Cancel</button>
+                <button className={styles.btnConfirm} onClick={handleUpload} disabled={uploading}>
+                  {uploading ? 'Uploading…' : 'Upload'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Controls */}
         <div className={styles.controlsRow}>
           <div className={styles.searchBox}>
             <span className={styles.searchIcon}>🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search lectures, subjects..." 
+            <input
+              type="text"
+              placeholder="Search files, modules..."
               className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select className={styles.filterSelect}>
-            <option>All Subjects</option>
-            <option>CS3042</option>
-            <option>BIO2012</option>
-            <option>CS2041</option>
+          <select
+            className={styles.filterSelect}
+            value={selectedModule}
+            onChange={(e) => setSelectedModule(e.target.value)}
+          >
+            <option value="all">All Modules</option>
+            {modules.map((m) => (
+              <option key={m.id} value={m.id}>{m.code}</option>
+            ))}
           </select>
         </div>
 
         <div className={styles.grid}>
-          {loading && <p>Loading your materials...</p>}
-          {!loading && error && <p role="alert">{error}</p>}
-          {!loading && !error && filteredMaterials.length === 0 && <p>No materials have been added to your account yet.</p>}
-          {!loading && !error && filteredMaterials.map(mat => (
+          {filteredMaterials.map(mat => (
             <div key={mat.id} className={styles.card}>
               <div className={styles.cardTop}>
                 <div className={styles.fileIcon}>{mat.icon}</div>
@@ -109,7 +145,7 @@ export default function MaterialsPage() {
               </div>
               <h3 className={styles.fileName}>{mat.name}</h3>
               <div className={styles.fileSubject}>{mat.subject}</div>
-              
+
               <div className={styles.cardBottom}>
                 <div className={styles.fileMeta}>{mat.date} · {mat.type}</div>
                 <div className={styles.statusBadge}>{mat.status}</div>

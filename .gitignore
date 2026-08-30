@@ -138,8 +138,38 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Python / Bytecode & Caches
+# Python & Data (Do not push heavy datasets)
 __pycache__/
+**/__pycache__/
+.venv/
+**/.venv/
+venv/
+**/venv/
+env/
+**/env/
+ENV/
+**/ENV/
+.env.bak
+*.pyc
+*.pyo
+*.pyd
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+**/.pytest_cache/
+
+# ── Universal Node / JavaScript / Next.js ─────────────
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+**/out/
+.cache/
+**/.cache/
+
+# ── Universal Data, Models & Uploads ──────────────────
 *.py[cod]
 *$py.class
 *.so
@@ -240,3 +270,16 @@ Model/emotion_rf_model_v2.pkl
 Model/emotion_rf_model_v3.pkl
 Model/label_encoder_v2.pkl
 Model/label_encoder_v3.pkl
+uploads/
+**/uploads/
+*.db
+*.sqlite
+*.sqlite3
+
+# ── macOS System & Duplicate Files ───────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+* 2.*
+* 2
