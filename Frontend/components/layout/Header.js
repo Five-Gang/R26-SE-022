@@ -13,6 +13,8 @@ export default function Header() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Study', path: '/study' },
+    { name: 'Focus Monitor', path: '/focus-monitor' },
+    { name: 'Analytics', path: '/analytics' },
     { name: 'AI Tutor', path: '/tutor' },
     { name: 'Materials', path: '/materials' },
     { name: 'Reminders', path: '/study/queue' },
@@ -31,10 +33,10 @@ export default function Header() {
       <nav className={styles.nav}>
         {navItems.map((item) => {
           const isActive = pathname === item.path || (pathname?.startsWith(item.path) && item.path !== '/');
-          
+
           return (
-            <Link 
-              key={item.name} 
+            <Link
+              key={item.name}
               href={item.path}
               className={`${styles.navLink} ${isActive ? styles.active : ''}`}
             >

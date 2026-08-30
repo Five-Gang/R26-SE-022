@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Study', path: '/study', icon: '📚' },
+    { name: 'Focus Monitor', path: '/focus-monitor', icon: '🎯' },
     { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
     { name: 'Materials', path: '/materials', icon: '📁' },
     { name: 'Reminders', path: '/study/queue', icon: '⏰' },

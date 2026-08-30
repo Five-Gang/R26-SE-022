@@ -112,6 +112,10 @@ class FeatureExtractor:
             "yMax": max(y_coords)
         }
 
+        # Precise Eye Aspect Ratio (EAR) Blink Detection:
+        # Open Eye EAR is typically 0.22 - 0.35. A real blink drops EAR below 0.165.
+        is_blinking = bool(avg_ear < 0.165)
+
         # Construct feature vector
         features = {
             "ear_left": ear_left,
@@ -123,7 +127,7 @@ class FeatureExtractor:
             "mouth_width": mouth_width / w,
             "mouth_height": mouth_height / h,
             "eyebrow_asymmetry": eyebrow_asymmetry,
-            "is_blinking": bool(avg_ear < 0.21),
+            "is_blinking": is_blinking,
             "bounding_box": bbox
         }
         

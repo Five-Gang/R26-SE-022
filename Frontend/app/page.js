@@ -13,7 +13,6 @@ export default function LandingPage() {
           AuraLearn
         </div>
         <div className={styles.navLinks}>
-          <Link href="/emotion-demo" className={styles.navLink}>Emotion Demo</Link>
           <Link href="/login" className={styles.navLink}>Sign In</Link>
           <Link href="/signup" className={styles.btnPrimary} style={{ padding: '0.6rem 1.5rem', fontSize: '0.95rem' }}>Get Started</Link>
         </div>

@@ -3,7 +3,7 @@
 
 /* ===== CSS VARIABLES ===== */
 :root {
-  --color-primary: #1E293B;
+  --color-primary: #1E293B; /* Dark Blue from screenshot */
   --color-primary-hover: #0F172A;
   --color-accent: #0F766E;
   --color-accent-hover: #115E59;
@@ -14,6 +14,7 @@
   --color-text-muted: #94A3B8;
   --color-border: #E2E8F0;
 
+  /* --- Old Variables for Emotion Detection Sample Page --- */
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-card: #16161f;
@@ -30,6 +31,7 @@
   --confused-color: #eab308;
   --frustrated-color: #ef4444;
   --bored-color: #64748b;
+  /* -------------------------------------------------------- */
 
   --radius-sm: 6px;
   --radius-md: 12px;

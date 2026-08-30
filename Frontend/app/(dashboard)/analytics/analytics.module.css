@@ -47,12 +47,15 @@
 
 .main {
   flex: 1;
-  padding: 3rem 4rem;
+  padding: 2.5rem 3.5rem;
   overflow-y: auto;
 }
 
 .headerBlock {
-  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
 }
 
 .pageTitle {
@@ -64,40 +67,114 @@
 
 .pageSubtitle {
   color: var(--color-text-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
+/* Daily Goal & Self-Regulation Banner */
+.goalBanner {
+  background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 2rem;
+  color: #FFFFFF;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 25px rgba(15, 118, 110, 0.15);
+}
+
+.goalInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.goalTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.goalDesc {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.goalMetrics {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.streakBadge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.goalProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 180px;
+}
+
+.goalProgressTrack {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.goalProgressFill {
+  height: 100%;
+  background: #FEF08A;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+/* 4 Key Metric Cards */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
 }
 
 .statCard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
 .statIcon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
 }
 
-.iconBlue { background-color: #EFF6FF; }
-.iconGreen { background-color: #F0FDF4; }
-.iconPurple { background-color: #F3E8FF; }
+.iconBlue { background-color: #EFF6FF; color: #2563EB; }
+.iconGreen { background-color: #F0FDF4; color: #16A34A; }
+.iconPurple { background-color: #F3E8FF; color: #7E22CE; }
+.iconAmber { background-color: #FEF3C7; color: #D97706; }
 
 .statInfo {
   display: flex;
@@ -105,14 +182,14 @@
 }
 
 .statValue {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-primary);
   line-height: 1.2;
 }
 
 .statLabel {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
@@ -120,27 +197,118 @@
 .chartsGrid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .chartCard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 2rem;
+  padding: 1.75rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
 .chartTitle {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: 2rem;
+}
+
+/* History Log Table */
+.historyCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.historyTable th {
+  padding: 0.85rem 1rem;
+  background-color: #F8FAFC;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.historyTable td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary);
+}
+
+.historyTable tr:last-child td {
+  border-bottom: none;
+}
+
+.historyTable tr:hover td {
+  background-color: #F8FAFC;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badgeFocused { background-color: #DCFCE7; color: #16A34A; }
+.badgeNeutral { background-color: #EFF6FF; color: #2563EB; }
+.badgeConfused { background-color: #FEF3C7; color: #D97706; }
+.badgeBored { background-color: #FEE2E2; color: #DC2626; }
+
+.btnExport {
+  background-color: #0F766E;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+
+.btnExport:hover {
+  background-color: #0D9488;
 }
 
 @media (max-width: 1024px) {
   .chartsGrid {
     grid-template-columns: 1fr;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .goalBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 }
 
@@ -149,7 +317,7 @@
     display: none;
   }
   .main {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem;
   }
   .statsGrid {
     grid-template-columns: 1fr;
