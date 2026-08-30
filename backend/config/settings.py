@@ -39,11 +39,15 @@ class Settings(BaseSettings):
     retrieval_top_k: int = int(os.getenv("RETRIEVAL_TOP_K", 5))
     similarity_threshold: float = float(os.getenv("SIMILARITY_THRESHOLD", 0.3))
     
-    # LLM Settings (Ollama)
-    llm_model: str = os.getenv("LLM_MODEL", "llama3.2")
+    # LLM Settings (Google AI Studio Gemini API)
+    llm_provider: str = "gemini"
+    llm_model: str = os.getenv("LLM_MODEL", "gemini-2.5-flash")
     llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", 0.7))
     llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", 1024))
-    ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    
+    # Gemini / Google AI Studio API Settings
+    gemini_api_key: Optional[str] = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    gemini_api_url: str = os.getenv("GEMINI_API_URL", "https://generativelanguage.googleapis.com/v1beta")
     
     # Confidence Thresholds
     confidence_high_threshold: float = float(os.getenv("CONFIDENCE_HIGH_THRESHOLD", 0.75))

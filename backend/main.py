@@ -63,7 +63,8 @@ def get_llm_engine() -> LLMEngine:
     if _llm_engine is None:
         _llm_engine = LLMEngine(
             model_name=settings.llm_model,
-            ollama_url=settings.ollama_url,
+            api_key=settings.gemini_api_key,
+            gemini_api_url=settings.gemini_api_url,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens
         )
@@ -162,7 +163,7 @@ async def health_check():
 
 @app.get("/api/llm/status")
 async def llm_status():
-    """Check if Ollama LLM is available."""
+    """Check if Google AI Studio (Gemini) API is connected and available."""
     engine = get_llm_engine()
     return engine.check_availability()
 
@@ -611,8 +612,8 @@ async def startup_event():
     """Run on application startup"""
     print(" AuraLearn Backend Starting...")
     print(f" Vector DB Path: {settings.vectorstore_path}")
-    print(f" LLM Model: {settings.llm_model} (via Ollama at {settings.ollama_url})")
-    print(f" Confidence Thresholds: HIGH≥{settings.confidence_high_threshold}, LOW<{settings.confidence_low_threshold}")
+    print(f" LLM Engine: Google AI Studio Gemini API (Model: {settings.llm_model})")
+    print(f" Confidence Thresholds: HIGH>={settings.confidence_high_threshold}, LOW<{settings.confidence_low_threshold}")
     # Initialise the SQLite query logger at startup so the DB file and table
     # are created before any requests arrive.
     try:

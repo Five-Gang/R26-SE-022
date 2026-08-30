@@ -294,11 +294,48 @@ export default function Sidebar({
       <div className="sidebar-footer">
         <div className="status-indicator">
           <span className={`status-dot ${llmStatus === "available" ? "online" : "offline"}`} />
-          LLM: {llmStatus === "available" ? "Connected" : "Disconnected"}
+          Gemini: {llmStatus === "available" ? "Connected" : "Disconnected"}
         </div>
         <div className="status-indicator" style={{ marginTop: 6 }}>
           <span className={`status-dot ${dbCount > 0 ? "online" : "offline"}`} />
           Vector DB: {dbCount} chunks indexed
+        </div>
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <a
+            href="http://localhost:8000/docs"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              textDecoration: 'none',
+              transition: 'color 0.15s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-secondary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            title="Open Swagger API documentation in a new tab"
+          >
+            📖 Swagger API Docs ↗
+          </a>
+          <a
+            href="http://localhost:8000/redoc"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              textDecoration: 'none',
+              transition: 'color 0.15s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-secondary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            title="Open ReDoc documentation"
+          >
+            ReDoc ↗
+          </a>
         </div>
       </div>
     </aside>

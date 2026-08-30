@@ -1,11 +1,13 @@
 """
-LLM Engine - Ollama Integration for AuraLearn
-Handles communication with local Ollama LLM for response generation.
+LLM Engine - Dedicated Google AI Studio (Gemini API) Integration for AuraLearn
+Handles direct cloud communication with Google Gemini for grounded response generation.
 """
 
+import os
 import requests
 import json
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
+from config.settings import settings
 
 
 SYSTEM_PROMPT = """You are AuraLearn, a hallucination-controlled academic tutoring assistant.
@@ -23,67 +25,69 @@ You are helping university students understand academic concepts accurately."""
 
 class LLMEngine:
     """
-    Manages communication with Ollama for LLM-based response generation.
+    Manages response generation exclusively via Google AI Studio (Gemini) API.
     """
 
     def __init__(
         self,
-        model_name: str = "llama3.2",
-        ollama_url: str = "http://localhost:11434",
-        temperature: float = 0.7,
-        max_tokens: int = 1024
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        gemini_api_url: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ):
-        self.model_name = model_name
-        self.ollama_url = ollama_url
-        self.temperature = temperature
-        self.max_tokens = max_tokens
+        self.model_name = model_name or settings.llm_model or "gemini-2.5-flash"
+        self.api_key = api_key or settings.gemini_api_key
+        self.gemini_api_url = gemini_api_url or settings.gemini_api_url
+        self.temperature = temperature if temperature is not None else settings.llm_temperature
+        self.max_tokens = max_tokens if max_tokens is not None else settings.llm_max_tokens
 
-    def check_availability(self) -> Dict:
-        """Check if Ollama is running and the model is available."""
+    def check_availability(self) -> Dict[str, Any]:
+        """Check if Google AI Studio (Gemini) API is configured and accessible."""
+        if not self.api_key or self.api_key in ("your_gemini_api_key_here", "your_api_key_here", "YOUR_GEMINI_API_KEY"):
+            return {
+                "status": "error",
+                "provider": "Google Gemini API",
+                "model_available": False,
+                "model_name": self.model_name,
+                "message": "Gemini API key is not configured. Please add GEMINI_API_KEY in backend/.env"
+            }
+
+        # Verify connection and model with Google AI Studio
         try:
-            resp = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
+            clean_model = self.model_name.replace("models/", "")
+            url = f"{self.gemini_api_url}/models/{clean_model}?key={self.api_key}"
+            resp = requests.get(url, timeout=8)
             if resp.status_code == 200:
-                models = resp.json().get("models", [])
-                model_names = [m.get("name", "") for m in models]
-                has_model = any(self.model_name in n for n in model_names)
                 return {
                     "status": "available",
-                    "ollama_running": True,
-                    "model_available": has_model,
+                    "provider": "Google Gemini API",
+                    "model_available": True,
                     "model_name": self.model_name,
-                    "available_models": model_names
+                    "message": f"Google Gemini ({self.model_name}) Connected"
                 }
-            return {"status": "error", "ollama_running": False, "message": "Ollama returned non-200"}
-        except requests.ConnectionError:
-            return {"status": "error", "ollama_running": False, "message": "Ollama is not running. Start it with: ollama serve"}
+            else:
+                err_text = resp.text
+                try:
+                    err_json = resp.json()
+                    err_text = err_json.get("error", {}).get("message", err_text)
+                except Exception:
+                    pass
+                return {
+                    "status": "error",
+                    "provider": "Google Gemini API",
+                    "model_available": False,
+                    "model_name": self.model_name,
+                    "message": f"Gemini API Error ({resp.status_code}): {err_text}"
+                }
         except Exception as e:
-            return {"status": "error", "ollama_running": False, "message": str(e)}
-
-    def _build_messages(
-        self,
-        query: str,
-        context: str,
-        conversation_history: Optional[List[Dict]] = None
-    ) -> List[Dict]:
-        """Build the messages array for Ollama chat API."""
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
-        # Add conversation history
-        if conversation_history:
-            messages.extend(conversation_history)
-
-        # Build user message with context
-        user_content = f"""**Retrieved Course Materials:**
----
-{context}
----
-
-**Student Question:** {query}
-
-Please provide an accurate response grounded ONLY in the above course materials. Reference the source documents when possible."""
-
-        messages.append({"role": "user", "content": user_content})
-        return messages
+            return {
+                "status": "error",
+                "provider": "Google Gemini API",
+                "model_available": False,
+                "model_name": self.model_name,
+                "message": f"Could not reach Google Gemini API: {str(e)}"
+            }
 
     def generate(
         self,
@@ -92,45 +96,94 @@ Please provide an accurate response grounded ONLY in the above course materials.
         conversation_history: Optional[List[Dict]] = None
     ) -> str:
         """
-        Generate a single response using Ollama chat API.
+        Generate a single grounded response via Google Gemini API.
 
         Args:
             query: The student's question.
-            context: Retrieved course material text.
-            conversation_history: Previous conversation messages.
+            context: Retrieved course material text from vector store.
+            conversation_history: Previous conversation messages for multi-turn context.
 
         Returns:
             str: The LLM-generated response text.
         """
-        messages = self._build_messages(query, context, conversation_history)
+        if not self.api_key or self.api_key in ("your_gemini_api_key_here", "your_api_key_here", "YOUR_GEMINI_API_KEY"):
+            return (
+                "⚠️ **Gemini API Key Required:** Please add your Google AI Studio API key in `backend/.env`:\n\n"
+                "```env\n"
+                "GEMINI_API_KEY=AIzaSy...\n"
+                "```\n\n"
+                "You can get a free API key at [https://aistudio.google.com](https://aistudio.google.com)."
+            )
+
+        clean_model = self.model_name.replace("models/", "")
+        endpoint = f"{self.gemini_api_url}/models/{clean_model}:generateContent?key={self.api_key}"
+
+        # Construct contents list
+        contents = []
+
+        # Convert prior conversation history to Gemini format (user / model)
+        if conversation_history:
+            for msg in conversation_history:
+                role = "user" if msg.get("role") == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": msg.get("content", "")}]
+                })
+
+        # Add current user prompt grounded in retrieved course materials
+        user_prompt = f"""**Retrieved Course Materials:**
+---
+{context}
+---
+
+**Student Question:** {query}
+
+Please provide an accurate response grounded ONLY in the above course materials. Reference the source documents when possible."""
+
+        contents.append({
+            "role": "user",
+            "parts": [{"text": user_prompt}]
+        })
+
+        payload = {
+            "system_instruction": {
+                "parts": [{"text": SYSTEM_PROMPT}]
+            },
+            "contents": contents,
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": self.max_tokens
+            }
+        }
 
         try:
             resp = requests.post(
-                f"{self.ollama_url}/api/chat",
-                json={
-                    "model": self.model_name,
-                    "messages": messages,
-                    "stream": False,
-                    "options": {
-                        "temperature": self.temperature,
-                        "num_predict": self.max_tokens
-                    }
-                },
-                timeout=120
+                endpoint,
+                json=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=60
             )
-
             if resp.status_code == 200:
                 data = resp.json()
-                return data.get("message", {}).get("content", "")
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        return parts[0].get("text", "").strip()
+                return "Based on the provided course materials, I could not generate a response."
             else:
-                return f"Error: Ollama returned status {resp.status_code}. Response: {resp.text}"
+                err_msg = resp.text
+                try:
+                    err_json = resp.json()
+                    err_msg = err_json.get("error", {}).get("message", err_msg)
+                except Exception:
+                    pass
+                return f"⚠️ **Google Gemini API Error ({resp.status_code}):** {err_msg}"
 
-        except requests.ConnectionError:
-            return "Error: Cannot connect to Ollama. Please ensure Ollama is running (ollama serve)."
         except requests.Timeout:
-            return "Error: LLM response timed out. Please try a shorter question."
+            return "⚠️ **Gemini API Timeout:** The request timed out. Please try asking again."
         except Exception as e:
-            return f"Error generating response: {str(e)}"
+            return f"⚠️ **Gemini API Error:** {str(e)}"
 
     def generate_multiple(
         self,
@@ -140,12 +193,12 @@ Please provide an accurate response grounded ONLY in the above course materials.
         conversation_history: Optional[List[Dict]] = None
     ) -> List[str]:
         """
-        Generate multiple responses for self-consistency checking.
+        Generate multiple responses via Google Gemini API for self-consistency checking.
 
         Args:
             query: The student's question.
             context: Retrieved course material text.
-            n: Number of responses to generate.
+            n: Number of responses to generate (default: 3).
             conversation_history: Previous conversation messages.
 
         Returns:
@@ -153,11 +206,12 @@ Please provide an accurate response grounded ONLY in the above course materials.
         """
         responses = []
         for i in range(n):
-            # Use slightly different temperatures for diversity
             original_temp = self.temperature
-            self.temperature = max(0.3, self.temperature + (i * 0.15))
+            # Perturb temperature slightly across samples to measure response consistency
+            self.temperature = max(0.2, min(1.0, self.temperature + (i * 0.15)))
             resp = self.generate(query, context, conversation_history)
             self.temperature = original_temp
-            if not resp.startswith("Error:"):
+            if not resp.startswith("⚠️"):
                 responses.append(resp)
+
         return responses if responses else [self.generate(query, context, conversation_history)]

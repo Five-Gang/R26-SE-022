@@ -185,7 +185,7 @@ export default function Home() {
       const errorMsg: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
-        content: `⚠️ **Error:** ${errorMessage}\n\nPlease ensure the backend server is running (\`uvicorn main:app --reload\`) and Ollama is active (\`ollama serve\`).`,
+        content: `⚠️ **Error:** ${errorMessage}\n\nPlease ensure the backend server is running (\`python main.py\`) and your \`GEMINI_API_KEY\` is configured in \`backend/.env\`.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMsg]);
