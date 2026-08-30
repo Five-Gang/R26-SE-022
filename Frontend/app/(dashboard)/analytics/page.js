@@ -331,8 +331,8 @@ export default function AnalyticsPage() {
             <div class="metric-lbl">Avg Cognitive Fatigue</div>
           </div>
           <div class="metric-card">
-            <div class="metric-val">${avgMetrics.avgBlinkRate} /min</div>
-            <div class="metric-lbl">Avg Alertness (BPM)</div>
+            <div class="metric-val">${avgMetrics.totalMinutes}m</div>
+            <div class="metric-lbl">Total Study Time</div>
           </div>
           <div class="metric-card">
             <div class="metric-val">${avgMetrics.totalSessionsCount}</div>
@@ -356,7 +356,6 @@ export default function AnalyticsPage() {
                 <th>Duration</th>
                 <th>Avg Attention</th>
                 <th>Fatigue Index</th>
-                <th>Blink Rate</th>
                 <th>Dominant Mental State</th>
               </tr>
             </thead>
@@ -368,7 +367,6 @@ export default function AnalyticsPage() {
                   <td>${formatDuration(s.durationSeconds)}</td>
                   <td><strong>${s.avgAttention ?? s.focus ?? 0}%</strong></td>
                   <td>${s.fatigueLevel || `${s.fatiguePct ?? s.fatigue ?? 0}%`}</td>
-                  <td>${s.blinkRate ?? 0} /min</td>
                   <td><span class="badge ${s.dominantEmotion === 'Focused' ? 'badge-focused' : s.dominantEmotion === 'Confused' ? 'badge-confused' : s.dominantEmotion === 'Bored' ? 'badge-bored' : 'badge-neutral'}">${s.dominantEmotion || 'Focused'}</span></td>
                 </tr>
               `).join('')}
@@ -425,7 +423,7 @@ export default function AnalyticsPage() {
               Personalized longitudinal attention tracking and cognitive telemetry for <strong>{studentName}</strong>.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className={styles.headerActions}>
             {rawSessions.length > 0 && (
               <button 
                 className={styles.btnExport}
@@ -628,7 +626,6 @@ export default function AnalyticsPage() {
                       <th>Duration</th>
                       <th>Avg Attention</th>
                       <th>Fatigue Level</th>
-                      <th>Blink Rate</th>
                       <th>Dominant State</th>
                     </tr>
                   </thead>
@@ -646,7 +643,6 @@ export default function AnalyticsPage() {
                             <strong style={{ color: '#0F766E' }}>{session.avgAttention ?? session.focus ?? 0}%</strong>
                           </td>
                           <td>{session.fatigueLevel || `${session.fatiguePct ?? session.fatigue ?? 0}%`}</td>
-                          <td>{session.blinkRate ?? 0} /min</td>
                           <td>
                             <span className={`${styles.badge} ${badgeClass}`}>
                               ● {session.dominantEmotion || 'Focused'}

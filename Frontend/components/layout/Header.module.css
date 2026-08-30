@@ -72,6 +72,11 @@
 .rightSection {
   display: flex;
   align-items: center;
+  position: relative;
+}
+
+.avatarWrapper {
+  position: relative;
 }
 
 .avatar {
@@ -87,12 +92,103 @@
   font-size: 0.875rem;
   cursor: pointer;
   transition: var(--transition);
-  border: 0;
-  cursor: pointer;
+  border: 2px solid transparent;
   font-family: inherit;
 }
 
-.avatar:hover {
+.avatar:hover, .avatar.open {
   transform: scale(1.05);
   box-shadow: var(--shadow-glow);
+  border-color: rgba(94, 234, 212, 0.4);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 220px;
+  background-color: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.35rem;
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  color: #E2E8F0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: var(--transition, all 0.15s ease);
+}
+
+.menuItem:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.logoutItem {
+  color: #F87171;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.65rem;
+}
+
+.logoutItem:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #FCA5A5;
+}
+
+.menuIcon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

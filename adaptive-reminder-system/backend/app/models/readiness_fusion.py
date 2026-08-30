@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-import numpy as np
 
 # from app.models.learning_context import (  # TODO: rebuild Models 2-5
 #     ACTIVE_LEARNING_ACTIVITIES,
@@ -14,18 +13,48 @@ import numpy as np
 #     clamp_signed_unit,
 # )
 
-# Temporary inline definitions for compatibility
-class ActivityType:
+class ActivityType(str, Enum):
     QUIZ = "QUIZ"
     PRACTICE = "PRACTICE"
     FLASHCARD = "FLASHCARD"
     VIDEO = "VIDEO"
     READING = "READING"
     LECTURE = "LECTURE"
+    REVISION = "REVISION"
+    IDLE = "IDLE"
+    UNKNOWN = "UNKNOWN"
 
-ACTIVE_LEARNING_ACTIVITIES = {ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD}
-CONTENT_CONSUMPTION_ACTIVITIES = {ActivityType.VIDEO, ActivityType.LECTURE, ActivityType.READING}
-DEEP_FOCUS_ACTIVITIES = {ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD}
+ACTIVE_LEARNING_ACTIVITIES = {
+    ActivityType.QUIZ,
+    ActivityType.PRACTICE,
+    ActivityType.FLASHCARD,
+    ActivityType.REVISION,
+}
+CONTENT_CONSUMPTION_ACTIVITIES = {
+    ActivityType.VIDEO,
+    ActivityType.LECTURE,
+    ActivityType.READING,
+}
+DEEP_FOCUS_ACTIVITIES = {
+    ActivityType.QUIZ,
+    ActivityType.PRACTICE,
+    ActivityType.FLASHCARD,
+    ActivityType.REVISION,
+}
+
+@dataclass
+class LearningSignal:
+    valence: float
+    arousal: float
+    attention: float
+    activity_type: ActivityType = ActivityType.QUIZ
+    session_active: bool = True
+    content_in_focus: bool = True
+    blink_rate: float | None = None
+    fatigue: float | None = None
+    head_tilt_degrees: float | None = None
+    signal_confidence: float = 1.0
+    source: str = "mock"
 
 def clamp(value, min_val, max_val):
     return max(min_val, min(max_val, value))
@@ -71,7 +100,7 @@ def compute_readiness(
     valence: float, arousal: float, attention: float
 ) -> tuple[float, ReadinessTier]:
     v_norm = (valence + 1) / 2       # [-1,1] → [0,1]
-    score = float(np.clip(
+    score = float(clamp(
         W_ATTENTION * attention + W_VALENCE * v_norm + W_AROUSAL * arousal,
         0.0, 1.0
     ))

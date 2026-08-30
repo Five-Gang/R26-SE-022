@@ -238,22 +238,7 @@ export default function FocusMonitorPage() {
                         transition: "all 0.15s ease-out",
                         zIndex: 10
                       }}
-                    >
-                      <span style={{
-                        position: 'absolute',
-                        top: '-24px',
-                        left: '0px',
-                        backgroundColor: '#22c55e',
-                        color: '#FFFFFF',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {focusData.emotion} ({Math.round(focusData.confidence || 0)}%)
-                      </span>
-                    </div>
+                    />
                   )}
                 </div>
 
