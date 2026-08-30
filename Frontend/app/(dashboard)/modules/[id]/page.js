@@ -155,9 +155,12 @@ export default function ModuleDetailPage() {
 
   const los = mod.learning_outcomes || [];
   const weeks = mod.weeks || [];
-  const completedDocs = docs.filter(d => d.processing_status === 'completed');
-  const pendingDocs = docs.filter(d => ['pending','processing'].includes(d.processing_status));
-  const failedDocs = docs.filter(d => d.processing_status === 'failed');
+  // Separate lectures from outlines
+  const lectureDocs = docs.filter(d => d.document_type !== 'module_outline');
+  const outlineDoc  = docs.find(d  => d.document_type === 'module_outline');
+  const completedDocs = lectureDocs.filter(d => d.processing_status === 'completed');
+  const pendingDocs   = lectureDocs.filter(d => ['pending','processing'].includes(d.processing_status));
+  const failedDocs    = lectureDocs.filter(d => d.processing_status === 'failed');
 
   return (
     <div className={styles.page}>
@@ -271,6 +274,9 @@ export default function ModuleDetailPage() {
               ✅ {completedDocs.length} lecture{completedDocs.length !== 1 ? 's' : ''} ready
             </span>
           )}
+          {outlineDoc && outlineDoc.processing_status === 'completed' && (
+            <span className={styles.outlineReadyPill}>📋 Outline ready</span>
+          )}
         </div>
 
         {/* Drag-and-drop zone */}
@@ -323,10 +329,10 @@ export default function ModuleDetailPage() {
           </div>
         )}
 
-        {/* Document list */}
-        {docs.length > 0 && (
+        {/* Document list — lectures only (outline shown separately above) */}
+        {lectureDocs.length > 0 && (
           <div className={styles.docList}>
-            {docs.map((doc) => {
+            {lectureDocs.map((doc) => {
               const s = STATUS_CONFIG[doc.processing_status] || STATUS_CONFIG.pending;
               return (
                 <div key={doc.id} className={styles.docRow}>
@@ -371,7 +377,7 @@ export default function ModuleDetailPage() {
           </div>
         )}
 
-        {docs.length === 0 && !uploading && (
+        {lectureDocs.length === 0 && !uploading && (
           <div className={styles.noDocsHint}>
             No lectures uploaded yet — upload one above to enable AI generation
           </div>

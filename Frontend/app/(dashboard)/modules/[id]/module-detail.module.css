@@ -160,6 +160,13 @@
   padding: 0.3rem 0.85rem;
 }
 
+.outlineReadyPill {
+  font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+  background: #f0f9ff; color: #0369a1;
+  border: 1px solid #bae6fd; border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+}
+
 /* Drop Zone */
 .dropZone {
   border: 2px dashed #cbd5e1;
