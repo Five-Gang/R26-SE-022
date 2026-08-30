@@ -57,12 +57,12 @@ class ConfidenceScorer:
         
         if pipeline is not None and os.path.exists(self.ml_model_path):
             try:
-                print(f"🚀 Loading custom ML Hallucination Model from {self.ml_model_path}...")
+                print(f"[ConfidenceScorer] Loading custom ML Hallucination Model from {self.ml_model_path}...")
                 # Try to load the text-classification pipeline
                 self.ml_pipeline = pipeline("text-classification", model=self.ml_model_path, device=-1)
-                print("✅ ML Model loaded successfully!")
+                print("[ConfidenceScorer] ML Model loaded successfully!")
             except Exception as e:
-                print(f"⚠️ Failed to load custom ML model: {e}. Falling back to heuristic grounding score.")
+                print(f"[ConfidenceScorer] ML model load note: {e}. Using heuristic grounding score.")
                 self.ml_pipeline = None
 
     def compute_retrieval_confidence(self, retrieval_results: List[Dict]) -> float:
@@ -113,62 +113,59 @@ class ConfidenceScorer:
         if not response_text or not retrieved_texts:
             return 0.0
 
-        # IF custom ML model is available, use it instead of heuristics!
+        ml_grounding = None
+        # Step 1: If custom ML model is available, compute NLI entailment score
+        # Note: Model is trained on (claim=response, evidence=context)
         if self.ml_pipeline is not None:
             try:
-                # Combine all retrieved texts into one context block
                 context = " ".join(retrieved_texts)
-                
-                # HuggingFace pipeline('text-classification') always returns a LIST even for
-                # a single input. We must index [0] to get the result dict.
-                # We also pass truncation=True to safely handle very long context strings.
                 raw = self.ml_pipeline(
-                    {"text": context, "text_pair": response_text},
+                    {"text": response_text, "text_pair": context},
                     truncation=True
                 )
-                result = raw[0]  # ✅ FIX: index the list to get the single result dict
+                result = raw[0] if isinstance(raw, list) else raw
+                label = result.get('label', '')
+                score = result.get('score', 0.5)
                 
-                # LABEL_1 = Grounded/Entailment, LABEL_0 = Hallucination/Contradiction
-                label = result['label']
-                score = result['score']
-                
-                print(f"🤖 ML Hallucination Model → label={label}, score={score:.4f}")
-                
-                # If the model predicts LABEL_1 (grounded), return score as-is.
-                # If LABEL_0 (hallucination), invert the score so LOW score = LOW confidence.
+                # If model predicts LABEL_1 (grounded/entailment), score as-is.
+                # If LABEL_0 (hallucination/neutral), invert score.
                 if label == "LABEL_1" or label == 1:
-                    return float(score)
+                    ml_grounding = float(score)
                 else:
-                    return 1.0 - float(score)
-            except Exception as e:
-                print(f"⚠️ ML model inference failed: {e}. Falling back to heuristic.")
-                # Fall through to heuristic calculation
+                    ml_grounding = 1.0 - float(score)
 
+                print(f"[ConfidenceScorer] ML Model -> label={label}, raw_score={score:.4f}, ml_grounding={ml_grounding:.4f}")
+            except Exception as e:
+                print(f"[ConfidenceScorer] ML model inference notice: {e}")
+                ml_grounding = None
+
+        # Step 2: Compute Semantic Embedding Grounding via SentenceTransformers
+        semantic_grounding = 0.5
         try:
-            # Encode response and documents
             response_emb = self.model.encode(response_text, convert_to_numpy=True)
             doc_embs = self.model.encode(retrieved_texts, convert_to_numpy=True)
 
-            # Compute cosine similarity between response and each document
             response_norm = response_emb / (np.linalg.norm(response_emb) + 1e-8)
-
             if len(doc_embs.shape) == 1:
                 doc_embs = doc_embs.reshape(1, -1)
 
             doc_norms = doc_embs / (np.linalg.norm(doc_embs, axis=1, keepdims=True) + 1e-8)
             similarities = np.dot(doc_norms, response_norm)
 
-            # Use a combination of max and mean similarity
             max_sim = float(np.max(similarities))
             mean_sim = float(np.mean(similarities))
-
-            # Weighted combination: max matters more
-            grounding = 0.6 * max_sim + 0.4 * mean_sim
-            return min(1.0, max(0.0, grounding))
-
+            semantic_grounding = min(1.0, max(0.0, 0.7 * max_sim + 0.3 * mean_sim))
         except Exception as e:
-            print(f"⚠️ Grounding score computation failed: {e}")
-            return 0.3  # Default moderate score on error
+            print(f"[ConfidenceScorer] Semantic grounding failed: {e}")
+            semantic_grounding = 0.5
+
+        # Step 3: Ensemble ML classification and Semantic Grounding
+        if ml_grounding is not None:
+            final_grounding = 0.50 * ml_grounding + 0.50 * semantic_grounding
+        else:
+            final_grounding = semantic_grounding
+
+        return round(min(1.0, max(0.0, final_grounding)), 4)
 
     def compute_self_consistency(self, responses: List[str]) -> float:
         """
@@ -200,7 +197,7 @@ class ConfidenceScorer:
             return float(np.mean(pairwise_sims))
 
         except Exception as e:
-            print(f"⚠️ Self-consistency computation failed: {e}")
+            print(f"[ConfidenceScorer] Self-consistency computation notice: {e}")
             return 0.5
 
     def compute_composite_score(

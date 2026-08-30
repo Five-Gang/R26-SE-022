@@ -233,7 +233,12 @@ async def chat(request: ChatRequest):
         if has_real_results:
             for r in retrieval_results:
                 if "content" in r and "error" not in r:
-                    source_name = r.get("source", "unknown")
+                    source_name = (
+                        r.get("metadata", {}).get("filename")
+                        or r.get("metadata", {}).get("source")
+                        or r.get("source")
+                        or "Course Document"
+                    )
                     context_parts.append(
                         f"[Source: {source_name}]\n{r['content']}"
                     )
@@ -258,6 +263,23 @@ async def chat(request: ChatRequest):
             context=context,
             conversation_history=conv_history
         )
+
+        # If API key is missing, return configuration notice directly
+        if llm_response.startswith("⚠️ **Gemini API Key Required:"):
+            return {
+                "response": llm_response,
+                "confidence": {
+                    "score": 0.0,
+                    "level": "LOW",
+                    "retrieval_confidence": 0.0,
+                    "grounding_score": 0.0
+                },
+                "response_type": "clarification_request",
+                "response_label": "API Key Required",
+                "sources": sources,
+                "conversation_history": conv_history,
+                "log_id": None
+            }
 
         # Step 5: Generate multiple responses for self-consistency (if enabled)
         # Per-request flag takes priority; falls back to the global settings value.

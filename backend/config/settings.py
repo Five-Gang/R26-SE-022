@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     similarity_threshold: float = float(os.getenv("SIMILARITY_THRESHOLD", 0.3))
     
     # LLM Settings (Google AI Studio Gemini API)
-    llm_provider: str = "gemini"
-    llm_model: str = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "gemini")
+    llm_model: str = os.getenv("LLM_MODEL", "gemini-3.5-flash")
     llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", 0.7))
     llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", 1024))
     
