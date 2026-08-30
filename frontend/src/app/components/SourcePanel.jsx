@@ -2,30 +2,20 @@
 
 import React, { useState } from "react";
 
-interface Source {
-  filename: string;
-  content: string;
-  similarity: number;
-}
-
-interface SourcePanelProps {
-  sources: Source[];
-}
-
-export default function SourcePanel({ sources }: SourcePanelProps) {
+export default function SourcePanel({ sources }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedIndices, setExpandedIndices] = useState<Record<number, boolean>>({});
+  const [expandedIndices, setExpandedIndices] = useState({});
 
   if (!sources || sources.length === 0) return null;
 
-  const toggleExpandItem = (idx: number) => {
+  const toggleExpandItem = (idx) => {
     setExpandedIndices((prev) => ({
       ...prev,
       [idx]: !prev[idx],
     }));
   };
 
-  const copyToClipboard = (text: string, e: React.MouseEvent) => {
+  const copyToClipboard = (text, e) => {
     e.stopPropagation(); // Avoid triggering expand toggle
     navigator.clipboard.writeText(text);
     alert("Source content copied to clipboard!");
@@ -43,8 +33,8 @@ export default function SourcePanel({ sources }: SourcePanelProps) {
           {sources.map((source, idx) => {
             const isExpanded = !!expandedIndices[idx];
             return (
-              <div 
-                className={`source-item ${isExpanded ? "expanded" : ""}`} 
+              <div
+                className={`source-item ${isExpanded ? "expanded" : ""}`}
                 key={idx}
                 onClick={() => toggleExpandItem(idx)}
                 style={{ cursor: "pointer" }}
@@ -54,11 +44,11 @@ export default function SourcePanel({ sources }: SourcePanelProps) {
                   <div className="source-item-title-row">
                     <span className="source-item-name">{source.filename}</span>
                     <span className="source-item-score">
-                      Relevance: {Math.round(source.similarity * 100)}%
+                      Relevance: {Math.round((source.similarity || 0) * 100)}%
                     </span>
                   </div>
                   <div className="source-item-actions">
-                    <button 
+                    <button
                       className="source-action-btn"
                       onClick={(e) => copyToClipboard(source.content, e)}
                       title="Copy source content"
@@ -79,8 +69,8 @@ export default function SourcePanel({ sources }: SourcePanelProps) {
                       </div>
                     ) : (
                       <div className="source-item-preview">
-                        {source.content.length > 150 
-                          ? `${source.content.substring(0, 150)}...` 
+                        {source.content.length > 150
+                          ? `${source.content.substring(0, 150)}...`
                           : source.content}
                       </div>
                     )}

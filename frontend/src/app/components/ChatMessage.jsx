@@ -6,37 +6,8 @@ import SourcePanel from "./SourcePanel";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-interface Source {
-  filename: string;
-  content: string;
-  similarity: number;
-}
-
-interface Confidence {
-  score: number;
-  level: "HIGH" | "MEDIUM" | "LOW";
-  retrieval_confidence: number;
-  grounding_score: number;
-  self_consistency_score?: number;
-}
-
-export interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  confidence?: Confidence;
-  response_type?: string;
-  response_label?: string;
-  sources?: Source[];
-  log_id?: number | null; // SQLite row ID — used to submit feedback
-}
-
-interface ChatMessageProps {
-  message: Message;
-}
-
-function formatInline(text: string): string {
+function formatInline(text) {
+  if (!text) return "";
   let processed = text;
   // Bold & Italic
   processed = processed.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
@@ -49,14 +20,14 @@ function formatInline(text: string): string {
   return processed;
 }
 
-function formatContent(content: string): React.ReactNode {
+function formatContent(content) {
   if (!content) return null;
 
   // Split content by fenced code blocks (```lang ... ```)
   const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
-  const elements: React.ReactNode[] = [];
+  const elements = [];
   let lastIndex = 0;
-  let match: RegExpExecArray | null;
+  let match;
 
   while ((match = codeBlockRegex.exec(content)) !== null) {
     const preText = content.substring(lastIndex, match.index);
@@ -88,12 +59,12 @@ function formatContent(content: string): React.ReactNode {
   return elements;
 }
 
-function renderTextBlocks(text: string, keyPrefix: string): React.ReactNode {
+function renderTextBlocks(text, keyPrefix) {
   const lines = text.split("\n");
-  const nodes: React.ReactNode[] = [];
-  let currentList: { type: "ul" | "ol"; items: string[] } | null = null;
+  const nodes = [];
+  let currentList = null;
 
-  const flushList = (idx: number) => {
+  const flushList = (idx) => {
     if (!currentList) return;
     if (currentList.type === "ul") {
       nodes.push(
@@ -179,12 +150,10 @@ function renderTextBlocks(text: string, keyPrefix: string): React.ReactNode {
 }
 
 // ── Feedback button component ──────────────────────────────────────────────────
-type FeedbackState = "none" | "thumbs_up" | "thumbs_down" | "sending" | "done";
+function FeedbackButtons({ logId }) {
+  const [state, setState] = useState("none"); // "none" | "thumbs_up" | "thumbs_down" | "sending"
 
-function FeedbackButtons({ logId }: { logId: number }) {
-  const [state, setState] = useState<FeedbackState>("none");
-
-  const submit = async (value: "thumbs_up" | "thumbs_down") => {
+  const submit = async (value) => {
     if (state !== "none") return; // already voted
     setState("sending");
     try {
@@ -240,7 +209,7 @@ function FeedbackButtons({ logId }: { logId: number }) {
 }
 
 // ── Main ChatMessage component ─────────────────────────────────────────────────
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message }) {
   const isUser = message.role === "user";
   const timestampObj = message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp);
   const timeStr = !isNaN(timestampObj.getTime())

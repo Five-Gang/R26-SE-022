@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from typing import List, Optional
+from contextlib import asynccontextmanager
 
 # Add backend directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -32,11 +33,36 @@ from database.query_logger import get_query_logger
 load_dotenv()
 settings = Settings()
 
-# Initialize FastAPI app
+
+# ============================================================================
+# LIFESPAN (Startup / Shutdown handlers)
+# ============================================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Modern lifespan context manager for startup and shutdown."""
+    print(" AuraLearn Backend Starting...")
+    print(f" Vector DB Path: {settings.vectorstore_path}")
+    print(f" LLM Engine: Google AI Studio Gemini API (Model: {settings.llm_model})")
+    print(f" Confidence Thresholds: HIGH>={settings.confidence_high_threshold}, LOW<{settings.confidence_low_threshold}")
+    try:
+        logger = get_query_logger()
+        count = logger.get_total_count()
+        print(f" QueryLogger: Ready - {count} interactions logged so far.")
+    except Exception as e:
+        print(f" QueryLogger: Init warning - {e}")
+    
+    yield
+    
+    print(" AuraLearn Backend Shutting Down...")
+
+
+# Initialize FastAPI app with lifespan
 app = FastAPI(
     title="AuraLearn Backend",
     description="Hallucination-Controlled LLM Tutor Backend",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 # Configure CORS for frontend communication
@@ -601,33 +627,6 @@ async def http_exception_handler(request, exc):
         status_code=exc.status_code,
         content={"error": exc.detail, "status_code": exc.status_code}
     )
-
-
-# ============================================================================
-# STARTUP/SHUTDOWN EVENTS
-# ============================================================================
-
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup"""
-    print(" AuraLearn Backend Starting...")
-    print(f" Vector DB Path: {settings.vectorstore_path}")
-    print(f" LLM Engine: Google AI Studio Gemini API (Model: {settings.llm_model})")
-    print(f" Confidence Thresholds: HIGH>={settings.confidence_high_threshold}, LOW<{settings.confidence_low_threshold}")
-    # Initialise the SQLite query logger at startup so the DB file and table
-    # are created before any requests arrive.
-    try:
-        logger = get_query_logger()
-        count = logger.get_total_count()
-        print(f" QueryLogger: Ready - {count} interactions logged so far.")
-    except Exception as e:
-        print(f" QueryLogger: Init warning - {e}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Run on application shutdown"""
-    print(" AuraLearn Backend Shutting Down...")
 
 
 # ============================================================================

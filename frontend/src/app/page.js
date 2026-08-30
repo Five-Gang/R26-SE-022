@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import ChatMessage, { Message } from "./components/ChatMessage";
+import ChatMessage from "./components/ChatMessage";
 import Sidebar from "./components/Sidebar";
 import AnalyticsPanel from "./components/AnalyticsPanel";
 
@@ -15,33 +15,24 @@ const SUGGESTED_QUERIES = [
   "What are design patterns in software engineering?",
 ];
 
-interface ConversationMsg {
-  role: string;
-  content: string;
-}
-
-interface MaterialInfo {
-  filename: string;
-}
-
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<ConversationMsg[]>([]);
+  const [conversationHistory, setConversationHistory] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [materials, setMaterials] = useState<MaterialInfo[]>([]);
+  const [materials, setMaterials] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const [llmStatus, setLlmStatus] = useState("checking");
   const [dbCount, setDbCount] = useState(0);
   const [selfConsistency, setSelfConsistency] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [deletingFile, setDeletingFile] = useState<string | null>(null);
+  const [deletingFile, setDeletingFile] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Load chat history from localStorage on initial mount
   useEffect(() => {
@@ -51,7 +42,7 @@ export default function Home() {
       if (savedMessages) {
         const parsed = JSON.parse(savedMessages);
         if (Array.isArray(parsed)) {
-          const restored: Message[] = parsed.map((m: any) => ({
+          const restored = parsed.map((m) => ({
             ...m,
             timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
           }));
@@ -119,7 +110,7 @@ export default function Home() {
       const res = await fetch(`${API_URL}/api/materials`);
       const data = await res.json();
       if (data.unique_files) {
-        setMaterials(data.unique_files.map((f: string) => ({ filename: f })));
+        setMaterials(data.unique_files.map((f) => ({ filename: f })));
       }
       setDbCount(data.document_count || 0);
     } catch {
@@ -128,12 +119,12 @@ export default function Home() {
   };
 
   // Send a chat message
-  const sendMessage = async (queryText?: string) => {
+  const sendMessage = async (queryText) => {
     const query = (queryText || input).trim();
     if (!query || isLoading) return;
 
     // Add user message to UI
-    const userMsg: Message = {
+    const userMsg = {
       id: `user-${Date.now()}`,
       role: "user",
       content: query,
@@ -163,7 +154,7 @@ export default function Home() {
       const data = await res.json();
 
       // Add assistant message
-      const assistantMsg: Message = {
+      const assistantMsg = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
         content: data.response,
@@ -180,9 +171,9 @@ export default function Home() {
       if (data.conversation_history) {
         setConversationHistory(data.conversation_history);
       }
-    } catch (err: unknown) {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
-      const errorMsg: Message = {
+      const errorMsg = {
         id: `error-${Date.now()}`,
         role: "assistant",
         content: `⚠️ **Error:** ${errorMessage}\n\nPlease ensure the backend server is running (\`python main.py\`) and your \`GEMINI_API_KEY\` is configured in \`backend/.env\`.`,
@@ -195,14 +186,14 @@ export default function Home() {
   };
 
   // Handle PDF upload
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file) => {
     setIsUploading(true);
     setUploadMessage("");
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
+    try {
       const res = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
         body: formData,
@@ -211,13 +202,13 @@ export default function Home() {
       const data = await res.json();
 
       if (res.ok) {
-        setUploadMessage(`✅ ${file.name} ingested successfully!`);
-        fetchMaterials(); // Refresh materials list
+        setUploadMessage(`✓ ${file.name} uploaded & indexed (${data.chunks_count} chunks)`);
+        fetchMaterials();
       } else {
-        setUploadMessage(`❌ ${data.error || data.detail || "Upload failed"}`);
+        setUploadMessage(`✗ Upload failed: ${data.detail || "Unknown error"}`);
       }
     } catch {
-      setUploadMessage("❌ Could not connect to backend.");
+      setUploadMessage("✗ Could not connect to backend server");
     } finally {
       setIsUploading(false);
       setTimeout(() => setUploadMessage(""), 5000);
@@ -225,7 +216,7 @@ export default function Home() {
   };
 
   // Handle PDF deletion with loading state
-  const handleDelete = async (filename: string) => {
+  const handleDelete = async (filename) => {
     if (deletingFile) return;
     setDeletingFile(filename);
     try {
@@ -260,7 +251,7 @@ export default function Home() {
   };
 
   // Handle Enter key
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -268,7 +259,7 @@ export default function Home() {
   };
 
   // Auto-resize textarea
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e) => {
     setInput(e.target.value);
     const el = e.target;
     el.style.height = "auto";
@@ -335,14 +326,14 @@ export default function Home() {
               whiteSpace: 'nowrap',
             }}
             onMouseOver={e => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(124,92,252,0.6)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 12px rgba(124,92,252,0.2)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.borderColor = 'rgba(124,92,252,0.6)';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(124,92,252,0.2)';
             }}
             onMouseOut={e => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(124,92,252,0.3)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+              e.currentTarget.style.borderColor = 'rgba(124,92,252,0.3)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             📊 Analytics

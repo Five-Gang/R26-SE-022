@@ -4,112 +4,45 @@ import React, { useState, useEffect, useCallback } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface ConfidenceDist {
-  HIGH: number;
-  MEDIUM: number;
-  LOW: number;
-}
-
-interface ResponseTypeDist {
-  direct_answer: number;
-  guided_hint: number;
-  clarification_request: number;
-}
-
-interface Alignment {
-  high_confidence_correct_pct: number | null;
-  medium_confidence_correct_pct: number | null;
-  low_confidence_correct_pct: number | null;
-}
-
-interface UserFeedback {
-  thumbs_up: number;
-  thumbs_down: number;
-  total_rated: number;
-  satisfaction_rate_pct: number | null;
-  false_positive_rate_pct: number | null;
-}
-
-interface RecentQuery {
-  timestamp: string;
-  query: string;
-  response_type: string;
-  confidence_level: string;
-  confidence_score: number;
-}
-
-interface AnalyticsData {
-  total_queries: number;
-  hallucination_rate_pct: number;
-  avg_confidence_score: number;
-  avg_grounding_score: number;
-  avg_retrieval_confidence: number;
-  avg_self_consistency: number | null;
-  min_confidence: number;
-  max_confidence: number;
-  confidence_distribution: ConfidenceDist;
-  response_type_distribution: ResponseTypeDist;
-  confidence_response_alignment: Alignment;
-  self_consistency_queries: number;
-  self_consistency_pct: number;
-  user_feedback: UserFeedback;
-  recent_queries: RecentQuery[];
-  message?: string;
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function pct(value: number, total: number): number {
+function pct(value, total) {
   return total > 0 ? Math.round((value / total) * 100) : 0;
 }
 
-function fmt(n: number | null | undefined, decimals = 2): string {
-  if (n == null) return "—";
-  return (n * (decimals === 0 ? 1 : 1)).toFixed ? n.toFixed(decimals) : String(n);
+function fmt(n, decimals = 2) {
+  if (n == null || isNaN(n)) return "—";
+  return Number(n).toFixed(decimals);
 }
 
-function confColor(level: string): string {
+function confColor(level) {
   if (level === "HIGH") return "var(--success)";
   if (level === "MEDIUM") return "var(--warning)";
   return "var(--danger)";
 }
 
-function responseIcon(type: string): string {
+function responseIcon(type) {
   if (type === "direct_answer") return "✓";
   if (type === "guided_hint") return "◎";
   return "?";
 }
 
-function responseLabel(type: string): string {
+function responseLabel(type) {
   if (type === "direct_answer") return "Direct";
   if (type === "guided_hint") return "Hint";
   return "Clarif.";
 }
 
-function formatTime(iso: string): string {
+function formatTime(iso) {
   try {
     const d = new Date(iso + "Z");
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch {
-    return iso.slice(11, 16);
+    return (iso || "").slice(11, 16);
   }
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  sub,
-  color,
-  icon,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  color?: string;
-  icon: string;
-}) {
+function StatCard({ label, value, sub, color, icon }) {
   return (
     <div className="analytics-stat-card">
       <div className="analytics-stat-icon" style={{ color: color || "var(--accent-primary)" }}>
@@ -124,17 +57,7 @@ function StatCard({
   );
 }
 
-function DistBar({
-  label,
-  count,
-  total,
-  color,
-}: {
-  label: string;
-  count: number;
-  total: number;
-  color: string;
-}) {
+function DistBar({ label, count = 0, total = 0, color }) {
   const p = pct(count, total);
   return (
     <div className="analytics-dist-row">
@@ -154,13 +77,8 @@ function DistBar({
 }
 
 // ── Main Panel ────────────────────────────────────────────────────────────────
-interface AnalyticsPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps) {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+export default function AnalyticsPanel({ isOpen, onClose }) {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -170,7 +88,7 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
     try {
       const res = await fetch(`${API_URL}/api/analytics`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: AnalyticsData = await res.json();
+      const json = await res.json();
       setData(json);
     } catch (e) {
       setError("Could not load analytics. Is the backend running?");
@@ -193,8 +111,8 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
   const rd = data?.response_type_distribution;
   const al = data?.confidence_response_alignment;
   const fb = data?.user_feedback;
-  const totalConf = cd ? cd.HIGH + cd.MEDIUM + cd.LOW : 0;
-  const totalResp = rd ? rd.direct_answer + rd.guided_hint + rd.clarification_request : 0;
+  const totalConf = cd ? (cd.HIGH || 0) + (cd.MEDIUM || 0) + (cd.LOW || 0) : 0;
+  const totalResp = rd ? (rd.direct_answer || 0) + (rd.guided_hint || 0) + (rd.clarification_request || 0) : 0;
 
   return (
     <>
@@ -261,16 +179,16 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                 <StatCard
                   icon="💬"
                   label="Total Queries"
-                  value={String(data.total_queries)}
+                  value={String(data.total_queries || 0)}
                 />
                 <StatCard
                   icon="🎯"
                   label="Avg Confidence"
-                  value={`${(data.avg_confidence_score * 100).toFixed(1)}%`}
+                  value={`${((data.avg_confidence_score || 0) * 100).toFixed(1)}%`}
                   color={
-                    data.avg_confidence_score >= 0.75
+                    (data.avg_confidence_score || 0) >= 0.75
                       ? "var(--success)"
-                      : data.avg_confidence_score >= 0.45
+                      : (data.avg_confidence_score || 0) >= 0.45
                       ? "var(--warning)"
                       : "var(--danger)"
                   }
@@ -278,9 +196,9 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                 <StatCard
                   icon="⚠"
                   label="Hallucination Risk"
-                  value={`${data.hallucination_rate_pct}%`}
+                  value={`${data.hallucination_rate_pct || 0}%`}
                   sub="LOW-conf responses"
-                  color={data.hallucination_rate_pct > 30 ? "var(--danger)" : "var(--success)"}
+                  color={(data.hallucination_rate_pct || 0) > 30 ? "var(--danger)" : "var(--success)"}
                 />
                 <StatCard
                   icon="👍"
@@ -301,8 +219,8 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
               <div className="analytics-section-title">Confidence Signals</div>
               <div className="analytics-signals">
                 {[
-                  { label: "Retrieval Confidence", value: data.avg_retrieval_confidence, icon: "🔍" },
-                  { label: "Grounding Score", value: data.avg_grounding_score, icon: "📄" },
+                  { label: "Retrieval Confidence", value: data.avg_retrieval_confidence || 0, icon: "🔍" },
+                  { label: "Grounding Score", value: data.avg_grounding_score || 0, icon: "📄" },
                   ...(data.avg_self_consistency != null
                     ? [{ label: "Self-Consistency", value: data.avg_self_consistency, icon: "🔄" }]
                     : []),
@@ -337,9 +255,9 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                   <div className="analytics-section-title">Confidence Levels</div>
                   {cd && (
                     <div className="analytics-dist-group">
-                      <DistBar label="HIGH" count={cd.HIGH} total={totalConf} color="var(--success)" />
-                      <DistBar label="MEDIUM" count={cd.MEDIUM} total={totalConf} color="var(--warning)" />
-                      <DistBar label="LOW" count={cd.LOW} total={totalConf} color="var(--danger)" />
+                      <DistBar label="HIGH" count={cd.HIGH || 0} total={totalConf} color="var(--success)" />
+                      <DistBar label="MEDIUM" count={cd.MEDIUM || 0} total={totalConf} color="var(--warning)" />
+                      <DistBar label="LOW" count={cd.LOW || 0} total={totalConf} color="var(--danger)" />
                     </div>
                   )}
                 </div>
@@ -349,19 +267,19 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                     <div className="analytics-dist-group">
                       <DistBar
                         label="Direct Answer"
-                        count={rd.direct_answer}
+                        count={rd.direct_answer || 0}
                         total={totalResp}
                         color="var(--success)"
                       />
                       <DistBar
                         label="Guided Hint"
-                        count={rd.guided_hint}
+                        count={rd.guided_hint || 0}
                         total={totalResp}
                         color="var(--warning)"
                       />
                       <DistBar
                         label="Clarification"
-                        count={rd.clarification_request}
+                        count={rd.clarification_request || 0}
                         total={totalResp}
                         color="var(--danger)"
                       />
@@ -398,21 +316,21 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
               )}
 
               {/* ── User Feedback breakdown ────────────────────── */}
-              {fb && fb.total_rated > 0 && (
+              {fb && (fb.total_rated || 0) > 0 && (
                 <>
                   <div className="analytics-section-title">User Feedback</div>
                   <div className="analytics-feedback-row">
                     <div className="analytics-feedback-cell">
                       <span style={{ fontSize: 20 }}>👍</span>
                       <span className="analytics-feedback-num" style={{ color: "var(--success)" }}>
-                        {fb.thumbs_up}
+                        {fb.thumbs_up || 0}
                       </span>
                       <span className="analytics-feedback-sub">Helpful</span>
                     </div>
                     <div className="analytics-feedback-cell">
                       <span style={{ fontSize: 20 }}>👎</span>
                       <span className="analytics-feedback-num" style={{ color: "var(--warning)" }}>
-                        {fb.thumbs_down}
+                        {fb.thumbs_down || 0}
                       </span>
                       <span className="analytics-feedback-sub">Not helpful</span>
                     </div>
@@ -453,7 +371,7 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                           <tr key={i}>
                             <td className="analytics-td-time">{formatTime(q.timestamp)}</td>
                             <td className="analytics-td-query" title={q.query}>
-                              {q.query.length > 50 ? q.query.slice(0, 50) + "…" : q.query}
+                              {(q.query || "").length > 50 ? q.query.slice(0, 50) + "…" : q.query}
                             </td>
                             <td>
                               <span
@@ -478,7 +396,7 @@ export default function AnalyticsPanel({ isOpen, onClose }: AnalyticsPanelProps)
                                   fontSize: 12,
                                 }}
                               >
-                                {q.confidence_level} ({(q.confidence_score * 100).toFixed(0)}%)
+                                {q.confidence_level} ({((q.confidence_score || 0) * 100).toFixed(0)}%)
                               </span>
                             </td>
                           </tr>

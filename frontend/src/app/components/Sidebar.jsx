@@ -2,30 +2,10 @@
 
 import React, { useRef, useState } from "react";
 
-interface Material {
-  filename: string;
-}
-
-interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
-  materials: Material[];
-  onUpload: (file: File) => void;
-  onDelete: (filename: string) => void;
-  isUploading: boolean;
-  uploadMessage: string;
-  onNewChat: () => void;
-  llmStatus: string;
-  dbCount: number;
-  selfConsistency: boolean;
-  onToggleSelfConsistency: () => void;
-  deletingFile?: string | null;
-}
-
 export default function Sidebar({
   isOpen,
   onToggle,
-  materials,
+  materials = [],
   onUpload,
   onDelete,
   isUploading,
@@ -36,19 +16,19 @@ export default function Sidebar({
   selfConsistency,
   onToggleSelfConsistency,
   deletingFile,
-}: SidebarProps) {
+}) {
   const [showScInfo, setShowScInfo] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragOver(true);
   };
 
   const handleDragLeave = () => setIsDragOver(false);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e) => {
     e.preventDefault();
     setIsDragOver(false);
     const file = e.dataTransfer.files?.[0];
@@ -57,7 +37,7 @@ export default function Sidebar({
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       onUpload(file);
@@ -135,7 +115,6 @@ export default function Sidebar({
               onMouseLeave={() => setShowScInfo(false)}
               id="sc-info-icon"
             >
-
               {showScInfo && (
                 <div style={{
                   position: 'absolute',
@@ -155,9 +134,9 @@ export default function Sidebar({
                   whiteSpace: 'normal',
                 }}>
                   <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>🔄 Self-Consistency Check</strong>
-                  Asks the LLM the <strong>same question 3 times</strong> with slightly different settings, then checks if the answers agree.
+                  Asks Gemini the <strong>same question 3 times</strong> with slight temperature variance, then evaluates response agreement.
                   <br /><br />
-                  <span style={{ color: 'var(--warning)' }}>⚠ Makes responses ~3× slower</span> but produces a more accurate confidence score.
+                  <span style={{ color: 'var(--warning)' }}>⚠ Makes responses ~3× slower</span> but produces a more robust confidence score.
                 </div>
               )}
             </span>

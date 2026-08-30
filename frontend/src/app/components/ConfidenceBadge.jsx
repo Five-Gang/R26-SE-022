@@ -2,46 +2,38 @@
 
 import React, { useState } from "react";
 
-interface ConfidenceBadgeProps {
-  level: "HIGH" | "MEDIUM" | "LOW";
-  score: number;
-  retrievalConfidence?: number;
-  groundingScore?: number;
-  selfConsistencyScore?: number;
-}
-
 export default function ConfidenceBadge({
-  level,
-  score,
+  level = "LOW",
+  score = 0,
   retrievalConfidence,
   groundingScore,
   selfConsistencyScore,
-}: ConfidenceBadgeProps) {
+}) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const levelClass = level.toLowerCase();
-  const percentage = Math.round(score * 100);
+  const levelClass = (level || "low").toLowerCase();
+  const percentage = Math.round((score || 0) * 100);
 
-  const labels: Record<string, string> = {
+  const labels = {
     HIGH: "High Confidence",
     MEDIUM: "Medium Confidence",
     LOW: "Low Confidence",
   };
 
-  const getMetricPercentage = (val?: number) => {
+  const getMetricPercentage = (val) => {
     if (val === undefined || val === null) return "N/A";
     return `${Math.round(val * 100)}%`;
   };
 
   return (
     <span
-      className={`confidence-badge-container`}
+      className="confidence-badge-container"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onClick={() => setShowTooltip(!showTooltip)}
     >
       <span className={`confidence-badge ${levelClass}`}>
         <span className="confidence-dot" />
-        {labels[level]} ({percentage}%)
+        {labels[level] || "Confidence"} ({percentage}%)
       </span>
 
       {showTooltip && (
