@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.predict_readiness import (
@@ -13,7 +14,7 @@ router = APIRouter()
 
 class ReadinessRequest(BaseModel):
     emotion: str
-    time_of_day: str | None = None
+    time_of_day: Optional[str] = None
 
 
 @router.post("/api/v1/predict/readiness")

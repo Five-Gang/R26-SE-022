@@ -1,3 +1,4 @@
+from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -50,9 +51,9 @@ class LearningSignal:
     activity_type: ActivityType = ActivityType.QUIZ
     session_active: bool = True
     content_in_focus: bool = True
-    blink_rate: float | None = None
-    fatigue: float | None = None
-    head_tilt_degrees: float | None = None
+    blink_rate: Optional[float] = None
+    fatigue: Optional[float] = None
+    head_tilt_degrees: Optional[float] = None
     signal_confidence: float = 1.0
     source: str = "mock"
 
@@ -110,14 +111,14 @@ def compute_readiness(
     return score, tier
 
 
-def _blink_quality(blink_rate: float | None) -> float:
+def _blink_quality(blink_rate: Optional[float]) -> float:
     if blink_rate is None:
         return 0.7
     distance = abs(blink_rate - 16.0)
     return clamp(1.0 - (distance / 20.0), 0.0, 1.0)
 
 
-def _head_alignment(head_tilt_degrees: float | None) -> float:
+def _head_alignment(head_tilt_degrees: Optional[float]) -> float:
     if head_tilt_degrees is None:
         return 0.75
     excess_tilt = max(abs(head_tilt_degrees) - 10.0, 0.0)

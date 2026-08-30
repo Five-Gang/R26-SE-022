@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app.services.predict_readiness import predict_readiness
@@ -14,7 +15,7 @@ content_service = ContentPersonalizationService()
 
 class PipelineRequest(BaseModel):
     emotion: str
-    time_of_day: str | None = None
+    time_of_day: Optional[str] = None
     quality_percentage: float = 80.0
     difficulty_level: str = "medium"
     days_since_last_review: float = 2.0

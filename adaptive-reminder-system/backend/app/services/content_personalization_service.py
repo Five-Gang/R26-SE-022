@@ -1,3 +1,4 @@
+from typing import Optional
 class ContentPersonalizationService:
     """Model 4: rule-based recommendation of study activity type."""
 
@@ -45,7 +46,7 @@ class ContentPersonalizationService:
         emotion: str,
         readiness_level: str,
         focus_score: float = 50.0,
-        time_of_day: str | None = None,
+        time_of_day: Optional[str] = None,
         duration_seconds: int = 0,
     ) -> dict:
         """

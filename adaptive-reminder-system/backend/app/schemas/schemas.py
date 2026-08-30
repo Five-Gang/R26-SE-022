@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
-from typing import Literal
+from typing import Optional, Literal
 
 # === Auth ===
 class LoginRequest(BaseModel):
@@ -27,7 +27,7 @@ class ReviewItemResponse(BaseModel):
     difficulty: float
     retention_probability: float
     review_priority: float
-    last_reviewed: datetime | None
+    last_reviewed: Optional[datetime]
 
 class ReviewItemListResponse(BaseModel):
     items: list[ReviewItemResponse]
@@ -46,13 +46,13 @@ class ReminderResponse(BaseModel):
     readiness_score: float
     retention_probability: float
     bandit_action: str
-    activity_type: str | None = None
-    engagement_score: float | None = None
-    decision_reason: str | None = None
+    activity_type: Optional[str] = None
+    engagement_score: Optional[float] = None
+    decision_reason: Optional[str] = None
     status: str
     scheduled_at: datetime
-    sent_at: datetime | None
-    responded_at: datetime | None
+    sent_at: Optional[datetime]
+    responded_at: Optional[datetime]
 
 class ReminderQueueResponse(BaseModel):
     reminders: list[ReminderResponse]
@@ -84,11 +84,11 @@ class ScheduleTickResponse(BaseModel):
     reminders_created: int
     items_processed: int
     status: str
-    decision: str | None = None
-    decision_reason: str | None = None
-    activity_type: str | None = None
-    session_active: bool | None = None
-    engagement_score: float | None = None
-    readiness_score: float | None = None
-    readiness_tier: str | None = None
-    content_type: str | None = None
+    decision: Optional[str] = None
+    decision_reason: Optional[str] = None
+    activity_type: Optional[str] = None
+    session_active: Optional[bool] = None
+    engagement_score: Optional[float] = None
+    readiness_score: Optional[float] = None
+    readiness_tier: Optional[str] = None
+    content_type: Optional[str] = None

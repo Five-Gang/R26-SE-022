@@ -1,3 +1,4 @@
+from typing import Optional
 from pathlib import Path
 from datetime import datetime
 import pickle
@@ -124,7 +125,7 @@ def _build_features(emotion: str, time_of_day: str) -> list[float]:
     ]
 
 
-def predict_readiness(emotion: str, time_of_day: str | None = None) -> str:
+def predict_readiness(emotion: str, time_of_day: Optional[str] = None) -> str:
     """Return decoded readiness label for given emotion and (optional) time_of_day.
 
     If time_of_day is None, uses current time of day.

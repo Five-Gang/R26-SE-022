@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Emotion-Triggered Adaptive Intervention Endpoint
 POST /api/v1/emotion/intervention
@@ -24,7 +25,7 @@ class EmotionInterventionRequest(BaseModel):
     emotion: str = Field(..., description="Detected emotion: Focused, Neutral, Frustrated, Bored, Confused")
     attention_score: float = Field(50.0, ge=0.0, le=100.0, description="Real-time attention score 0-100")
     duration_seconds: int = Field(0, ge=0, description="How long this emotion has been sustained (seconds)")
-    time_of_day: str | None = Field(None, description="Morning, Afternoon, Evening, Night (auto-detected if None)")
+    time_of_day: Optional[str] = Field(None, description="Morning, Afternoon, Evening, Night (auto-detected if None)")
 
 
 @router.post("/intervention")

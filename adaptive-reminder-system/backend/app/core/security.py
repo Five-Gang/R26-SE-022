@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -19,7 +20,7 @@ def create_access_token(student_id: str) -> str:
         algorithm="HS256",
     )
 
-def decode_token(token: str) -> str | None:
+def decode_token(token: str) -> Optional[str]:
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
         return payload.get("sub")
