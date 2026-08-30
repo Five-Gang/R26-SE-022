@@ -87,12 +87,15 @@ class ConfidenceScorer:
         if not similarities:
             return 0.0
 
+        # Calibrate dense embedding similarity (MiniLM noise floor ~0.20, strong match ~0.70)
+        calibrated_sims = [min(1.0, max(0.0, (s - 0.20) / (0.70 - 0.20))) for s in similarities]
+
         # Weighted average: top results matter more
-        weights = [1.0 / (i + 1) for i in range(len(similarities))]
-        weighted_sum = sum(s * w for s, w in zip(similarities, weights))
+        weights = [1.0 / (i + 1) for i in range(len(calibrated_sims))]
+        weighted_sum = sum(s * w for s, w in zip(calibrated_sims, weights))
         total_weight = sum(weights)
 
-        return min(1.0, weighted_sum / total_weight)
+        return min(1.0, max(0.0, weighted_sum / total_weight))
 
     def compute_grounding_score(
         self,

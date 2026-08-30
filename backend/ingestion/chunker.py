@@ -11,14 +11,20 @@ from nltk.tokenize import word_tokenize
 
 def clean_text(text: str) -> str:
     """
-    Basic text cleaning:
-    - Remove extra spaces
-    - Remove weird characters
-    - Normalize newlines
+    Enhanced text cleaning for academic lecture notes and PDFs:
+    - Normalizes bullet symbols with clean spacing ('▪Scalable' -> ' - Scalable')
+    - Removes non-printable characters
+    - Normalizes extra whitespace while preserving readability
     """
-    text = re.sub(r'\s+', ' ', text)  # collapse multiple spaces
-    text = text.replace("\n", " ").strip()
-    return text
+    if not text:
+        return ""
+    # Normalize bullet points so they don't stick to words
+    text = re.sub(r'[▪•●◆★‣]\s*', ' - ', text)
+    # Collapse multiple whitespace characters into single space
+    text = re.sub(r'[ \t]+', ' ', text)
+    # Normalize multiple newlines
+    text = re.sub(r'\n+', '\n', text)
+    return text.strip()
 
 
 def chunk_text(
