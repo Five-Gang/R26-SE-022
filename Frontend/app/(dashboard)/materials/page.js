@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { modulesApi, documentsApi } from '../../../lib/summarizer-api';
 import styles from './materials.module.css';
 
 const STATUS_META = {
@@ -13,11 +12,12 @@ const STATUS_META = {
 };
 
 export default function MaterialsPage() {
+  const [materials, setMaterials] = useState([]);
   const [modules, setModules] = useState([]);
-  const [docs, setDocs] = useState([]);
   const [selectedModule, setSelectedModule] = useState('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [uploadModuleId, setUploadModuleId] = useState('');
@@ -25,34 +25,75 @@ export default function MaterialsPage() {
   const [uploadError, setUploadError] = useState(null);
   const fileRef = useRef();
 
-  const [materials, setMaterials] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
   useEffect(() => {
     const token = window.localStorage.getItem('access_token');
-    if (!token) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/v1/materials`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Unable to load materials');
-        return response.json();
+    if (!token) { setLoading(false); return; }
+
+    Promise.all([
+      fetch(`${API}/api/v1/materials`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API}/api/v1/modules`, { headers: { Authorization: `Bearer ${token}` } }),
+    ])
+      .then(async ([matRes, modRes]) => {
+        if (!matRes.ok) throw new Error('Unable to load materials');
+        const matData = await matRes.json();
+        const modData = modRes.ok ? await modRes.json() : { modules: [] };
+
+        setMaterials((matData.materials || []).map((m) => ({
+          ...m,
+          date: m.date ? new Date(m.date).toLocaleDateString() : 'Recently added',
+          icon: '📄',
+        })));
+        setModules(modData.modules || []);
+        if (modData.modules?.length) setUploadModuleId(modData.modules[0]?.id || '');
       })
-      .then((result) => setMaterials((result.materials || []).map((material) => ({
-        ...material,
-        date: material.date ? new Date(material.date).toLocaleDateString() : 'Recently added',
-        icon: '📄',
-      }))))
       .catch(() => setError('Your materials could not be loaded.'))
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredMaterials = materials.filter(m =>
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleUpload = async () => {
+    const token = window.localStorage.getItem('access_token');
+    const file = fileRef.current?.files?.[0];
+    if (!file || !uploadModuleId) { setUploadError('Please select a module and file.'); return; }
+
+    setUploading(true);
+    setUploadError(null);
+    const form = new FormData();
+    form.append('file', file);
+    form.append('module_id', uploadModuleId);
+    form.append('document_type', uploadType);
+
+    try {
+      const res = await fetch(`${API}/api/v1/documents/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      setShowUpload(false);
+      // Refresh materials list
+      const matRes = await fetch(`${API}/api/v1/materials`, { headers: { Authorization: `Bearer ${token}` } });
+      const matData = await matRes.json();
+      setMaterials((matData.materials || []).map((m) => ({
+        ...m,
+        date: m.date ? new Date(m.date).toLocaleDateString() : 'Recently added',
+        icon: '📄',
+      })));
+    } catch {
+      setUploadError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const filteredMaterials = materials.filter((m) => {
+    const matchesSearch =
+      (m.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.subject || '').toLowerCase().includes(search.toLowerCase());
+    const matchesModule = selectedModule === 'all' || m.module_id === selectedModule;
+    return matchesSearch && matchesModule;
+  });
 
   return (
     <div className={styles.container}>
@@ -136,24 +177,34 @@ export default function MaterialsPage() {
           </select>
         </div>
 
+        {loading && <p className={styles.statusMsg}>Loading materials…</p>}
+        {error && <p className={styles.errorMsg}>{error}</p>}
+
+        {!loading && !error && filteredMaterials.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>No materials yet. Upload your first lecture file to get started!</p>
+          </div>
+        )}
+
         <div className={styles.grid}>
-          {filteredMaterials.map(mat => (
-            <div key={mat.id} className={styles.card}>
-              <div className={styles.cardTop}>
-                <div className={styles.fileIcon}>{mat.icon}</div>
-                <div className={styles.moreBtn}>⋮</div>
+          {filteredMaterials.map((mat) => {
+            const status = STATUS_META[mat.status] || { label: mat.status, color: '#94a3b8' };
+            return (
+              <div key={mat.id} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <div className={styles.fileIcon}>{mat.icon}</div>
+                  <div className={styles.moreBtn}>⋮</div>
+                </div>
+                <h3 className={styles.fileName}>{mat.name}</h3>
+                <div className={styles.fileSubject}>{mat.subject || mat.module_name || '—'}</div>
+                <div className={styles.cardBottom}>
+                  <div className={styles.fileMeta}>{mat.date} · {mat.type || mat.document_type}</div>
+                  <div className={styles.statusBadge} style={{ color: status.color }}>{status.label}</div>
+                </div>
               </div>
-              <h3 className={styles.fileName}>{mat.name}</h3>
-              <div className={styles.fileSubject}>{mat.subject}</div>
-
-              <div className={styles.cardBottom}>
-                <div className={styles.fileMeta}>{mat.date} · {mat.type}</div>
-                <div className={styles.statusBadge}>{mat.status}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
       </main>
     </div>
   );
