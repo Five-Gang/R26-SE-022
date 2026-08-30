@@ -252,6 +252,9 @@ export default function ModulesPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // module object to delete
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const load = () => modulesApi.list()
     .then(setModules)
@@ -272,6 +275,21 @@ export default function ModulesPage() {
     window.location.href = `/modules/${mod.id}`;
   };
 
+  const handleDeleteModule = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await modulesApi.delete(confirmDelete.id);
+      setModules(prev => prev.filter(m => m.id !== confirmDelete.id));
+      setConfirmDelete(null);
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       {showCreate && (
@@ -279,6 +297,48 @@ export default function ModulesPage() {
           onClose={() => setShowCreate(false)}
           onCreated={handleModuleCreated}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className={styles.modalOverlay} onClick={() => { setConfirmDelete(null); setDeleteError(null); }}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+            <div className={styles.modalBody}>
+              <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🗑️</div>
+                <h2 className={styles.modalTitle} style={{ margin: 0 }}>Delete Module?</h2>
+              </div>
+              <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', marginBottom: '0.5rem' }}>
+                This will permanently delete
+              </p>
+              <p style={{ textAlign: 'center', fontWeight: 700, fontSize: '1rem', color: 'var(--color-text)', marginBottom: '0.25rem' }}>
+                {confirmDelete.name}
+              </p>
+              <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.82rem', marginBottom: '1.5rem' }}>
+                {confirmDelete.code} · All uploaded documents, summaries, and learning outcomes will be lost.
+              </p>
+              {deleteError && (
+                <div className={styles.formError} style={{ marginBottom: '1rem' }}>❌ {deleteError}</div>
+              )}
+              <div className={styles.modalActions}>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={() => { setConfirmDelete(null); setDeleteError(null); }}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={styles.btnDelete}
+                  onClick={handleDeleteModule}
+                  disabled={deleting}
+                >
+                  {deleting ? 'Deleting…' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Page Header */}
@@ -334,42 +394,53 @@ export default function ModulesPage() {
       {!loading && !error && filtered.length > 0 && (
         <div className={styles.grid}>
           {filtered.map((mod) => (
-            <Link key={mod.id} href={`/modules/${mod.id}`} className={styles.card}>
-              <div className={styles.cardBadges}>
-                <span className={styles.codeBadge}>{mod.code}</span>
-                {mod.department && <span className={styles.deptBadge}>{mod.department}</span>}
-                {mod.outline_processed
-                  ? <span className={styles.outlineReadyBadge}>✅ Outline</span>
-                  : <span className={styles.outlinePendingBadge}>📋 No outline</span>
-                }
-              </div>
-
-              <h3 className={styles.cardName}>{mod.name}</h3>
-
-              <div className={styles.cardMeta}>
-                {mod.year && <span>Year {mod.year}</span>}
-                {mod.semester && <span>Sem {mod.semester}</span>}
-                {mod.credits && <span>{mod.credits} cr</span>}
-                {mod.lecturer && <span>👤 {mod.lecturer}</span>}
-              </div>
-
-              {/* LO dots */}
-              {mod.learning_outcomes?.length > 0 && (
-                <div className={styles.loRow}>
-                  <span className={styles.loLabel}>{mod.learning_outcomes.length} LOs</span>
-                  {mod.learning_outcomes.slice(0, 6).map((lo) => (
-                    <span key={lo.id} className={styles.loDot}
-                      title={`${lo.lo_code}: ${lo.text}`}
-                      style={{ background: BLOOM_COLORS[lo.bloom_level] || '#94a3b8' }} />
-                  ))}
-                  {mod.learning_outcomes.length > 6 && (
-                    <span className={styles.loMore}>+{mod.learning_outcomes.length - 6}</span>
-                  )}
+            <div key={mod.id} className={styles.cardWrapper}>
+              <Link href={`/modules/${mod.id}`} className={styles.card}>
+                <div className={styles.cardBadges}>
+                  <span className={styles.codeBadge}>{mod.code}</span>
+                  {mod.department && <span className={styles.deptBadge}>{mod.department}</span>}
+                  {mod.outline_processed
+                    ? <span className={styles.outlineReadyBadge}>✅ Outline</span>
+                    : <span className={styles.outlinePendingBadge}>📋 No outline</span>
+                  }
                 </div>
-              )}
 
-              <div className={styles.cardArrow}>Open Module →</div>
-            </Link>
+                <h3 className={styles.cardName}>{mod.name}</h3>
+
+                <div className={styles.cardMeta}>
+                  {mod.year && <span>Year {mod.year}</span>}
+                  {mod.semester && <span>Sem {mod.semester}</span>}
+                  {mod.credits && <span>{mod.credits} cr</span>}
+                  {mod.lecturer && <span>👤 {mod.lecturer}</span>}
+                </div>
+
+                {/* LO dots */}
+                {mod.learning_outcomes?.length > 0 && (
+                  <div className={styles.loRow}>
+                    <span className={styles.loLabel}>{mod.learning_outcomes.length} LOs</span>
+                    {mod.learning_outcomes.slice(0, 6).map((lo) => (
+                      <span key={lo.id} className={styles.loDot}
+                        title={`${lo.lo_code}: ${lo.text}`}
+                        style={{ background: BLOOM_COLORS[lo.bloom_level] || '#94a3b8' }} />
+                    ))}
+                    {mod.learning_outcomes.length > 6 && (
+                      <span className={styles.loMore}>+{mod.learning_outcomes.length - 6}</span>
+                    )}
+                  </div>
+                )}
+
+                <div className={styles.cardArrow}>Open Module →</div>
+              </Link>
+
+              {/* Delete button — shown on hover via CSS */}
+              <button
+                className={styles.cardDeleteBtn}
+                title={`Delete ${mod.name}`}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDelete(mod); setDeleteError(null); }}
+              >
+                🗑️
+              </button>
+            </div>
           ))}
 
           {/* Add Module card */}

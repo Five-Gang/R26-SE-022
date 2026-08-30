@@ -130,6 +130,56 @@
   transform: translateY(-2px);
 }
 
+/* ── Card Wrapper (positions the delete button) ──────── */
+.cardWrapper {
+  position: relative;
+}
+
+.cardDeleteBtn {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, transform 0.15s;
+  z-index: 2;
+}
+
+.cardWrapper:hover .cardDeleteBtn {
+  opacity: 1;
+}
+
+.cardDeleteBtn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  transform: scale(1.1);
+}
+
+/* ── Delete confirm button ───────────────────────────── */
+.btnDelete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btnDelete:hover:not(:disabled) { background: #dc2626; }
+.btnDelete:disabled { opacity: 0.55; cursor: not-allowed; }
+
 .cardBadges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .codeBadge {

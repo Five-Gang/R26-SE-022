@@ -159,6 +159,12 @@ class ChatRequest(BaseModel):
     # Per-request override: if provided, overrides the global ENABLE_SELF_CONSISTENCY setting.
     # This allows the frontend UI toggle to control the feature live without restarting the server.
     enable_self_consistency: Optional[bool] = None
+    # Optional module context injected by the frontend from the summarizer backend.
+    # Contains LOs, weekly topics, and existing AI summaries so the tutor can answer
+    # even when the local vector store has no matching documents.
+    module_context: Optional[str] = None
+    module_name: Optional[str] = None
+    module_code: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -216,29 +222,59 @@ async def chat(request: ChatRequest):
         scorer = get_confidence_scorer()
         responder = get_adaptive_responder()
 
-        # Step 1: Retrieve relevant documents
+        # Step 1: Retrieve relevant documents from the local vector store
         print(f"\n{'='*60}")
         print(f" Query: {request.query}")
         retrieval_results = retrieve_documents(request.query, top_k=request.top_k)
 
-        # Check if retrieval returned errors
+        # Check if retrieval returned real (non-error) results
         has_real_results = any(
             "content" in r and "error" not in r
             for r in retrieval_results
         )
 
-        # Step 2: Build context from retrieved documents
+        # Step 2: Build context — combine RAG results + any module_context from the frontend
         context_parts = []
         sources = []
-        if has_real_results:
-            for r in retrieval_results:
-                if "content" in r and "error" not in r:
-                    source_name = (
-                        r.get("metadata", {}).get("filename")
-                        or r.get("metadata", {}).get("source")
-                        or r.get("source")
-                        or "Course Document"
-                    )
+
+        # 2a. Inject module context from the summarizer backend (LOs, weeks, AI summaries)
+        #     This allows the tutor to answer even when the local vector store is empty.
+        #     Note: module_context is only sent by the frontend when real summaries exist.
+        real_retrieval_results = [r for r in retrieval_results if "content" in r and "error" not in r]
+
+        if request.module_context and request.module_context.strip():
+            module_label = f"{request.module_name} ({request.module_code})" if request.module_name else "Module Materials"
+            source_label = f"{module_label} — AI Lecture Summaries"
+            context_parts.append(
+                f"[Source: {source_label}]\n{request.module_context}"
+            )
+            sources.append({
+                "filename": source_label,
+                "content": request.module_context[:300],
+                "similarity": 0.92  # treat summarizer content as high-confidence source
+            })
+            # Synthesise ONE retrieval result so the confidence scorer sees a real hit.
+            # Keep it separate from real_retrieval_results to avoid double-processing.
+            synthetic_hit = {
+                "content": request.module_context,
+                "metadata": {"source": source_label},
+                "similarity": 0.92,
+            }
+            retrieval_results = [synthetic_hit] + real_retrieval_results
+            has_real_results = True
+            print(f" Module context injected from summarizer ({len(request.module_context)} chars)")
+
+        # 2b. Add real vector store hits (skip any that are already in sources)
+        recorded_filenames = {s["filename"] for s in sources}
+        for r in real_retrieval_results:
+            if "content" in r and "error" not in r:
+                source_name = (
+                    r.get("metadata", {}).get("filename")
+                    or r.get("metadata", {}).get("source")
+                    or r.get("source")
+                    or "Course Document"
+                )
+                if source_name not in recorded_filenames:
                     context_parts.append(
                         f"[Source: {source_name}]\n{r['content']}"
                     )
@@ -247,6 +283,7 @@ async def chat(request: ChatRequest):
                         "content": r["content"][:300],
                         "similarity": r.get("similarity", 0)
                     })
+                    recorded_filenames.add(source_name)
 
         context = "\n\n".join(context_parts) if context_parts else "No relevant course materials found."
 
@@ -305,6 +342,20 @@ async def chat(request: ChatRequest):
             retrieval_results=retrieval_results if has_real_results else [],
             multiple_responses=multiple_responses
         )
+
+        # Step 6b: When module context was injected from the summarizer, the local
+        # ChromaDB may be empty so the scorer returns 0.0. Clamp to MEDIUM minimum
+        # since we DO have verified, grounded course material as context.
+        module_context_used = bool(request.module_context and request.module_context.strip())
+        if module_context_used:
+            # Ensure score is at least the LOW→MEDIUM threshold so we get a useful response
+            min_score = scorer.low_threshold + 0.05  # just above LOW threshold
+            if confidence["score"] < min_score:
+                confidence["score"] = round(min_score, 4)
+            if confidence["level"] == "LOW":
+                confidence["level"] = "MEDIUM"
+            confidence["module_context_used"] = True
+            print(f" Confidence overridden to MEDIUM (module context injected from summarizer)")
 
         # Step 7: Apply adaptive response strategy
         print(f" Confidence: {confidence['score']} ({confidence['level']})")
