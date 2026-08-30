@@ -200,3 +200,58 @@
     padding: 2rem;
   }
 }
+
+/* ── New classes for live quiz ─────────────────────── */
+.optionCorrect { background: #f0fdf4 !important; border-color: #86efac !important; }
+.optionWrong   { background: #fff5f5 !important; border-color: #fca5a5 !important; }
+.optCheck { color: #0f766e; font-weight: 700; margin-left: auto; }
+.optX     { color: #dc2626; font-weight: 700; margin-left: auto; }
+
+.loTag {
+  background: #f0f9ff; color: #0369a1; font-size: 0.72rem; font-weight: 600;
+  padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid #bae6fd;
+  margin-left: 0.5rem; vertical-align: middle;
+}
+
+.diffBadge { margin-left: 0.5rem; font-size: 0.68rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700; }
+.diff_easy   { background: #f0fdf4; color: #0f766e; }
+.diff_medium { background: #fffbeb; color: #d97706; }
+.diff_hard   { background: #fff5f5; color: #dc2626; }
+
+.explanation {
+  background: #f8fafc; border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-top: 1rem;
+  font-size: 0.875rem; color: var(--color-text-primary);
+}
+.explainLabel { font-weight: 700; color: var(--color-primary); display: block; margin-bottom: 0.4rem; }
+.correctAns { margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-secondary); }
+
+.shortAnswer {
+  width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 0.75rem 1rem; font-family: var(--font); font-size: 0.9rem;
+  resize: vertical; outline: none; margin-top: 0.75rem;
+}
+.shortAnswer:focus { border-color: var(--color-accent); }
+
+/* Done screen */
+.doneCard {
+  text-align: center; padding: 3rem 2rem;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); max-width: 440px; width: 100%;
+  margin: 2rem auto; box-shadow: var(--shadow-card);
+}
+.doneIcon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+.doneTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; }
+.scoreCircle { display: flex; align-items: baseline; justify-content: center; gap: 0.25rem; margin-bottom: 0.5rem; }
+.scoreNum { font-size: 3.5rem; font-weight: 800; color: var(--color-accent); }
+.scoreDen { font-size: 1.5rem; color: var(--color-text-muted); }
+.scoreLabel { color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+.doneActions { display: flex; gap: 0.75rem; justify-content: center; }
+.btnOutline { background: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.65rem 1.2rem; font-weight: 600; cursor: pointer; }
+.btnPrimary { background: var(--color-accent); color: white; border: none; border-radius: var(--radius-md); padding: 0.65rem 1.4rem; font-weight: 600; cursor: pointer; }
+.btnBack { background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.6rem 1.2rem; cursor: pointer; margin-top: 0.75rem; }
+
+/* States */
+.stateCenter { text-align: center; padding: 5rem 2rem; color: var(--color-text-secondary); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -70,9 +70,10 @@ async def upload_document(
     content = await file.read()
     file_size = len(content)
 
-    # Generate storage path and save to uploads folder
+    # Generate storage path and save to uploads folder (use absolute path)
     import os
-    upload_dir = f"uploads/{module.code}"
+    _base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    upload_dir = os.path.join(_base_dir, "uploads", module.code)
     os.makedirs(upload_dir, exist_ok=True)
 
     storage_filename = f"{uuid.uuid4()}_{file.filename}"
@@ -171,3 +172,28 @@ async def delete_document(document_id: uuid.UUID, db: AsyncSession = Depends(get
     # TODO: Delete embeddings from Qdrant
 
     await db.delete(document)
+
+
+@router.post("/{document_id}/reprocess", response_model=DocumentResponse)
+async def reprocess_document(document_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Re-trigger ingestion for a failed or stuck document."""
+    result = await db.execute(select(Document).where(Document.id == document_id))
+    document = result.scalar_one_or_none()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Reset status so pipeline will run again
+    document.processing_status = "pending"
+    document.processing_error = None
+    await db.flush()
+    await db.refresh(document)
+
+    # Re-dispatch processing task
+    try:
+        from app.tasks.ingestion_tasks import _process_document_async
+        import asyncio
+        asyncio.create_task(_process_document_async(str(document.id)))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to dispatch task: {e}")
+
+    return document

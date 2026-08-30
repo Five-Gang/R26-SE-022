@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
 
     # ── Embedding Configuration ──────────────────────────────
-    embedding_provider: Literal["openai", "local"] = "openai"
+    embedding_provider: Literal["openai", "local", "google"] = "openai"
     embedding_dimensions: int = 1536
     local_embedding_model: str = "all-MiniLM-L6-v2"
 

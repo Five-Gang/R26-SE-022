@@ -137,12 +137,28 @@ async def generate_summary(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # ── Determine content to persist ─────────────────────────────────────────
+    # For flashcards / quiz, the generator stores the list under its own key
+    # and leaves content="" . Serialize the structured list as JSON so the
+    # GET endpoint can always find it by reading the content column.
+    import json as _json
+
+    if data.output_type == "flashcards":
+        stored_content = _json.dumps({"flashcards": pipeline_result.get("flashcards", [])})
+        content_format = "json"
+    elif data.output_type == "quiz":
+        stored_content = _json.dumps({"questions": pipeline_result.get("questions", [])})
+        content_format = "json"
+    else:
+        stored_content = pipeline_result.get("content", "")
+        content_format = "markdown"
+
     # Save output to database
     output = GeneratedOutput(
         request_id=request.id,
         output_type=data.output_type,
-        content=pipeline_result.get("content", ""),
-        content_format="markdown",
+        content=stored_content,
+        content_format=content_format,
         lo_coverage=pipeline_result.get("lo_coverage", {}),
         citations=pipeline_result.get("citations", []),
         generation_time_ms=pipeline_result.get("metadata", {}).get("generation_time_ms", elapsed_ms),
@@ -196,7 +212,7 @@ async def generate_summary(
 
 @router.get("/{summary_id}", response_model=SummaryResponse)
 async def get_summary(summary_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    """Retrieve a previously generated summary."""
+    """Retrieve a previously generated summary, flashcard set, or quiz."""
     result = await db.execute(
         select(GeneratedOutput).where(GeneratedOutput.id == summary_id)
     )
@@ -204,13 +220,65 @@ async def get_summary(summary_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     if not output:
         raise HTTPException(status_code=404, detail="Summary not found")
 
+    # ── Parse structured data from stored content ──────────────────────────────
+    # For flashcards and quiz, the content field stores a JSON payload.
+    # Parse it back so the UI can consume the structured list.
+    import json
+
+    flashcards = None
+    questions = None
+
+    if output.output_type == "flashcards":
+        try:
+            parsed = json.loads(output.content)
+            if isinstance(parsed, list):
+                flashcards = parsed
+            elif isinstance(parsed, dict) and "flashcards" in parsed:
+                flashcards = parsed["flashcards"]
+        except (json.JSONDecodeError, TypeError):
+            # Content may be plain markdown fallback — leave as None
+            flashcards = []
+
+    elif output.output_type == "quiz":
+        try:
+            parsed = json.loads(output.content)
+            if isinstance(parsed, list):
+                questions = parsed
+            elif isinstance(parsed, dict) and "questions" in parsed:
+                questions = parsed["questions"]
+        except (json.JSONDecodeError, TypeError):
+            questions = []
+
+    # ── Rebuild LO coverage from stored lo_coverage dict ──────────────────────
+    lo_coverage_list = []
+    if output.lo_coverage:
+        for lo_code, score in output.lo_coverage.items():
+            lo_coverage_list.append({
+                "lo_code": lo_code,
+                "lo_text": "",
+                "coverage_score": float(score),
+                "bloom_level": "Understand",
+            })
+
+    # ── Rebuild citations from stored citations list ───────────────────────────
+    citations_list = [
+        {
+            "text": c.get("text", ""),
+            "source": c.get("source", "Lecture Material"),
+            "location": c.get("location") or "",
+        }
+        for c in (output.citations or [])
+    ]
+
     return SummaryResponse(
         id=output.id,
         content=output.content,
         content_format=output.content_format,
         output_type=output.output_type,
-        learning_outcomes_covered=[],
-        citations=[],
+        learning_outcomes_covered=lo_coverage_list,
+        citations=citations_list,
+        flashcards=flashcards,
+        questions=questions,
         metadata={
             "model": output.llm_model or "unknown",
             "input_tokens": output.input_tokens or 0,

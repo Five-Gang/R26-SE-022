@@ -9,11 +9,11 @@ export default function Header() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Study', path: '/study' },
-    { name: 'Focus Monitor', path: '/focus-monitor' },
-    { name: 'AI Tutor', path: '/tutor' },
-    { name: 'Materials', path: '/materials' },
+    { name: 'Dashboard',      path: '/dashboard' },
+    { name: 'Modules',        path: '/modules' },
+    { name: 'Focus Monitor',  path: '/focus-monitor' },
+    { name: 'AI Tutor',       path: '/tutor' },
+    { name: 'Materials',      path: '/materials' },
   ];
 
   return (
@@ -28,11 +28,15 @@ export default function Header() {
 
       <nav className={styles.nav}>
         {navItems.map((item) => {
-          const isActive = pathname === item.path || (pathname?.startsWith(item.path) && item.path !== '/');
-          
+          // /modules is also active for all AI generation sub-pages that originate from modules
+          const studyRoutes = ['/study/generate', '/study/session', '/study/flashcards', '/study/quiz'];
+          const isStudySubRoute = item.path === '/modules' && studyRoutes.some(r => pathname?.startsWith(r));
+          const isActive = isStudySubRoute || pathname === item.path ||
+            (pathname?.startsWith(item.path) && item.path !== '/');
+
           return (
-            <Link 
-              key={item.name} 
+            <Link
+              key={item.name}
               href={item.path}
               className={`${styles.navLink} ${isActive ? styles.active : ''}`}
             >

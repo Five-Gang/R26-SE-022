@@ -40,15 +40,22 @@ async def create_module(data: ModuleCreate, db: AsyncSession = Depends(get_db)):
     return module
 
 
-@router.get("", response_model=list[ModuleResponse])
+@router.get("", response_model=list[ModuleDetailResponse])
 async def list_modules(
     department: Optional[str] = None,
     year: Optional[int] = None,
     semester: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """List all modules with optional filtering."""
-    query = select(Module).order_by(Module.code)
+    """List all modules with optional filtering, including learning outcomes."""
+    query = (
+        select(Module)
+        .options(
+            selectinload(Module.learning_outcomes),
+            selectinload(Module.weeks),
+        )
+        .order_by(Module.code)
+    )
     if department:
         query = query.where(Module.department == department)
     if year:

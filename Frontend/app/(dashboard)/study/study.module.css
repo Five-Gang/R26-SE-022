@@ -173,3 +173,27 @@
   border: none;
   cursor: pointer;
 }
+
+/* ── New additions for live upload ── */
+.selectRow { display: flex; gap: 1rem; width: 100%; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.selectGroup { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 200px; }
+.selectLabel { font-size: 0.78rem; font-weight: 600; color: var(--color-text-secondary); }
+.selectInput {
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 0.55rem 0.8rem; font-family: var(--font); font-size: 0.875rem;
+  background: var(--color-surface); color: var(--color-text-primary); outline: none;
+}
+.selectInput:focus { border-color: var(--color-accent); }
+.dragOver { border-color: var(--color-accent) !important; background: #f0fdf4 !important; }
+.uploading { opacity: 0.7; cursor: not-allowed !important; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--color-border); border-top-color: var(--color-accent);
+  border-radius: 50%; animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.errorBox {
+  background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;
+  padding: 0.7rem 1rem; color: #991b1b; font-size: 0.875rem;
+  width: 100%; margin-top: 0.75rem; text-align: center;
+}

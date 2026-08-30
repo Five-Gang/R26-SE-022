@@ -1,7 +1,8 @@
 from __future__ import annotations
 """Embedding Service — generates vector embeddings for chunks and learning outcomes.
 
-Supports both OpenAI (text-embedding-3-small) and local (all-MiniLM-L6-v2) models.
+Supports OpenAI (text-embedding-3-small), Google Gemini (text-embedding-004),
+and local (all-MiniLM-L6-v2) models.
 Manages Qdrant collection creation and point insertion.
 """
 
@@ -33,6 +34,7 @@ class EmbeddingService:
         )
         self._local_model = None
         self._openai_client = None
+        self._google_client = None
 
     async def initialize_collections(self):
         """Create Qdrant collections if they don't exist."""
@@ -66,19 +68,36 @@ class EmbeddingService:
 
     async def embed_text(self, text: str) -> list[float]:
         """Generate embedding for a single text string."""
+        # Guard: Google API rejects empty content
+        if not text or not text.strip():
+            return [0.0] * self.settings.embedding_dimensions
         if self.settings.embedding_provider == "openai":
             return await self._embed_openai(text)
+        elif self.settings.embedding_provider == "google":
+            return await self._embed_google(text)
         else:
             import asyncio
             return await asyncio.to_thread(self._embed_local, text)
 
     async def embed_texts(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for multiple texts (batched)."""
+        # Filter empty strings — replace them with zero vectors
+        zero = [0.0] * self.settings.embedding_dimensions
+        non_empty = [(i, t) for i, t in enumerate(texts) if t and t.strip()]
+        results = [zero] * len(texts)
+        if not non_empty:
+            return results
+        idxs, valid_texts = zip(*non_empty)
         if self.settings.embedding_provider == "openai":
-            return await self._embed_openai_batch(texts)
+            embeddings = await self._embed_openai_batch(list(valid_texts))
+        elif self.settings.embedding_provider == "google":
+            embeddings = await self._embed_google_batch(list(valid_texts))
         else:
             import asyncio
-            return await asyncio.to_thread(self._embed_local_batch, texts)
+            embeddings = await asyncio.to_thread(self._embed_local_batch, list(valid_texts))
+        for idx, emb in zip(idxs, embeddings):
+            results[idx] = emb
+        return results
 
     async def upsert_chunk(
         self,
@@ -286,3 +305,43 @@ class EmbeddingService:
 
         embeddings = self._local_model.encode(texts)
         return embeddings.tolist()
+
+    # ── Google Gemini Embeddings ──────────────────────────────────────────────
+
+    async def _embed_google(self, text: str) -> list[float]:
+        """Generate embedding using Google Gemini text-embedding-004 API."""
+        import asyncio
+        return await asyncio.to_thread(self._embed_google_sync, text)
+
+    async def _embed_google_batch(self, texts: list[str]) -> list[list[float]]:
+        """Generate embeddings for a batch using Google Gemini API."""
+        import asyncio
+        return await asyncio.to_thread(self._embed_google_batch_sync, texts)
+
+    def _get_google_client(self):
+        """Lazy-init the Google genai client."""
+        if not self._google_client:
+            from google import genai
+            self._google_client = genai.Client(api_key=self.settings.google_api_key)
+        return self._google_client
+
+    def _embed_google_sync(self, text: str) -> list[float]:
+        """Sync call to Google Gemini embedding API."""
+        client = self._get_google_client()
+        result = client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=text,
+        )
+        return list(result.embeddings[0].values)
+
+    def _embed_google_batch_sync(self, texts: list[str]) -> list[list[float]]:
+        """Sync batch call to Google Gemini embedding API."""
+        client = self._get_google_client()
+        embeddings = []
+        for text in texts:
+            result = client.models.embed_content(
+                model="gemini-embedding-001",
+                contents=text,
+            )
+            embeddings.append(list(result.embeddings[0].values))
+        return embeddings

@@ -9,14 +9,14 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
+    { name: 'Dashboard',     path: '/dashboard',     icon: '📊' },
+    { name: 'Modules',       path: '/modules',       icon: '📚' },
+    { name: 'AI Tutor',      path: '/tutor',         icon: '🤖' },
+    { name: 'Materials',     path: '/materials',     icon: '📁' },
+    { name: 'Focus Monitor', path: '/focus-monitor', icon: '👁️' },
+    { name: 'Analytics',     path: '/analytics',     icon: '📈' },
+    { name: 'Rewards',       path: '/rewards',       icon: '🏆' },
+    { name: 'Settings',      path: '/settings',      icon: '⚙️' },
   ];
 
   return (
