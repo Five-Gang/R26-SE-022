@@ -32,6 +32,9 @@ export function FocusProvider({ children }) {
   const streamRef = useRef(null);
   const timerRef = useRef(null);
   const captureIntervalRef = useRef(null);
+  
+  // Buffer to capture every processed frame during an active session for exact statistical calculation
+  const sessionSamplesRef = useRef([]);
 
   // References to maintain current state inside event listeners & unloads
   const stateRef = useRef({ isMonitoring, sessionSeconds, focusData });
@@ -39,26 +42,75 @@ export function FocusProvider({ children }) {
     stateRef.current = { isMonitoring, sessionSeconds, focusData };
   }, [isMonitoring, sessionSeconds, focusData]);
 
-  // Safe Session Saver
+  // Safe Session Saver with Exact Statistical Aggregates
   const saveSessionToStorage = useCallback((currentData, duration) => {
-    if (duration < 3) return; // Skip trivial clicks
+    if (duration < 3) return; // Skip trivial clicks (< 3s)
     try {
+      const samples = sessionSamplesRef.current || [];
+      let calculatedAvgAttention = currentData.attentionScore || 0;
+      let calculatedDominantEmotion = currentData.emotion || "Focused";
+      let calculatedProbs = currentData.probs || { Focused: 0, Neutral: 0, Confused: 0, Bored: 0 };
+      let calculatedFatiguePct = currentData.fatiguePct || 15;
+
+      if (samples.length > 0) {
+        // 1. Calculate true mean attention score
+        const sumAtt = samples.reduce((acc, s) => acc + (s.attention || 0), 0);
+        calculatedAvgAttention = Math.round(sumAtt / samples.length);
+
+        // 2. Calculate true dominant emotion across all recorded frames
+        const emotionCounts = {};
+        samples.forEach(s => {
+          const em = s.emotion || "Neutral";
+          emotionCounts[em] = (emotionCounts[em] || 0) + 1;
+        });
+        let maxCount = 0;
+        Object.entries(emotionCounts).forEach(([em, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            calculatedDominantEmotion = em;
+          }
+        });
+
+        // 3. Calculate true emotion percentage distribution
+        const totalSamples = samples.length;
+        calculatedProbs = {
+          Focused: Math.round(((emotionCounts["Focused"] || 0) / totalSamples) * 100),
+          Neutral: Math.round(((emotionCounts["Neutral"] || 0) / totalSamples) * 100),
+          Confused: Math.round(((emotionCounts["Confused"] || 0) / totalSamples) * 100),
+          Bored: Math.round(((emotionCounts["Bored"] || 0) / totalSamples) * 100),
+        };
+
+        calculatedFatiguePct = calculatedDominantEmotion === "Bored" ? 75 : calculatedDominantEmotion === "Focused" ? 15 : 30;
+      }
+
+      const totalBlinks = currentData.totalBlinks || 0;
+      const bpmRate = duration >= 60 ? Math.round((totalBlinks / duration) * 60) : totalBlinks;
+      const fatigueLevel = calculatedFatiguePct > 60 ? "High" : calculatedFatiguePct > 30 ? "Moderate" : "Low";
+
       const existing = JSON.parse(localStorage.getItem('auralearn_focus_sessions') || '[]');
       const newSession = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
         label: `Session ${existing.length + 1} (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
         durationSeconds: duration,
-        avgAttention: currentData.attentionScore || 85,
-        fatigueLevel: currentData.fatigueLevel || "Low",
-        fatiguePct: currentData.fatiguePct || 20,
-        blinkRate: currentData.blinkRate || currentData.totalBlinks || 16,
-        dominantEmotion: currentData.emotion || "Focused",
-        probs: currentData.probs || { Focused: 85, Neutral: 15, Confused: 0, Bored: 0 }
+        avgAttention: calculatedAvgAttention,
+        fatigueLevel: fatigueLevel,
+        fatiguePct: calculatedFatiguePct,
+        blinkRate: bpmRate,
+        totalBlinks: totalBlinks,
+        dominantEmotion: calculatedDominantEmotion,
+        probs: calculatedProbs,
+        samplesCount: samples.length
       };
+
       existing.push(newSession);
-      if (existing.length > 25) existing.shift();
+      if (existing.length > 50) existing.shift();
       localStorage.setItem('auralearn_focus_sessions', JSON.stringify(existing));
+      
+      // Also dispatch a storage event for immediate cross-component reactivity
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('focusSessionSaved'));
+      }
     } catch (e) {
       console.error("Auto-save session error:", e);
     }
@@ -77,6 +129,17 @@ export function FocusProvider({ children }) {
       };
 
       const attentionScore = Math.min(100, Math.max(0, Math.round(apiData.attentionScore || 0)));
+
+      // Record sample in buffer for final session statistics calculation
+      if (sessionSamplesRef.current) {
+        sessionSamplesRef.current.push({
+          attention: attentionScore,
+          emotion: rawEmotion,
+          probs: cleanProbs,
+          ear: apiData.ear,
+          timestamp: Date.now()
+        });
+      }
 
       // Timeline entry
       const now = new Date();
@@ -179,6 +242,9 @@ export function FocusProvider({ children }) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
       }
+      // Reset session samples buffer on new start
+      sessionSamplesRef.current = [];
+      
       // Reset all metrics to 0 on new start
       setFocusData({
         emotion: "Detecting...",
