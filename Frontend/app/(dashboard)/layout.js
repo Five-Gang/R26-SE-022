@@ -5,6 +5,7 @@ import Header from '../../components/layout/Header';
 import SessionGuard from '../../components/auth/SessionGuard';
 import { FocusProvider } from '../../context/FocusContext';
 import FloatingFocusWidget from '../../components/layout/FloatingFocusWidget';
+import EmotionInterventionToast from '../../components/reminders/EmotionInterventionToast';
 
 export default function DashboardLayout({ children }) {
   return (
@@ -17,6 +18,8 @@ export default function DashboardLayout({ children }) {
           </main>
           {/* Persistent Floating Live Focus Indicator on all study pages */}
           <FloatingFocusWidget />
+          {/* Emotion-aware adaptive intervention notifications */}
+          <EmotionInterventionToast />
         </div>
       </FocusProvider>
     </SessionGuard>
