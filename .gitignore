@@ -138,20 +138,17 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Python & Data (Do not push heavy datasets)
+# ── Universal Python & Virtual Environments ───────────
 __pycache__/
-Model/Data/
-*.zip
-extracted_features.csv
-proposal_extracted.txt
-extracted_features*.csv
-*.pkl
-
-# ── Python Virtual Environments ───────────────────────
+**/__pycache__/
 .venv/
+**/.venv/
 venv/
+**/venv/
 env/
+**/env/
 ENV/
+**/ENV/
 .env.bak
 *.pyc
 *.pyo
@@ -159,44 +156,36 @@ ENV/
 dist/
 build/
 *.egg-info/
+.pytest_cache/
+**/.pytest_cache/
 
-# ── Summarizer Backend ────────────────────────────────
-summarizer-backend/.venv/
-summarizer-backend/venv/
-summarizer-backend/uploads/
-summarizer-backend/*.db
-summarizer-backend/*.sqlite
-summarizer-backend/*.sqlite3
-summarizer-backend/alembic/versions/__pycache__/
+# ── Universal Node / JavaScript / Next.js ─────────────
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+**/out/
+.cache/
+**/.cache/
 
-# ── Frontend ──────────────────────────────────────────
-Frontend/node_modules/
-Frontend/.next/
-Frontend/out/
+# ── Universal Data, Models & Uploads ──────────────────
+Model/Data/
+*.zip
+extracted_features.csv
+proposal_extracted.txt
+extracted_features*.csv
+*.pkl
+uploads/
+**/uploads/
+*.db
+*.sqlite
+*.sqlite3
 
-# ── macOS duplicates (files with " 2" suffix) ────────
-* 2.example
-* 2.yml
-* 2.yaml
-* 2.py
-* 2.txt
-* 2.md
-* 2.js
-* 2.ts
-* 2.css
-* 2.json
-* 2.ico
-* 2.svg
-* 2.png
-
-# ── macOS system files ────────────────────────────────
+# ── macOS System & Duplicate Files ───────────────────
 .DS_Store
 .AppleDouble
 .LSOverride
 Thumbs.db
-
-# ── Uploads & local DB files ──────────────────────────
-uploads/
-*.db
-*.sqlite
-*.sqlite3
+* 2.*
+* 2
