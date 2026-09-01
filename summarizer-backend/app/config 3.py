@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     llm_provider: Literal["gemini", "openai"] = "gemini"
     llm_temperature_summary: float = 0.3
     llm_temperature_quiz: float = 0.7
-    llm_max_output_tokens: int = 4096
+    llm_max_output_tokens: int = 16384
 
     # OpenAI
     openai_api_key: str = ""

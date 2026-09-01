@@ -214,7 +214,7 @@ export function FocusProvider({ children }) {
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
       try {
-        const res = await fetch('http://localhost:8002/api/detect-emotion', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_EMOTION_API_URL || 'http://localhost:8004'}/api/detect-emotion`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageData }),

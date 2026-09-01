@@ -1,0 +1,155 @@
+services:
+  # ── Summarizer Backend ────────────────────────────────────
+  - type: web
+    name: auralearn-summarizer
+    runtime: docker
+    dockerfilePath: ./summarizer-backend/Dockerfile
+    dockerContext: ./summarizer-backend
+    plan: standard          # needs 2GB RAM for PyTorch + EasyOCR
+    region: singapore
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      # PostgreSQL — use Render managed DB (see below) or Supabase
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: auralearn-postgres
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: auralearn-postgres
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: auralearn-postgres
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: auralearn-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: auralearn-postgres
+          property: password
+      # Qdrant Cloud — https://cloud.qdrant.io (free 1GB cluster)
+      - key: QDRANT_HOST
+        sync: false         # set manually in Render dashboard
+      - key: QDRANT_PORT
+        value: "6333"
+      - key: QDRANT_API_KEY
+        sync: false
+      # Upstash Redis — https://upstash.com (free tier)
+      - key: REDIS_URL
+        sync: false         # format: redis://:<password>@<host>:<port>
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      # Cloudflare R2 / MinIO compatible (free 10GB)
+      - key: MINIO_ENDPOINT
+        sync: false
+      - key: MINIO_ACCESS_KEY
+        sync: false
+      - key: MINIO_SECRET_KEY
+        sync: false
+      - key: MINIO_BUCKET
+        value: loa-ess-documents
+      - key: MINIO_SECURE
+        value: "true"
+      # LLM keys
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+      - key: EMBEDDING_PROVIDER
+        value: google
+
+  # ── Celery Worker ─────────────────────────────────────────
+  - type: worker
+    name: auralearn-celery-worker
+    runtime: docker
+    dockerfilePath: ./summarizer-backend/Dockerfile
+    dockerContext: ./summarizer-backend
+    plan: standard
+    region: singapore
+    startCommand: celery -A app.tasks.worker worker --loglevel=info
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: auralearn-postgres
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: auralearn-postgres
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: auralearn-postgres
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: auralearn-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: auralearn-postgres
+          property: password
+      - key: QDRANT_HOST
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: MINIO_ENDPOINT
+        sync: false
+      - key: MINIO_ACCESS_KEY
+        sync: false
+      - key: MINIO_SECRET_KEY
+        sync: false
+      - key: MINIO_BUCKET
+        value: loa-ess-documents
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+  # ── LLM Tutor Backend ─────────────────────────────────────
+  - type: web
+    name: auralearn-tutor
+    runtime: docker
+    dockerfilePath: ./llm-tutor-backend/Dockerfile
+    dockerContext: ./llm-tutor-backend
+    plan: standard          # 2GB RAM for sentence-transformers
+    region: singapore
+    healthCheckPath: /health
+    disk:
+      name: tutor-chroma-data
+      mountPath: /app/data
+      sizeGB: 5             # persistent volume for ChromaDB
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: gemini-1.5-flash
+      - key: ENABLE_SELF_CONSISTENCY
+        value: "false"
+
+databases:
+  - name: auralearn-postgres
+    plan: free              # 90-day free trial, then $7/mo
+    region: singapore
+    databaseName: loa_ess
+    user: loa_ess_user

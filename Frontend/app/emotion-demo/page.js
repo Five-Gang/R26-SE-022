@@ -156,7 +156,7 @@ export default function Home() {
       const imageData = canvas.toDataURL("image/jpeg", 0.8);
       
       try {
-        const response = await fetch("http://localhost:8002/api/detect-emotion", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_EMOTION_API_URL || 'http://localhost:8004'}/api/detect-emotion`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -124,6 +124,7 @@ class LLMGateway:
             temperature=temperature,
             max_output_tokens=max_tokens,
             system_instruction=system_instruction,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),  # Disable thinking to maximize output tokens
         )
         if json_mode:
             config.response_mime_type = "application/json"
@@ -149,6 +150,13 @@ class LLMGateway:
 
         input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0) or 0
         output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0) or 0
+
+        # Log if the model was cut off
+        finish_reason = None
+        if response.candidates:
+            finish_reason = str(getattr(response.candidates[0], "finish_reason", ""))
+            if finish_reason and "MAX_TOKENS" in finish_reason.upper():
+                print(f"⚠️  Gemini hit MAX_TOKENS — output truncated at {output_tokens} tokens. Consider reducing prompt size or increasing token budget.")
 
         cost = self._estimate_cost(
             self.settings.gemini_model, input_tokens, output_tokens
