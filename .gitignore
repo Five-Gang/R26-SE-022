@@ -283,3 +283,6 @@ uploads/
 Thumbs.db
 * 2.*
 * 2
+
+# Secrets — never commit
+secrets.env
