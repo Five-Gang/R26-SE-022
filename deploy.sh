@@ -134,23 +134,44 @@ fi
 success "Docker Compose: $(sudo docker compose version)"
 
 # =============================================================================
-# STEP 3 — Node.js 20 LTS + PM2
+# STEP 3 — Node.js 20 LTS + PM2  (via NVM — avoids aarch64/dnf conflicts)
 # =============================================================================
 step "Installing Node.js 20 LTS + PM2"
 
-if ! command -v node &>/dev/null; then
-  if [[ "$OS" == "ubuntu" ]]; then
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-  else
-    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-    sudo dnf install -y nodejs npm
-  fi
+# Install or update NVM
+export NVM_DIR="$HOME/.nvm"
+if [ ! -d "$NVM_DIR" ]; then
+  info "Installing NVM..."
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 fi
+
+# Load NVM into this shell session
+# shellcheck disable=SC1091
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+
+# Install Node 20 LTS if not already on it
+if ! node --version 2>/dev/null | grep -q "^v20"; then
+  info "Installing Node.js 20 LTS via NVM..."
+  nvm install 20
+  nvm alias default 20
+  nvm use 20
+fi
+
+# Make node/npm available system-wide for PM2 to find
+NODE_BIN_DIR="$(dirname "$(which node)")"
+if ! grep -q "NVM_DIR" /etc/profile.d/nvm.sh 2>/dev/null; then
+  sudo tee /etc/profile.d/nvm.sh > /dev/null <<NVMEOF
+export NVM_DIR="$HOME/.nvm"
+[ -s "\$NVM_DIR/nvm.sh" ] && source "\$NVM_DIR/nvm.sh"
+export PATH="$NODE_BIN_DIR:\$PATH"
+NVMEOF
+fi
+
 success "Node: $(node --version) | npm: $(npm --version)"
 
 if ! command -v pm2 &>/dev/null; then
-  sudo npm install -g pm2
+  npm install -g pm2
 fi
 success "PM2: $(pm2 --version)"
 
