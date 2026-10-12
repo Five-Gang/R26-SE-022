@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -33,11 +33,26 @@ async def _time_since_reminder(db: AsyncIOMotorDatabase, student_id: str, now: d
         .to_list(1)
     )
     if not latest:
-        return 24.0
+        return 1.0
     sent_at = latest[0]["sent_at"]
     if sent_at.tzinfo is None:
         sent_at = sent_at.replace(tzinfo=timezone.utc)
-    return max(0.0, (now - sent_at).total_seconds() / 3600.0)
+    hours = max(0.0, (now - sent_at).total_seconds() / 3600.0)
+    return min(hours / 24.0, 1.0)
+
+
+async def _deliver_due_delays(
+    db: AsyncIOMotorDatabase, student_id: str, now: datetime
+) -> int:
+    result = await db.reminders.update_many(
+        {
+            "student_id": student_id,
+            "status": "SCHEDULED",
+            "scheduled_at": {"$lte": now},
+        },
+        {"$set": {"status": "SENT", "sent_at": now}},
+    )
+    return result.modified_count
 
 
 async def run_scheduling_tick(
@@ -51,13 +66,18 @@ async def run_scheduling_tick(
     provider = provider or create_emotion_provider()
     signal = await provider.read(student_id)
     assessment = assess_learning_readiness(signal)
+    delivered_delays = await _deliver_due_delays(db, student_id, now)
     items = await db.review_items.find({"student_id": student_id}).to_list(None)
     policy: LinUCB = await load_student_bandit(db, student_id)
     acceptance_rate, dismissal_rate = await _feedback_rates(db, student_id)
-    hours_since_reminder = await _time_since_reminder(db, student_id, now)
+    time_since_reminder = await _time_since_reminder(db, student_id, now)
+    has_feedback = await db.reminders.count_documents(
+        {"student_id": student_id, "status": {"$in": ["ACCEPTED", "SNOOZED", "DISMISSED"]}}
+    ) > 0
 
     reminders_created = 0
     selected_actions: list[str] = []
+    selected_scores: list[dict[str, float]] = []
     for document in items:
         item = item_from_mongo(document)
         metrics = process_item(item, assessment.readiness_tier.value, now)
@@ -65,25 +85,44 @@ async def run_scheduling_tick(
             readiness_score=assessment.readiness_score,
             retention_probability=metrics["retention_probability"],
             priority_score=metrics["priority_score"],
-            time_since_reminder=hours_since_reminder,
+            time_since_reminder=time_since_reminder,
             acceptance_rate=acceptance_rate,
             dismissal_rate=dismissal_rate,
             engagement_score=assessment.engagement_score,
             at=now,
         )
-        selected = policy.select_action(context)
+        if not has_feedback:
+            permitted = (
+                (ReminderAction.SEND, ReminderAction.DELAY)
+                if (
+                    assessment.readiness_tier.value == "HIGH"
+                    and metrics["retention_probability"] < 0.6
+                    and metrics["priority_score"] >= 0.5
+                )
+                else (ReminderAction.DELAY, ReminderAction.SKIP)
+            )
+        else:
+            permitted = ReminderAction.ALL
+        scores = policy.score_actions(context, permitted)
+        selected = policy.select_action(context, permitted)
         action = selected if assessment.should_send_recommendation else ReminderAction.SKIP
         selected_actions.append(action)
+        selected_scores.append(scores)
 
-        if action != ReminderAction.SEND:
+        if action == ReminderAction.SKIP:
             continue
 
         existing = await db.reminders.find_one(
-            {"student_id": student_id, "item_key": document.get("item_key", item.item_id), "status": "SENT"}
+            {
+                "student_id": student_id,
+                "item_key": document.get("item_key", item.item_id),
+                "status": {"$in": ["SENT", "SCHEDULED"]},
+            }
         )
         if existing:
             continue
 
+        scheduled_at = now if action == ReminderAction.SEND else now + timedelta(hours=1)
         await db.reminders.insert_one(
             {
                 "student_id": student_id,
@@ -94,24 +133,27 @@ async def run_scheduling_tick(
                 "readiness_score": assessment.readiness_score,
                 "retention_probability": metrics["retention_probability"],
                 "bandit_action": action,
+                "bandit_scores": scores,
+                "bandit_allowed_actions": list(permitted),
                 "bandit_context": context.to_dict(),
                 "activity_type": assessment.activity_type.value,
                 "engagement_score": assessment.engagement_score,
                 "decision_reason": assessment.decision_reason,
-                "scheduled_at": now,
-                "sent_at": now,
+                "scheduled_at": scheduled_at,
+                "sent_at": now if action == ReminderAction.SEND else None,
                 "responded_at": None,
-                "status": "SENT",
+                "status": "SENT" if action == ReminderAction.SEND else "SCHEDULED",
             }
         )
         reminders_created += 1
 
     return {
         "student_id": student_id,
-        "reminders_created": reminders_created,
+        "reminders_created": reminders_created + delivered_delays,
         "items_processed": len(items),
         "status": "ok",
         "decision": selected_actions[0] if selected_actions else ReminderAction.SKIP,
+        "decision_scores": selected_scores[0] if selected_scores else {},
         "decision_reason": assessment.decision_reason,
         "activity_type": assessment.activity_type.value,
         "session_active": assessment.session_active,

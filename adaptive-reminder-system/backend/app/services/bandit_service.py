@@ -15,10 +15,10 @@ async def load_student_bandit(
         return LinUCB()
     try:
         return LinUCB.from_dict(document["state"])
-    except (KeyError, BanditValidationError) as exc:
-        raise BanditValidationError(
-            f"Stored bandit state for student {student_id} is invalid"
-        ) from exc
+    except (KeyError, BanditValidationError):
+        # Feature semantics changed when elapsed time was normalized. Start
+        # a fresh policy rather than applying old statistics to new contexts.
+        return LinUCB()
 
 
 async def save_student_bandit(

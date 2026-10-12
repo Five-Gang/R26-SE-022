@@ -74,29 +74,35 @@ async def submit_feedback(
             detail="Reminder is missing a valid bandit action or context",
         ) from exc
     
-    # Update reminder status
     now = datetime.now(timezone.utc)
-    await db.reminders.update_one(
-        {"_id": ObjectId(reminder_id)},
+    claimed = await db.reminders.update_one(
+        {
+            "_id": ObjectId(reminder_id),
+            "student_id": student_id,
+            "responded_at": None,
+            "status": {"$in": ["SENT", "SCHEDULED"]},
+        },
         {"$set": {
             "status": feedback.status,
             "responded_at": now,
         }}
     )
+    if claimed.modified_count != 1:
+        raise HTTPException(status_code=409, detail="Reminder feedback already submitted")
     
-    # Update SM-2 state for the item
-    item_doc = await db.review_items.find_one({
-        "student_id": student_id,
-        "item_key": reminder["item_key"]
-    })
-    
-    if item_doc:
-        item = item_from_mongo(item_doc)
-        updated_item = update(item, feedback.grade, now)
-        await db.review_items.update_one(
-            {"_id": item_doc["_id"]},
-            {"$set": item_to_mongo_update(updated_item)}
-        )
+    if feedback.status == "ACCEPTED" and feedback.grade is not None:
+        item_doc = await db.review_items.find_one({
+            "student_id": student_id,
+            "item_key": reminder["item_key"]
+        })
+
+        if item_doc:
+            item = item_from_mongo(item_doc)
+            updated_item = update(item, feedback.grade, now)
+            await db.review_items.update_one(
+                {"_id": item_doc["_id"]},
+                {"$set": item_to_mongo_update(updated_item)}
+            )
     
     policy = await load_student_bandit(db, student_id)
     policy.update(action, context, feedback_reward(feedback.status))

@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 import numpy as np
 
+CONTEXT_VERSION = 2
 
 class BanditValidationError(ValueError):
     """Raised when a bandit context, action, or state is invalid."""
@@ -59,8 +60,10 @@ class BanditContext:
             raise BanditValidationError("readiness_score must be between 0 and 1")
         if not 0.0 <= self.retention_probability <= 1.0:
             raise BanditValidationError("retention_probability must be between 0 and 1")
-        if self.time_since_reminder < 0:
-            raise BanditValidationError("time_since_reminder must be non-negative")
+        if not 0.0 <= self.time_since_reminder <= 1.0:
+            raise BanditValidationError(
+                "time_since_reminder must be normalized between 0 and 1"
+            )
         for name in ("acceptance_rate", "dismissal_rate", "engagement_score"):
             value = getattr(self, name)
             if not 0.0 <= value <= 1.0:
@@ -69,6 +72,7 @@ class BanditContext:
 
     def to_dict(self) -> dict[str, float]:
         return {
+            "context_version": CONTEXT_VERSION,
             "readiness_score": self.readiness_score,
             "retention_probability": self.retention_probability,
             "priority_score": self.priority_score,
@@ -147,16 +151,32 @@ class LinUCB:
         self._a = {action: np.eye(dimension) for action in ReminderAction.ALL}
         self._b = {action: np.zeros(dimension) for action in ReminderAction.ALL}
 
-    def select_action(self, context: BanditContext) -> str:
+    def score_actions(
+        self,
+        context: BanditContext,
+        actions: tuple[str, ...] = ReminderAction.ALL,
+    ) -> dict[str, float]:
         vector = context.vector()
         scores = {}
-        for action in ReminderAction.ALL:
+        for action in actions:
+            if action not in ReminderAction.ALL:
+                raise BanditValidationError(f"Unknown reminder action: {action}")
             theta = np.linalg.solve(self._a[action], self._b[action])
             bonus = self.alpha * math.sqrt(
                 float(vector @ np.linalg.solve(self._a[action], vector))
             )
             scores[action] = float(theta @ vector) + bonus
-        return max(ReminderAction.ALL, key=lambda action: scores[action])
+        return scores
+
+    def select_action(
+        self,
+        context: BanditContext,
+        actions: tuple[str, ...] = ReminderAction.ALL,
+    ) -> str:
+        if not actions:
+            raise BanditValidationError("At least one action must be available")
+        scores = self.score_actions(context, actions)
+        return max(actions, key=lambda action: scores[action])
 
     def update(self, action: str, context: BanditContext, reward: float) -> None:
         if action not in ReminderAction.ALL:
@@ -171,6 +191,7 @@ class LinUCB:
         return {
             "alpha": self.alpha,
             "dimension": self.dimension,
+            "context_version": CONTEXT_VERSION,
             "actions": {
                 action: {
                     "a": self._a[action].tolist(),
@@ -183,6 +204,10 @@ class LinUCB:
     @classmethod
     def from_dict(cls, state: Mapping[str, Any]) -> "LinUCB":
         try:
+            if int(state.get("context_version", 1)) != CONTEXT_VERSION:
+                raise BanditValidationError(
+                    "Stored LinUCB state uses an incompatible context version"
+                )
             model = cls(alpha=float(state["alpha"]), dimension=int(state["dimension"]))
             actions = state["actions"]
             for action in ReminderAction.ALL:
