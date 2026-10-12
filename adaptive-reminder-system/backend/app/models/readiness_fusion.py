@@ -1,61 +1,17 @@
-from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
-
-
-# from app.models.learning_context import (  # TODO: rebuild Models 2-5
-#     ACTIVE_LEARNING_ACTIVITIES,
-#     CONTENT_CONSUMPTION_ACTIVITIES,
-#     DEEP_FOCUS_ACTIVITIES,
-#     ActivityType,
-#     LearningSignal,
-#     activity_learning_score,
-#     clamp,
-#     clamp_signed_unit,
-# )
-
-class ActivityType(str, Enum):
-    QUIZ = "QUIZ"
-    PRACTICE = "PRACTICE"
-    FLASHCARD = "FLASHCARD"
-    VIDEO = "VIDEO"
-    READING = "READING"
-    LECTURE = "LECTURE"
-    REVISION = "REVISION"
-    IDLE = "IDLE"
-    UNKNOWN = "UNKNOWN"
+from typing import Optional
+from app.models.learning_context import ActivityType, LearningSignal
 
 ACTIVE_LEARNING_ACTIVITIES = {
-    ActivityType.QUIZ,
-    ActivityType.PRACTICE,
-    ActivityType.FLASHCARD,
-    ActivityType.REVISION,
+    ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD, ActivityType.REVISION,
 }
 CONTENT_CONSUMPTION_ACTIVITIES = {
-    ActivityType.VIDEO,
-    ActivityType.LECTURE,
-    ActivityType.READING,
+    ActivityType.VIDEO, ActivityType.LECTURE, ActivityType.READING,
 }
 DEEP_FOCUS_ACTIVITIES = {
-    ActivityType.QUIZ,
-    ActivityType.PRACTICE,
-    ActivityType.FLASHCARD,
-    ActivityType.REVISION,
+    ActivityType.QUIZ, ActivityType.PRACTICE, ActivityType.FLASHCARD, ActivityType.REVISION,
 }
-
-@dataclass
-class LearningSignal:
-    valence: float
-    arousal: float
-    attention: float
-    activity_type: ActivityType = ActivityType.QUIZ
-    session_active: bool = True
-    content_in_focus: bool = True
-    blink_rate: Optional[float] = None
-    fatigue: Optional[float] = None
-    head_tilt_degrees: Optional[float] = None
-    signal_confidence: float = 1.0
-    source: str = "mock"
 
 def clamp(value, min_val, max_val):
     return max(min_val, min(max_val, value))
@@ -179,7 +135,10 @@ def assess_learning_readiness(signal: LearningSignal) -> ReadinessAssessment:
         effective_arousal,
         effective_attention,
     )
-    is_learning_activity = signal.activity_type in ACTIVE_LEARNING_ACTIVITIES
+    is_learning_activity = (
+        signal.activity_type in ACTIVE_LEARNING_ACTIVITIES
+        or signal.activity_type in CONTENT_CONSUMPTION_ACTIVITIES
+    )
 
     if not signal.session_active:
         should_send = False
