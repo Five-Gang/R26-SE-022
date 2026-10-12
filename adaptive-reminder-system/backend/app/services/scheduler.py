@@ -3,11 +3,21 @@ from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.models.bandit import BanditContext, LinUCB, ReminderAction
+from app.models.bandit import (
+    BanditContext,
+    BanditValidationError,
+    LinUCB,
+    ReminderAction,
+)
+from app.models.adaptive_scheduler import AdaptiveScheduler
 from app.models.readiness_fusion import assess_learning_readiness
 from app.models.sm2 import item_from_mongo, process_item
 from app.services.bandit_service import load_student_bandit
+from app.services.content_personalization_service import ContentPersonalizationService
 from app.services.emotion_provider import create_emotion_provider
+
+_rule_scheduler = AdaptiveScheduler()
+_content_service = ContentPersonalizationService()
 
 
 async def _feedback_rates(db: AsyncIOMotorDatabase, student_id: str) -> tuple[float, float]:
@@ -68,7 +78,12 @@ async def run_scheduling_tick(
     assessment = assess_learning_readiness(signal)
     delivered_delays = await _deliver_due_delays(db, student_id, now)
     items = await db.review_items.find({"student_id": student_id}).to_list(None)
-    policy: LinUCB = await load_student_bandit(db, student_id)
+    try:
+        policy: LinUCB = await load_student_bandit(db, student_id)
+        bandit_unavailable = False
+    except (BanditValidationError, ValueError, KeyError, TypeError):
+        policy = LinUCB()
+        bandit_unavailable = True
     acceptance_rate, dismissal_rate = await _feedback_rates(db, student_id)
     time_since_reminder = await _time_since_reminder(db, student_id, now)
     has_feedback = await db.reminders.count_documents(
@@ -91,6 +106,12 @@ async def run_scheduling_tick(
             engagement_score=assessment.engagement_score,
             at=now,
         )
+        content = _content_service.recommend_activity(
+            readiness_level=assessment.readiness_tier.value,
+            retention_probability=metrics["retention_probability"],
+            priority_percentage=metrics["priority_score"] * 100,
+            difficulty_level=document.get("difficulty_level", document.get("difficulty", "medium")),
+        )
         if not has_feedback:
             permitted = (
                 (ReminderAction.SEND, ReminderAction.DELAY)
@@ -103,11 +124,36 @@ async def run_scheduling_tick(
             )
         else:
             permitted = ReminderAction.ALL
-        scores = policy.score_actions(context, permitted)
-        selected = policy.select_action(context, permitted)
+        policy_source = "rule_based_fallback" if bandit_unavailable else "linucb"
+        try:
+            if bandit_unavailable:
+                raise BanditValidationError("LinUCB policy unavailable")
+            scores = policy.score_actions(context, permitted)
+            selected = policy.select_action(context, permitted)
+        except (BanditValidationError, ValueError, KeyError, TypeError):
+            policy_source = "rule_based_fallback"
+            scores = {}
+            selected = _rule_scheduler.decide_reminder_action(
+                readiness_level=assessment.readiness_tier.value,
+                retention_probability=metrics["retention_probability"],
+                priority_score=metrics["priority_score"],
+            )
         action = selected if assessment.should_send_recommendation else ReminderAction.SKIP
         selected_actions.append(action)
         selected_scores.append(scores)
+
+        decision_record = {
+            "student_id": student_id,
+            "item_key": document.get("item_key", item.item_id),
+            "action": action,
+            "policy_source": policy_source,
+            "allowed_actions": list(permitted),
+            "scores": scores,
+            "context": context.to_dict(),
+            "readiness_tier": assessment.readiness_tier.value,
+            "created_at": now,
+        }
+        await db.scheduler_decisions.insert_one(decision_record)
 
         if action == ReminderAction.SKIP:
             continue
@@ -129,6 +175,8 @@ async def run_scheduling_tick(
                 "item_key": document.get("item_key", item.item_id),
                 "item_title": document.get("title", document.get("topic", item.item_id)),
                 "content_type": assessment.content_type,
+                "recommended_activity": content["activity"],
+                "content_reason": content["reason"],
                 "readiness_tier": assessment.readiness_tier.value,
                 "readiness_score": assessment.readiness_score,
                 "retention_probability": metrics["retention_probability"],

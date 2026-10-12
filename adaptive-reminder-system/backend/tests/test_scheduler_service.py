@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.models.learning_context import ActivityType, LearningSignal
+import app.services.scheduler as scheduler_service
 from app.services.scheduler import run_scheduling_tick
 
 
@@ -90,6 +91,7 @@ class Database:
         )
         self.reminders = Collection()
         self.bandit_policies = Collection()
+        self.scheduler_decisions = Collection()
 
 
 class Provider:
@@ -125,6 +127,8 @@ async def test_tick_creates_sendable_reminder_with_bandit_context():
         assert set(reminder["bandit_scores"]) == set(reminder["bandit_allowed_actions"])
         assert reminder["bandit_context"]["context_version"] == 2
         assert len(reminder["bandit_context"]) - 1 == 10
+        assert reminder["recommended_activity"]
+    assert len(db.scheduler_decisions.values) == 1
 
 
 @pytest.mark.asyncio
@@ -146,6 +150,7 @@ async def test_tick_skips_when_no_active_learning_session():
 
     assert result["reminders_created"] == 0
     assert result["decision"] == "SKIP"
+    assert db.scheduler_decisions.values[0]["action"] == "SKIP"
 
 
 @pytest.mark.asyncio
@@ -179,3 +184,23 @@ async def test_delayed_reminder_is_not_delivered_before_due_time():
     )
     assert after_due["reminders_created"] == 1
     assert db.reminders.values[0]["status"] == "SENT"
+
+
+@pytest.mark.asyncio
+async def test_rule_scheduler_fallback_persists_decision(monkeypatch):
+    db = Database()
+
+    async def failing_policy(_db, _student_id):
+        raise ValueError("invalid persisted policy")
+
+    monkeypatch.setattr(scheduler_service, "load_student_bandit", failing_policy)
+
+    result = await run_scheduling_tick(
+        "student-1",
+        db,
+        provider=Provider(),
+        now=datetime(2026, 10, 12, tzinfo=timezone.utc),
+    )
+
+    assert result["status"] == "ok"
+    assert db.scheduler_decisions.values[0]["policy_source"] == "rule_based_fallback"
