@@ -36,7 +36,12 @@ class Collection:
 
     async def find_one(self, query):
         for value in self.values:
-            if all(value.get(key) == expected for key, expected in query.items()):
+            if all(
+                value.get(key) in expected["$in"]
+                if isinstance(expected, dict) and "$in" in expected
+                else value.get(key) == expected
+                for key, expected in query.items()
+            ):
                 return value
         return None
 
@@ -53,6 +58,18 @@ class Collection:
 
     async def insert_one(self, value):
         self.values.append(value)
+
+    async def update_many(self, query, update):
+        modified = 0
+        for value in self.values:
+            if (
+                value.get("student_id") == query.get("student_id")
+                and value.get("status") == query["status"]
+                and value.get("scheduled_at") <= query["scheduled_at"]["$lte"]
+            ):
+                value.update(update["$set"])
+                modified += 1
+        return type("Result", (), {"modified_count": modified})()
 
 
 class Database:
@@ -103,8 +120,11 @@ async def test_tick_creates_sendable_reminder_with_bandit_context():
     assert result["reminders_created"] in (0, 1)
     if result["reminders_created"]:
         reminder = db.reminders.values[0]
-        assert reminder["bandit_action"] == "SEND"
-        assert len(reminder["bandit_context"]) == 10
+        assert reminder["bandit_action"] in ("SEND", "DELAY")
+        assert reminder["status"] in ("SENT", "SCHEDULED")
+        assert set(reminder["bandit_scores"]) == set(reminder["bandit_allowed_actions"])
+        assert reminder["bandit_context"]["context_version"] == 2
+        assert len(reminder["bandit_context"]) - 1 == 10
 
 
 @pytest.mark.asyncio
@@ -126,3 +146,36 @@ async def test_tick_skips_when_no_active_learning_session():
 
     assert result["reminders_created"] == 0
     assert result["decision"] == "SKIP"
+
+
+@pytest.mark.asyncio
+async def test_delayed_reminder_is_not_delivered_before_due_time():
+    db = Database()
+    scheduled_at = datetime(2026, 10, 12, 13, tzinfo=timezone.utc)
+    db.reminders.values.append(
+        {
+            "student_id": "student-1",
+            "item_key": "item-1",
+            "status": "SCHEDULED",
+            "scheduled_at": scheduled_at,
+            "sent_at": None,
+        }
+    )
+
+    before_due = await run_scheduling_tick(
+        "student-1",
+        db,
+        provider=Provider(),
+        now=datetime(2026, 10, 12, 12, 30, tzinfo=timezone.utc),
+    )
+    assert before_due["reminders_created"] == 0
+    assert db.reminders.values[0]["status"] == "SCHEDULED"
+
+    after_due = await run_scheduling_tick(
+        "student-1",
+        db,
+        provider=Provider(),
+        now=datetime(2026, 10, 12, 13, tzinfo=timezone.utc),
+    )
+    assert after_due["reminders_created"] == 1
+    assert db.reminders.values[0]["status"] == "SENT"

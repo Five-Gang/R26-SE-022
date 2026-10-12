@@ -23,7 +23,7 @@ def make_context(**overrides):
         "priority_score": 0.9,
         "time_sin": 0.5,
         "time_cos": 0.866,
-        "time_since_reminder": 2.0,
+        "time_since_reminder": 1.0,
         "acceptance_rate": 0.6,
         "dismissal_rate": 0.1,
         "engagement_score": 0.75,
@@ -100,6 +100,17 @@ def test_state_round_trip_preserves_selection_and_statistics():
 def test_invalid_context_is_rejected():
     with pytest.raises(BanditValidationError):
         make_context(readiness_score=1.1)
+    with pytest.raises(BanditValidationError):
+        make_context(time_since_reminder=1.1)
+
+
+def test_action_selection_can_be_restricted_for_cold_start():
+    model = LinUCB(alpha=0)
+
+    assert model.select_action(
+        make_context(),
+        actions=(ReminderAction.DELAY, ReminderAction.SKIP),
+    ) == ReminderAction.DELAY
 
 
 @pytest.mark.asyncio
