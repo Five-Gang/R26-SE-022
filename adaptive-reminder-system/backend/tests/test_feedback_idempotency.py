@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 import pytest
 from fastapi import HTTPException
 
@@ -60,13 +58,14 @@ class Database:
 @pytest.mark.asyncio
 async def test_feedback_claim_is_single_use(monkeypatch):
     db = Database()
+    policy_updates = []
 
     async def no_item(*_args, **_kwargs):
         return None
 
     class Policy:
-        def update(self, *_args):
-            return None
+        def update(self, action, context, reward):
+            policy_updates.append((action, context.to_dict(), reward))
 
     async def load(*_args):
         return Policy()
@@ -87,3 +86,9 @@ async def test_feedback_claim_is_single_use(monkeypatch):
 
     assert error.value.status_code == 409
     assert db.reminders.update_calls == 2
+    assert len(policy_updates) == 1
+    action, context, reward = policy_updates[0]
+    assert action == "SEND"
+    assert context["context_version"] == 2
+    assert context["readiness_score"] == 0.8
+    assert reward == 1.0
