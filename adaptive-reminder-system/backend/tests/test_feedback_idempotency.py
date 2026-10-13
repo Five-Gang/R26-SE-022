@@ -86,6 +86,7 @@ async def test_feedback_claim_is_single_use(monkeypatch):
 
     assert error.value.status_code == 409
     assert db.reminders.update_calls == 2
+    assert db.reminders.document["reward"] == 1.0
     assert len(policy_updates) == 1
     action, context, reward = policy_updates[0]
     assert action == "SEND"
