@@ -74,6 +74,7 @@ async def submit_feedback(
             detail="Reminder is missing a valid bandit action or context",
         ) from exc
     
+    reward = feedback_reward(feedback.status)
     now = datetime.now(timezone.utc)
     claimed = await db.reminders.update_one(
         {
@@ -84,6 +85,7 @@ async def submit_feedback(
         },
         {"$set": {
             "status": feedback.status,
+            "reward": reward,
             "responded_at": now,
         }}
     )
@@ -105,7 +107,7 @@ async def submit_feedback(
             )
     
     policy = await load_student_bandit(db, student_id)
-    policy.update(action, context, feedback_reward(feedback.status))
+    policy.update(action, context, reward)
     await save_student_bandit(db, student_id, policy)
     
     return {"status": "ok"}
