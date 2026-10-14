@@ -132,6 +132,49 @@ async def test_tick_creates_sendable_reminder_with_bandit_context():
 
 
 @pytest.mark.asyncio
+async def test_high_priority_context_is_persisted_for_policy_feedback():
+    db = Database()
+    result = await run_scheduling_tick(
+        "student-1",
+        db,
+        provider=Provider(),
+        now=datetime(2026, 10, 12, tzinfo=timezone.utc),
+    )
+
+    assert result["items_processed"] == 1
+    decision = db.scheduler_decisions.values[0]
+    assert decision["context"]["priority_score"] == db.reminders.values[0]["bandit_context"]["priority_score"]
+    assert decision["context"]["retention_probability"] == db.reminders.values[0]["bandit_context"]["retention_probability"]
+    assert decision["item_key"] == "item-1"
+
+
+@pytest.mark.asyncio
+async def test_repeated_tick_does_not_create_duplicate_active_reminder(monkeypatch):
+    db = Database()
+
+    class SendPolicy:
+        def score_actions(self, context, actions):
+            return {action: 1.0 if action == "SEND" else 0.0 for action in actions}
+
+        def select_action(self, context, actions):
+            return "SEND" if "SEND" in actions else actions[0]
+
+    async def load_policy(_db, _student_id):
+        return SendPolicy()
+
+    monkeypatch.setattr(scheduler_service, "load_student_bandit", load_policy)
+    now = datetime(2026, 10, 12, tzinfo=timezone.utc)
+
+    first = await run_scheduling_tick("student-1", db, provider=Provider(), now=now)
+    second = await run_scheduling_tick("student-1", db, provider=Provider(), now=now)
+
+    assert first["reminders_created"] == 1
+    assert second["reminders_created"] == 0
+    assert len(db.reminders.values) == 1
+    assert len(db.scheduler_decisions.values) == 2
+
+
+@pytest.mark.asyncio
 async def test_tick_skips_when_no_active_learning_session():
     db = Database()
 
