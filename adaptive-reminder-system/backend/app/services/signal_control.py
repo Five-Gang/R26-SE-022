@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from app.models.learning_context import ActivityType, LearningSignal, signal_from_payload
 
@@ -20,11 +20,11 @@ class SignalControlStore:
         self._signals[student_id] = signal
         return signal
 
-    def get_override_payload(self, student_id: str) -> dict[str, Any] | None:
+    def get_override_payload(self, student_id: str) -> Optional[dict[str, Any]]:
         payload = self._payloads.get(student_id)
         return payload.copy() if payload is not None else None
 
-    def get_override_signal(self, student_id: str) -> LearningSignal | None:
+    def get_override_signal(self, student_id: str) -> Optional[LearningSignal]:
         return self._signals.get(student_id)
 
     def has_override(self, student_id: str) -> bool:

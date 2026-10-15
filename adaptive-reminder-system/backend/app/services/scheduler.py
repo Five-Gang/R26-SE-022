@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -70,7 +70,7 @@ async def run_scheduling_tick(
     db: AsyncIOMotorDatabase,
     *,
     provider=None,
-    now: datetime | None = None,
+    now: Optional[datetime] = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     provider = provider or create_emotion_provider()
