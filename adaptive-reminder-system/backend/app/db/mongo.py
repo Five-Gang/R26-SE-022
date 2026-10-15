@@ -15,6 +15,8 @@ async def connect_db() -> None:
     )
     await db.reminders.create_index("student_id")
     await db.reminders.create_index([("student_id", 1), ("status", 1)])
+    await db.scheduler_decisions.create_index([("student_id", 1), ("created_at", -1)])
+    await db.bandit_policies.create_index("student_id", unique=True)
     await db.push_subscriptions.create_index("student_id")
 
 async def disconnect_db() -> None:

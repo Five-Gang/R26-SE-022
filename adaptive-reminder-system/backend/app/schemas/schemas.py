@@ -35,7 +35,7 @@ class ReviewItemListResponse(BaseModel):
 # === Reminders ===
 class ReminderFeedback(BaseModel):
     status: Literal["ACCEPTED", "SNOOZED", "DISMISSED"]
-    grade: int = Field(0, ge=0, le=5)
+    grade: Optional[int] = Field(None, ge=0, le=5)
 
 class ReminderResponse(BaseModel):
     reminder_id: str

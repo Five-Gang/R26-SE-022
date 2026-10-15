@@ -261,9 +261,13 @@ Response:
 ### LinUCB Bandit
 
 - **File**: `app/models/bandit.py`
-- **Context dim**: 9 (readiness, priority, hour cyclical, time since reminder, accept rate, engagement, activity score, bias)
+- **Context dim**: 10 (`readiness_score`, `retention_probability`, `priority_score`, `time_sin`, `time_cos`, `time_since_reminder`, `acceptance_rate`, `dismissal_rate`, `engagement_score`, `bias`)
 - **Actions**: SEND, DELAY, SKIP
 - **Reward mapping**: ACCEPTED=1.0, SNOOZED=0.0, DISMISSED=-1.0
+- **Persistence**: Per-student policy matrices are stored in the `bandit_policies` MongoDB collection. Reminder documents must store the selected `bandit_action` and the ten-feature `bandit_context` for feedback updates.
+- **Elapsed-time normalization**: `time_since_reminder` is capped elapsed hours divided by 24, producing a value in [0, 1]. This is context version 2; incompatible persisted policies are reset.
+- **Cold start**: Before feedback exists, SEND is permitted only for high readiness, retention below 0.6, and priority at least 0.5. Otherwise the policy chooses between DELAY and SKIP.
+- **DELAY semantics**: DELAY creates a `SCHEDULED` reminder one hour in the future. A later tick promotes it to `SENT` only when its scheduled time is due.
 
 ## Development Commands
 

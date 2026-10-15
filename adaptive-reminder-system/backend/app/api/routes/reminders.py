@@ -4,6 +4,12 @@ from app.db.mongo import get_db
 from app.api.deps import get_current_student_id
 from app.schemas.schemas import ReminderFeedback, ReminderQueueResponse, ReminderResponse
 from app.models.sm2 import item_from_mongo, item_to_mongo_update, update_sm2 as update
+from app.models.bandit import BanditContext, BanditValidationError, ReminderAction
+from app.services.bandit_service import (
+    feedback_reward,
+    load_student_bandit,
+    save_student_bandit,
+)
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
@@ -56,35 +62,52 @@ async def submit_feedback(
     reminder = await db.reminders.find_one({"_id": ObjectId(reminder_id), "student_id": student_id})
     if not reminder:
         raise HTTPException(status_code=404, detail="Reminder not found")
+
+    try:
+        action = reminder["bandit_action"]
+        context = BanditContext.from_mapping(reminder["bandit_context"])
+        if action not in ReminderAction.ALL:
+            raise BanditValidationError(f"Unknown reminder action: {action}")
+    except (KeyError, TypeError, ValueError, BanditValidationError) as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="Reminder is missing a valid bandit action or context",
+        ) from exc
     
-    # Update reminder status
+    reward = feedback_reward(feedback.status)
     now = datetime.now(timezone.utc)
-    await db.reminders.update_one(
-        {"_id": ObjectId(reminder_id)},
+    claimed = await db.reminders.update_one(
+        {
+            "_id": ObjectId(reminder_id),
+            "student_id": student_id,
+            "responded_at": None,
+            "status": {"$in": ["SENT", "SCHEDULED"]},
+        },
         {"$set": {
             "status": feedback.status,
+            "reward": reward,
             "responded_at": now,
         }}
     )
+    if claimed.modified_count != 1:
+        raise HTTPException(status_code=409, detail="Reminder feedback already submitted")
     
-    # Update SM-2 state for the item
-    item_doc = await db.review_items.find_one({
-        "student_id": student_id,
-        "item_key": reminder["item_key"]
-    })
+    if feedback.status == "ACCEPTED" and feedback.grade is not None:
+        item_doc = await db.review_items.find_one({
+            "student_id": student_id,
+            "item_key": reminder["item_key"]
+        })
+
+        if item_doc:
+            item = item_from_mongo(item_doc)
+            updated_item = update(item, feedback.grade, now)
+            await db.review_items.update_one(
+                {"_id": item_doc["_id"]},
+                {"$set": item_to_mongo_update(updated_item)}
+            )
     
-    if item_doc:
-        item = item_from_mongo(item_doc)
-        updated_item = update(item, feedback.grade, now)
-        await db.review_items.update_one(
-            {"_id": item_doc["_id"]},
-            {"$set": item_to_mongo_update(updated_item)}
-        )
-    
-    # Update bandit reward
-    if feedback.status in ["ACCEPTED", "SNOOZED", "DISMISSED"]:
-        reward = {"ACCEPTED": 1.0, "SNOOZED": 0.0, "DISMISSED": -1.0}[feedback.status]
-        # In production, extract context from reminder and feed to bandit
-        # For now: TODO
+    policy = await load_student_bandit(db, student_id)
+    policy.update(action, context, reward)
+    await save_student_bandit(db, student_id, policy)
     
     return {"status": "ok"}
