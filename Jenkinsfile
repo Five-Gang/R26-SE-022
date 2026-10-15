@@ -94,29 +94,27 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${ORACLE_VM_USER}@${ORACLE_VM_IP} '
                             set -e
 
-                            install_reqs() {
+                            install_venv() {
                                 local dir="\$1"
                                 local name="\$2"
                                 if [ -f "\${dir}/requirements.txt" ]; then
-                                    echo ">>> \${name}: installing..."
+                                    echo ">>> \${name}: installing into .venv..."
                                     cd "\${dir}"
-                                    if [ -d "venv" ]; then
-                                        . venv/bin/activate
-                                        pip install -r requirements.txt --quiet
-                                        deactivate
-                                    else
-                                        pip3 install -r requirements.txt --quiet
-                                    fi
+                                    python3 -m venv .venv --upgrade-deps 2>/dev/null || python3 -m venv .venv
+                                    . .venv/bin/activate
+                                    pip install --upgrade pip wheel -q
+                                    pip install -r requirements.txt -q
+                                    deactivate
                                     echo ">>> \${name}: done"
                                 else
                                     echo ">>> \${name}: no requirements.txt, skipping"
                                 fi
                             }
 
-                            install_reqs ${APP_DIR}/summarizer-backend        "summarizer-backend"
-                            install_reqs ${APP_DIR}/llm-tutor-backend         "llm-tutor-backend"
-                            install_reqs ${APP_DIR}/adaptive-reminder-backend "adaptive-reminder-backend"
-                            install_reqs ${APP_DIR}/emotion-backend           "emotion-backend"
+                            install_venv ${APP_DIR}/summarizer-backend                 "summarizer-backend"
+                            install_venv ${APP_DIR}/llm-tutor-backend                  "llm-tutor-backend"
+                            install_venv ${APP_DIR}/adaptive-reminder-system/backend   "adaptive-reminder-backend"
+                            install_venv ${APP_DIR}/emotion-backend                    "emotion-backend"
                         '
                     """
                 }
@@ -130,7 +128,7 @@ pipeline {
         // ──────────────────────────────────────────────────────
         stage('Restart PM2 Processes') {
             steps {
-                echo "♻️ Restarting all PM2 services on Oracle VM..."
+                echo "♻️ Re-registering and restarting all PM2 services on Oracle VM..."
 
                 sshagent(credentials: ['oracle-vm-ssh-key']) {
                     sh """
@@ -139,21 +137,54 @@ pipeline {
                             export NVM_DIR="\$HOME/.nvm"
                             [ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
 
-                            pm2 restart frontend
-                            pm2 restart summarizer-backend
-                            pm2 restart llm-tutor-backend
-                            pm2 restart adaptive-reminder-backend
-                            pm2 restart emotion-backend
+                            APP=${APP_DIR}
+
+                            echo ">>> [1/5] Restarting frontend (Next.js)..."
+                            pm2 delete frontend 2>/dev/null || true
+                            pm2 start npm --name frontend -- start -- -p 3000 \
+                                --cwd "\$APP/Frontend"
+
+                            echo ">>> [2/5] Restarting summarizer-backend..."
+                            pm2 delete summarizer-backend 2>/dev/null || true
+                            pm2 start \
+                                --name summarizer-backend \
+                                --interpreter "\$APP/summarizer-backend/.venv/bin/python" \
+                                --cwd "\$APP/summarizer-backend" \
+                                -- -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+
+                            echo ">>> [3/5] Restarting llm-tutor-backend..."
+                            pm2 delete llm-tutor-backend 2>/dev/null || true
+                            pm2 start \
+                                --name llm-tutor-backend \
+                                --interpreter "\$APP/llm-tutor-backend/.venv/bin/python" \
+                                --cwd "\$APP/llm-tutor-backend" \
+                                -- -m uvicorn main:app --host 0.0.0.0 --port 8002 --workers 2
+
+                            echo ">>> [4/5] Restarting adaptive-reminder-backend..."
+                            pm2 delete adaptive-reminder-backend 2>/dev/null || true
+                            pm2 start \
+                                --name adaptive-reminder-backend \
+                                --interpreter "\$APP/adaptive-reminder-system/backend/.venv/bin/python" \
+                                --cwd "\$APP/adaptive-reminder-system/backend" \
+                                -- -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --workers 2
+
+                            echo ">>> [5/5] Restarting emotion-backend..."
+                            pm2 delete emotion-backend 2>/dev/null || true
+                            pm2 start \
+                                --name emotion-backend \
+                                --interpreter "\$APP/emotion-backend/.venv/bin/python" \
+                                --cwd "\$APP/emotion-backend" \
+                                -- -m uvicorn main:app --host 0.0.0.0 --port 8004 --workers 2
 
                             pm2 save
 
-                            echo ">>> PM2 status:"
+                            echo ">>> Final PM2 status:"
                             pm2 list
                         '
                     """
                 }
 
-                echo "✅ All PM2 processes restarted."
+                echo "✅ All PM2 processes re-registered and running."
             }
         }
 
