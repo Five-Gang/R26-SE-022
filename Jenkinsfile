@@ -114,7 +114,16 @@ pipeline {
                             install_venv ${APP_DIR}/summarizer-backend                 "summarizer-backend"
                             install_venv ${APP_DIR}/llm-tutor-backend                  "llm-tutor-backend"
                             install_venv ${APP_DIR}/adaptive-reminder-system/backend   "adaptive-reminder-backend"
-                            install_venv ${APP_DIR}/emotion-backend                    "emotion-backend"
+
+                            # emotion-backend lives in Backend/ and uses venv/ (not .venv/)
+                            echo ">>> emotion-backend: installing into venv..."
+                            cd ${APP_DIR}/Backend
+                            python3 -m venv venv 2>/dev/null || true
+                            . venv/bin/activate
+                            pip install --upgrade pip wheel -q
+                            pip install -r requirements.txt -q
+                            deactivate
+                            echo ">>> emotion-backend: done"
                         '
                     """
                 }
@@ -169,10 +178,10 @@ pipeline {
 
                             echo ">>> [5/5] Restarting emotion-backend..."
                             pm2 delete emotion-backend 2>/dev/null || true
-                            pm2 start "\$APP/emotion-backend/.venv/bin/python" \
+                            pm2 start /usr/bin/bash \
                                 --name emotion-backend \
-                                --cwd "\$APP/emotion-backend" \
-                                -- -m uvicorn main:app --host 0.0.0.0 --port 8004 --workers 2
+                                --cwd "\$APP/Backend" \
+                                -- -c "venv/bin/uvicorn main:app --host 0.0.0.0 --port 8004"
 
                             pm2 save
 
