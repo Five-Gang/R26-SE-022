@@ -141,8 +141,10 @@ pipeline {
 
                             echo ">>> [1/5] Restarting frontend (Next.js)..."
                             pm2 delete frontend 2>/dev/null || true
-                            pm2 start npm --name frontend -- start -- -p 3000 \
-                                --cwd "\$APP/Frontend"
+                            pm2 start npm \
+                                --name frontend \
+                                --cwd "\$APP/Frontend" \
+                                -- start -- -p 3000
 
                             echo ">>> [2/5] Restarting summarizer-backend..."
                             pm2 delete summarizer-backend 2>/dev/null || true
