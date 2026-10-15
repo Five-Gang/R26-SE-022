@@ -148,33 +148,29 @@ pipeline {
 
                             echo ">>> [2/5] Restarting summarizer-backend..."
                             pm2 delete summarizer-backend 2>/dev/null || true
-                            pm2 start \
+                            pm2 start "\$APP/summarizer-backend/.venv/bin/python" \
                                 --name summarizer-backend \
-                                --interpreter "\$APP/summarizer-backend/.venv/bin/python" \
                                 --cwd "\$APP/summarizer-backend" \
                                 -- -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
 
                             echo ">>> [3/5] Restarting llm-tutor-backend..."
                             pm2 delete llm-tutor-backend 2>/dev/null || true
-                            pm2 start \
+                            pm2 start "\$APP/llm-tutor-backend/.venv/bin/python" \
                                 --name llm-tutor-backend \
-                                --interpreter "\$APP/llm-tutor-backend/.venv/bin/python" \
                                 --cwd "\$APP/llm-tutor-backend" \
                                 -- -m uvicorn main:app --host 0.0.0.0 --port 8002 --workers 2
 
                             echo ">>> [4/5] Restarting adaptive-reminder-backend..."
                             pm2 delete adaptive-reminder-backend 2>/dev/null || true
-                            pm2 start \
+                            pm2 start "\$APP/adaptive-reminder-system/backend/.venv/bin/python" \
                                 --name adaptive-reminder-backend \
-                                --interpreter "\$APP/adaptive-reminder-system/backend/.venv/bin/python" \
                                 --cwd "\$APP/adaptive-reminder-system/backend" \
                                 -- -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --workers 2
 
                             echo ">>> [5/5] Restarting emotion-backend..."
                             pm2 delete emotion-backend 2>/dev/null || true
-                            pm2 start \
+                            pm2 start "\$APP/emotion-backend/.venv/bin/python" \
                                 --name emotion-backend \
-                                --interpreter "\$APP/emotion-backend/.venv/bin/python" \
                                 --cwd "\$APP/emotion-backend" \
                                 -- -m uvicorn main:app --host 0.0.0.0 --port 8004 --workers 2
 
