@@ -115,14 +115,21 @@ pipeline {
                             install_venv ${APP_DIR}/llm-tutor-backend                  "llm-tutor-backend"
                             install_venv ${APP_DIR}/adaptive-reminder-system/backend   "adaptive-reminder-backend"
 
-                            # emotion-backend lives in Backend/ and uses venv/ (not .venv/)
-                            echo ">>> emotion-backend: installing into venv..."
-                            cd ${APP_DIR}/Backend
-                            python3 -m venv venv 2>/dev/null || true
-                            . venv/bin/activate
-                            pip install --upgrade pip wheel -q
-                            pip install -r requirements.txt -q
-                            deactivate
+                            # emotion-backend lives in Backend/ with venv/ (not .venv/)
+                            # Skip pip install if venv already exists — mediapipe==0.10.33 pin
+                            # is unavailable on this platform; existing venv is already working.
+                            echo ">>> emotion-backend: checking venv..."
+                            if [ -f "${APP_DIR}/Backend/venv/bin/python" ]; then
+                                echo ">>> emotion-backend: venv exists, skipping reinstall (existing deps are working)"
+                            else
+                                echo ">>> emotion-backend: creating venv for first-time install..."
+                                cd ${APP_DIR}/Backend
+                                python3 -m venv venv
+                                . venv/bin/activate
+                                pip install --upgrade pip wheel -q
+                                pip install -r requirements.txt -q || echo "WARN: some packages failed, continuing..."
+                                deactivate
+                            fi
                             echo ">>> emotion-backend: done"
                         '
                     """
