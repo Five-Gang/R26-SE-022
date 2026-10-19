@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from pywebpush import WebPushException, webpush
+from py_vapid import Vapid
 from requests import RequestException
 
 from app.core.config import settings
@@ -26,6 +27,13 @@ def _vapid_claims() -> dict[str, str]:
             "VAPID_PRIVATE_KEY and VAPID_CONTACT_EMAIL must be configured"
         )
     return {"sub": settings.VAPID_CONTACT_EMAIL}
+
+
+def _vapid_private_key() -> Vapid | str:
+    key = settings.VAPID_PRIVATE_KEY
+    if "BEGIN" in key:
+        return Vapid.from_pem(key.encode())
+    return key
 
 
 def _payload(reminder: dict[str, Any]) -> str:
@@ -90,7 +98,7 @@ async def deliver_reminder_push(
                     },
                 },
                 data=payload,
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_private_key=_vapid_private_key(),
                 vapid_claims=claims,
             )
             result["delivered"] += 1
