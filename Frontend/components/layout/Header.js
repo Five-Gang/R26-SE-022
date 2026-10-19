@@ -11,16 +11,17 @@ export default function Header() {
   const router = useRouter();
   const { student } = useSession();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Modules', path: '/modules' },
-    { name: 'Focus Monitor', path: '/focus-monitor' },
-    { name: 'Analytics', path: '/analytics' },
-    { name: 'AI Tutor', path: '/tutor' },
-    { name: 'Materials', path: '/materials' },
-    { name: 'Reminders', path: '/study/queue' },
+    { name: 'Dashboard', path: '/dashboard', icon: '⊞' },
+    { name: 'Modules', path: '/modules', icon: '📖' },
+    { name: 'Study', path: '/study/queue', icon: '🎴' },
+    { name: 'Focus', path: '/focus-monitor', icon: '🎯' },
+    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
+    { name: 'Analytics', path: '/analytics', icon: '📈' },
+    { name: 'Rewards', path: '/rewards', icon: '🏆' },
   ];
 
   // Close dropdown when clicking outside
@@ -34,6 +35,11 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = () => {
     setDropdownOpen(false);
     window.localStorage.removeItem('access_token');
@@ -45,32 +51,46 @@ export default function Header() {
 
   return (
     <header className={styles.header}>
+      {/* Logo */}
       <div className={styles.leftSection}>
         <Link href="/dashboard" className={styles.logo}>
           <span className={styles.logoIcon}>AL</span>
-          AuraLearn
+          <span className={styles.logoText}>AuraLearn</span>
         </Link>
-        <span className={styles.badge}>R26-SE-022</span>
       </div>
 
-      <nav className={styles.nav}>
+      {/* Desktop Navigation */}
+      <nav className={styles.nav} aria-label="Main navigation">
         {navItems.map((item) => {
-          const isActive = pathname === item.path || (pathname?.startsWith(item.path) && item.path !== '/');
+          const isActive =
+            pathname === item.path ||
+            (item.path !== '/dashboard' && item.path !== '/' && pathname?.startsWith(
+              item.path.split('/')[1] ? '/' + item.path.split('/')[1] : item.path
+            ));
 
           return (
             <Link
               key={item.name}
               href={item.path}
               className={`${styles.navLink} ${isActive ? styles.active : ''}`}
+              title={item.name}
             >
-              {item.name}
+              <span className={styles.navIcon}>{item.icon}</span>
+              <span className={styles.navLabel}>{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className={styles.rightSection} ref={dropdownRef}>
-        <div className={styles.avatarWrapper}>
+      {/* Right: User menu + mobile toggle */}
+      <div className={styles.rightSection}>
+        {/* Settings shortcut */}
+        <Link href="/settings" className={styles.settingsBtn} title="Settings">
+          ⚙️
+        </Link>
+
+        {/* Avatar / User dropdown */}
+        <div className={styles.avatarWrapper} ref={dropdownRef}>
           <button
             type="button"
             className={`${styles.avatar} ${dropdownOpen ? styles.open : ''}`}
@@ -95,7 +115,16 @@ export default function Header() {
                 onClick={() => setDropdownOpen(false)}
               >
                 <span className={styles.menuIcon}>👤</span>
-                Profile
+                Profile & Settings
+              </Link>
+
+              <Link
+                href="/rewards"
+                className={styles.menuItem}
+                onClick={() => setDropdownOpen(false)}
+              >
+                <span className={styles.menuIcon}>🏆</span>
+                My Rewards
               </Link>
 
               <button
@@ -109,7 +138,37 @@ export default function Header() {
             </div>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          className={styles.mobileMenuBtn}
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          <span className={`${styles.hamburger} ${mobileMenuOpen ? styles.hamburgerOpen : ''}`} />
+        </button>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <nav className={styles.mobileNav} aria-label="Mobile navigation">
+          {navItems.map((item) => {
+            const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
+            return (
+              <Link
+                key={item.name}
+                href={item.path}
+                className={`${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </header>
   );
 }

@@ -2,44 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import styles from './dashboard.module.css';
 
 export default function DashboardPage() {
-  const pathname = usePathname();
-
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'Focus Monitor', path: '/focus-monitor', icon: '🎯' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
-  ];
 
   return (
     <div className={styles.container}>
-
-      {/* Sidebar specific to main layout areas */}
-      <aside className={styles.sidebar}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link
-              key={item.name}
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </aside>
-
       {/* Main Content Area */}
       <main className={styles.main}>
 
@@ -101,8 +69,8 @@ export default function DashboardPage() {
                   <div className={styles.sessionTitle}>Integration Methods</div>
                   <div className={styles.sessionMeta}>CS3042 · Today</div>
                 </div>
-                <Link href="/study/session/summary" className={styles.reviewLink}>
-                  Review →
+                              <Link href="/study/queue" className={styles.reviewLink}>
+                  Review &rarr;
                 </Link>
               </div>
 
