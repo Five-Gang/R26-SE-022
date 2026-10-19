@@ -1,0 +1,726 @@
+/* ================================================================
+   ONBOARDING WIZARD — AuraLearn
+   AWS Console-inspired step-by-step guided setup
+   ================================================================ */
+
+/* ── Full-screen overlay ──────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayIn 0.3s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Wizard shell ─────────────────────────────────────────────── */
+.wizard {
+  display: flex;
+  width: min(96vw, 1060px);
+  height: min(92vh, 740px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px -8px rgba(0, 0, 0, 0.7);
+  animation: wizardIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes wizardIn {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* ── Left Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: #0F172A;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 2.5rem;
+}
+
+.brandIcon {
+  background: linear-gradient(135deg, #0F766E, #14B8A6);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.sidebarTitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 1.25rem;
+  padding-left: 0.25rem;
+}
+
+/* ── Step list ────────────────────────────────────────────────── */
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.stepBullet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.stepNumber, .checkMark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.stepNumber {
+  background: #1E293B;
+  color: #475569;
+  border: 2px solid #1E293B;
+}
+
+.checkMark {
+  background: #0F766E;
+  color: #fff;
+  font-size: 0.875rem;
+}
+
+.stepConnector {
+  width: 2px;
+  height: 28px;
+  background: #1E293B;
+  margin-top: 2px;
+  transition: background 0.3s ease;
+  align-self: center;
+  position: absolute;
+  top: 30px;
+  left: 13px;
+}
+
+.connectorDone {
+  background: #0F766E;
+}
+
+.stepActive .stepNumber {
+  background: #0F766E;
+  color: #fff;
+  border-color: #0F766E;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.2);
+}
+
+.stepCompleted .stepNumber {
+  background: #0F766E;
+  color: #fff;
+}
+
+.stepMeta {
+  padding-top: 4px;
+}
+
+.stepLabel {
+  font-size: 0.65rem;
+  color: #475569;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stepName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748B;
+  margin-top: 1px;
+  transition: color 0.2s;
+}
+
+.stepActive .stepName { color: #5EEAD4; }
+.stepCompleted .stepName { color: #94A3B8; }
+
+/* ── Sidebar footer ───────────────────────────────────────────── */
+.sidebarFooter {
+  margin-top: 1.5rem;
+}
+
+.skipAllBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #334155;
+  font-family: inherit;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.skipAllBtn:hover { color: #64748B; }
+
+/* ── Main content ─────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  background: #F8FAFC;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentInner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 2.75rem;
+  animation: stepIn 0.3s ease;
+}
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+/* ── Step Badge ───────────────────────────────────────────────── */
+.stepBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0F766E;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+/* ── Step header ──────────────────────────────────────────────── */
+.stepHeader {
+  margin-bottom: 1.75rem;
+}
+
+.stepTitle {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+
+.stepDesc {
+  font-size: 0.9375rem;
+  color: #64748B;
+  line-height: 1.6;
+}
+
+/* ── Hero (Welcome & Complete) ────────────────────────────────── */
+.stepHero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.heroEmoji {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.heroTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+}
+
+.heroSubtitle {
+  font-size: 1rem;
+  color: #64748B;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ── Feature grid (welcome step) ─────────────────────────────── */
+.featureGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+  flex: 1;
+}
+
+.featureCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.125rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.featureCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border-color: #CBD5E1;
+}
+
+.featureIcon { font-size: 1.5rem; flex-shrink: 0; }
+
+.featureTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 0.2rem;
+}
+
+.featureDesc {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* ── Lock-gate notice (step 4) ────────────────────────────────── */
+.lockGateNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.07));
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.lockGateIcon { font-size: 1.5rem; flex-shrink: 0; }
+
+.lockGateTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #B45309;
+  margin-bottom: 0.2rem;
+}
+
+.lockGateItems {
+  font-size: 0.8rem;
+  color: #92400E;
+  line-height: 1.4;
+}
+
+/* ── Step roadmap (welcome screen) ───────────────────────────── */
+.roadmap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.roadmapStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.roadmapNum {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0F766E, #14B8A6);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roadmapLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.roadmapArrow {
+  color: #CBD5E1;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Form ─────────────────────────────────────────────────────── */
+.form { flex: 1; display: flex; flex-direction: column; }
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.spanFull { grid-column: 1 / -1; }
+
+.formLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.req { color: #EF4444; }
+
+.formInput {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #1E293B;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.formInput:focus {
+  border-color: #0F766E;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.formTextarea { resize: vertical; }
+
+/* ── Error / success boxes ────────────────────────────────────── */
+.errorBox {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.successBox {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.successIcon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+.successTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #14532D;
+  margin-bottom: 0.5rem;
+}
+
+.successDesc { font-size: 0.9rem; color: #166534; max-width: 400px; }
+
+/* ── Module badge ─────────────────────────────────────────────── */
+.moduleBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 10px;
+  padding: 0.875rem 1.125rem;
+  margin-bottom: 1.25rem;
+}
+
+.moduleBadgeIcon { font-size: 1.25rem; }
+.moduleBadgeCode { font-size: 0.75rem; font-weight: 700; color: #0F766E; letter-spacing: 0.05em; }
+.moduleBadgeName { font-size: 0.9rem; font-weight: 600; color: #1E293B; }
+
+/* ── Drop zone ────────────────────────────────────────────────── */
+.dropZone {
+  border: 2px dashed #CBD5E1;
+  border-radius: 16px;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+  margin-bottom: 1.25rem;
+  flex: 1;
+}
+
+.dropZone:hover { border-color: #0F766E; background: #F0FDFA; }
+.dropZoneActive { border-color: #0F766E; background: #F0FDFA; transform: scale(1.01); }
+.dropZoneUploading { cursor: default; }
+
+.dropZoneContent { text-align: center; padding: 2rem; }
+.dropZoneIcon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.dropZoneTitle { font-size: 1rem; font-weight: 600; color: #1E293B; margin-bottom: 0.25rem; }
+.dropZoneSubtitle { font-size: 0.875rem; color: #64748B; margin-bottom: 0.5rem; }
+.dropZoneFormats {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  background: #F1F5F9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+/* ── Uploading state ──────────────────────────────────────────── */
+.uploadingState { text-align: center; padding: 2rem; width: 100%; max-width: 320px; }
+
+.uploadProgress {
+  height: 4px;
+  background: linear-gradient(90deg, #0F766E, #14B8A6, #0F766E);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  animation: progressSlide 1.5s linear infinite;
+}
+
+@keyframes progressSlide {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.uploadingLabel { font-size: 0.9rem; font-weight: 600; color: #0F766E; }
+.uploadingFile  { font-size: 0.8rem; color: #94A3B8; margin-top: 0.25rem; }
+
+/* ── Complete step ────────────────────────────────────────────── */
+.completeHero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.completeIconWrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1.25rem;
+}
+
+.completeIconRing {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid rgba(15, 118, 110, 0.3);
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.1); opacity: 0.5; }
+}
+
+.completeIcon {
+  font-size: 3rem;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Unlocked features grid ───────────────────────────────────── */
+.unlockedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  flex: 1;
+}
+
+.unlockedCard {
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  animation: cardPop 0.4s ease forwards;
+  opacity: 0;
+}
+
+.unlockedCard:nth-child(1) { animation-delay: 0.05s; }
+.unlockedCard:nth-child(2) { animation-delay: 0.1s; }
+.unlockedCard:nth-child(3) { animation-delay: 0.15s; }
+.unlockedCard:nth-child(4) { animation-delay: 0.2s; }
+.unlockedCard:nth-child(5) { animation-delay: 0.25s; }
+.unlockedCard:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes cardPop {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);   }
+}
+
+.unlockedCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: #0F766E;
+}
+
+.unlockedIcon  { font-size: 1.5rem; display: block; margin-bottom: 0.4rem; }
+.unlockedLabel { font-size: 0.8125rem; font-weight: 700; color: #1E293B; }
+.unlockedDesc  { font-size: 0.7rem; color: #94A3B8; margin-top: 0.2rem; line-height: 1.3; }
+
+/* ── Action buttons ───────────────────────────────────────────── */
+.stepActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #0F766E, #14B8A6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1.75rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+}
+
+.btnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(15, 118, 110, 0.45);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnSecondary {
+  background: #fff;
+  color: #1E293B;
+  border: 1.5px solid #E2E8F0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.btnSecondary:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.btnGhost {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.5rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.btnGhost:hover { color: #64748B; }
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wizard { flex-direction: column; height: 95vh; width: 95vw; }
+  .sidebar { width: 100%; padding: 1.25rem 1.5rem; flex-direction: row; align-items: center; }
+  .stepList { flex-direction: row; gap: 0.5rem; }
+  .sidebarTitle, .sidebarFooter, .stepMeta, .stepConnector { display: none; }
+  .step { padding: 1.5rem; }
+  .featureGrid, .unlockedGrid { grid-template-columns: 1fr 1fr; }
+}
