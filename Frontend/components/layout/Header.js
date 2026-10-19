@@ -4,24 +4,31 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from '../auth/SessionGuard';
+import { useOnboarding } from '../../context/OnboardingContext';
 import styles from './Header.module.css';
+
+// Items that are GATED behind completing the onboarding setup
+const GATED_PATHS = ['/study', '/focus-monitor', '/tutor', '/analytics', '/rewards'];
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { student } = useSession();
+  const { setupComplete, openWizard } = useOnboarding();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tooltip, setTooltip] = useState(null); // { label, x, y }
   const dropdownRef = useRef(null);
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: '⊞' },
-    { name: 'Modules', path: '/modules', icon: '📖' },
-    { name: 'Study', path: '/study/queue', icon: '🎴' },
-    { name: 'Focus', path: '/focus-monitor', icon: '🎯' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
+    { name: 'Modules',   path: '/modules',   icon: '📖' },
+    { name: 'Reminders', path: '/study/queue', icon: '⏰', gated: true },
+    { name: 'Focus',     path: '/focus-monitor', icon: '🎯', gated: true },
+    { name: 'AI Tutor',  path: '/tutor',     icon: '🤖', gated: true },
+    { name: 'Analytics', path: '/analytics', icon: '📈', gated: true },
+    { name: 'Rewards',   path: '/rewards',   icon: '🏆', gated: true },
   ];
 
   // Close dropdown when clicking outside
@@ -49,6 +56,14 @@ export default function Header() {
   const displayName = student?.name || student?.email || 'Student';
   const avatarInitials = displayName.slice(0, 2).toUpperCase();
 
+  // Handle click on a gated nav item when setup isn't complete
+  const handleGatedClick = (e, item) => {
+    if (item.gated && !setupComplete) {
+      e.preventDefault();
+      openWizard();
+    }
+  };
+
   return (
     <header className={styles.header}>
       {/* Logo */}
@@ -62,24 +77,37 @@ export default function Header() {
       {/* Desktop Navigation */}
       <nav className={styles.nav} aria-label="Main navigation">
         {navItems.map((item) => {
+          const isLocked = item.gated && !setupComplete;
           const isActive =
-            pathname === item.path ||
-            (item.path !== '/dashboard' && item.path !== '/' && pathname?.startsWith(
-              item.path.split('/')[1] ? '/' + item.path.split('/')[1] : item.path
-            ));
+            !isLocked && (
+              pathname === item.path ||
+              (item.path !== '/dashboard' && item.path !== '/' && pathname?.startsWith(
+                item.path.split('/')[1] ? '/' + item.path.split('/')[1] : item.path
+              ))
+            );
 
           return (
             <Link
               key={item.name}
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-              title={item.name}
+              href={isLocked ? '#' : item.path}
+              onClick={(e) => handleGatedClick(e, item)}
+              className={`${styles.navLink} ${isActive ? styles.active : ''} ${isLocked ? styles.locked : ''}`}
+              title={isLocked ? 'Complete setup to unlock' : item.name}
+              aria-disabled={isLocked}
             >
               <span className={styles.navIcon}>{item.icon}</span>
               <span className={styles.navLabel}>{item.name}</span>
+              {isLocked && <span className={styles.lockIcon} aria-hidden="true">🔒</span>}
             </Link>
           );
         })}
+
+        {/* Setup banner — only shown when not complete */}
+        {!setupComplete && (
+          <button className={styles.setupBanner} onClick={openWizard} type="button">
+            ✨ Complete Setup
+          </button>
+        )}
       </nav>
 
       {/* Right: User menu + mobile toggle */}
@@ -107,7 +135,21 @@ export default function Header() {
               <div className={styles.dropdownHeader}>
                 <div className={styles.userName}>{student?.name || 'Student'}</div>
                 <div className={styles.userEmail}>{student?.email || student?.student_id || ''}</div>
+                {!setupComplete && (
+                  <div className={styles.setupStatusChip}>⚡ Setup incomplete</div>
+                )}
               </div>
+
+              {!setupComplete && (
+                <button
+                  type="button"
+                  className={`${styles.menuItem} ${styles.setupMenuItem}`}
+                  onClick={() => { setDropdownOpen(false); openWizard(); }}
+                >
+                  <span className={styles.menuIcon}>✨</span>
+                  Complete Setup
+                </button>
+              )}
 
               <Link
                 href="/settings"
@@ -155,18 +197,26 @@ export default function Header() {
       {mobileMenuOpen && (
         <nav className={styles.mobileNav} aria-label="Mobile navigation">
           {navItems.map((item) => {
-            const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
+            const isLocked = item.gated && !setupComplete;
+            const isActive = !isLocked && (pathname === item.path || pathname?.startsWith(item.path + '/'));
             return (
               <Link
                 key={item.name}
-                href={item.path}
-                className={`${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+                href={isLocked ? '#' : item.path}
+                onClick={(e) => handleGatedClick(e, item)}
+                className={`${styles.mobileNavLink} ${isActive ? styles.active : ''} ${isLocked ? styles.locked : ''}`}
               >
                 <span className={styles.navIcon}>{item.icon}</span>
                 {item.name}
+                {isLocked && <span className={styles.lockIcon} style={{ marginLeft: 'auto' }}>🔒</span>}
               </Link>
             );
           })}
+          {!setupComplete && (
+            <button className={styles.mobileSetupBtn} onClick={() => { setMobileMenuOpen(false); openWizard(); }}>
+              ✨ Complete Setup to unlock all features
+            </button>
+          )}
         </nav>
       )}
     </header>

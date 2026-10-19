@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 # Add backend to path for importing evaluation services
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 
 def compute_rouge(hypothesis: str, reference: str) -> dict:
