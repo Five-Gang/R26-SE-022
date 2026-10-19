@@ -30,7 +30,7 @@ export default function LandingPage() {
       <header className={styles.hero}>
         <div className={styles.badge}>
           <span className={styles.badgeDot} />
-          R26-SE-022 · AI Research Platform
+          Personalised learning, reimagined
         </div>
 
         <h1 className={styles.title}>
@@ -40,8 +40,8 @@ export default function LandingPage() {
         </h1>
 
         <p className={styles.subtitle}>
-          AuraLearn combines real-time emotion detection, hallucination-safe AI tutoring,
-          and spaced repetition to build a personalised study environment that evolves with you.
+          AuraLearn brings your study materials, an intelligent tutor, and focus-aware
+          support together in one calm, personalised learning space.
         </p>
 
         <div className={styles.buttonGroup}>
@@ -52,20 +52,20 @@ export default function LandingPage() {
         {/* Stats */}
         <div className={styles.statsBar}>
           <div className={styles.statItem}>
-            <span className={styles.statNumber}>4</span>
-            <span className={styles.statLabel}>AI Services</span>
+            <span className={styles.statNumber}>01</span>
+            <span className={styles.statLabel}>Personal study space</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statNumber}>26</span>
-            <span className={styles.statLabel}>Routes</span>
+            <span className={styles.statNumber}>24/7</span>
+            <span className={styles.statLabel}>On-demand tutor</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statNumber}>RAG</span>
-            <span className={styles.statLabel}>Powered Tutor</span>
+            <span className={styles.statNumber}>AI</span>
+            <span className={styles.statLabel}>Study guidance</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statNumber}>SM-2</span>
-            <span className={styles.statLabel}>Spaced Repetition</span>
+            <span className={styles.statNumber}>You</span>
+            <span className={styles.statLabel}>At the centre</span>
           </div>
         </div>
       </header>
@@ -75,49 +75,45 @@ export default function LandingPage() {
         <p className={styles.sectionLabel}>Core Capabilities</p>
         <h2 className={styles.sectionTitle}>Everything you need to excel</h2>
         <p className={styles.sectionSubtitle}>
-          Four intelligent microservices working together, seamlessly.
+          A thoughtful toolkit that helps you understand more, stay focused, and remember longer.
         </p>
 
         <div className={styles.featuresGrid}>
 
           <div className={styles.featureCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconBlue}`}>📄</div>
+            <div className={`${styles.iconWrapper} ${styles.iconBlue}`}>01</div>
             <h3 className={styles.featureTitle}>AI Summarisation</h3>
             <p className={styles.featureDesc}>
               Automatically convert lengthy PDF and PPTX lectures into concise,
               high-yield flashcards ready for instant review.
             </p>
-            <span className={`${styles.featureTag} ${styles.tagBlue}`}>port 8000</span>
           </div>
 
           <div className={styles.featureCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconPurple}`}>🤖</div>
+            <div className={`${styles.iconWrapper} ${styles.iconPurple}`}>02</div>
             <h3 className={styles.featureTitle}>Hallucination-Safe Tutor</h3>
             <p className={styles.featureDesc}>
-              Ask questions safely. Our RAG-based AI tutor grounds every answer
+              Ask questions confidently. Our AI tutor grounds every answer
               strictly in your uploaded study materials.
             </p>
-            <span className={`${styles.featureTag} ${styles.tagPurple}`}>port 8002</span>
           </div>
 
           <div className={styles.featureCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconRed}`}>🎯</div>
+            <div className={`${styles.iconWrapper} ${styles.iconRed}`}>03</div>
             <h3 className={styles.featureTitle}>Emotion Detection</h3>
             <p className={styles.featureDesc}>
               Real-time webcam analysis tracks your focus and fatigue levels,
               dynamically adjusting your session to optimise retention.
             </p>
-            <span className={`${styles.featureTag} ${styles.tagPink}`}>port 8004</span>
           </div>
 
           <div className={styles.featureCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconTeal}`}>⏰</div>
+            <div className={`${styles.iconWrapper} ${styles.iconTeal}`}>04</div>
             <h3 className={styles.featureTitle}>Adaptive Reminders</h3>
             <p className={styles.featureDesc}>
-              SM-2 spaced repetition algorithms schedule your reviews at the
-              precise moment for maximum long-term memory consolidation.
+              Smart spaced repetition schedules your reviews at the precise
+              moment to help new knowledge stick.
             </p>
-            <span className={`${styles.featureTag} ${styles.tagTeal}`}>port 8001</span>
           </div>
 
         </div>
@@ -125,7 +121,7 @@ export default function LandingPage() {
 
       {/* ── Footer ─────────────────────────────────── */}
       <footer className={styles.footer}>
-        © 2026 AuraLearn · R26-SE-022 · Five-Gang Research Project
+        © 2026 AuraLearn · Learn with clarity. Grow with confidence.
       </footer>
 
     </div>
