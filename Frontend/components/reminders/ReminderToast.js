@@ -56,6 +56,10 @@ export default function ReminderToast() {
     setReminder(null);
   };
 
+  const dismissReminder = async () => {
+    await sendFeedback('DISMISSED');
+  };
+
   const sendFeedback = async (status, grade) => {
     const token = window.localStorage.getItem('access_token');
     if (token && reminder) {
@@ -74,7 +78,7 @@ export default function ReminderToast() {
     <aside className={styles.toast} role="status" aria-live="polite">
       <div className={styles.topLine}>
         <span className={styles.eyebrow}>Reminder One</span>
-        <button className={styles.close} onClick={closeToast} aria-label="Dismiss reminder">×</button>
+        <button className={styles.close} onClick={dismissReminder} aria-label="Dismiss reminder">×</button>
       </div>
       <p className={styles.title}>{reminder.item_title || reminder.item_key} is ready for review</p>
       <p className={styles.detail}>A short review now helps protect your long-term recall.</p>
