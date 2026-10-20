@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { modulesApi, documentsApi } from '../../../lib/summarizer-api';
+import { useSession } from '../../../components/auth/SessionGuard';
 import styles from './modules.module.css';
 
 const BLOOM_COLORS = {
@@ -14,6 +15,8 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 // ── Create Module Modal ──────────────────────────────────────────────
 function CreateModuleModal({ onClose, onCreated }) {
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
   const [step, setStep] = useState(1); // 1 = Module info, 2 = Upload outline
   const [form, setForm] = useState({
     code: '', name: '', description: '', year: CURRENT_YEAR,
@@ -38,6 +41,7 @@ function CreateModuleModal({ onClose, onCreated }) {
     setCreateError(null);
     try {
       const mod = await modulesApi.create({
+        student_id: studentId,
         code: form.code.trim().toUpperCase(),
         name: form.name.trim(),
         description: form.description.trim() || undefined,
@@ -247,6 +251,8 @@ function CreateModuleModal({ onClose, onCreated }) {
 
 // ── Main Modules Page ────────────────────────────────────────────────
 export default function ModulesPage() {
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -256,12 +262,21 @@ export default function ModulesPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const load = () => modulesApi.list()
-    .then(setModules)
-    .catch(e => setError(e.message))
-    .finally(() => setLoading(false));
+  const load = useCallback(() => {
+    if (!studentId) return;
+    setLoading(true);
+    setError(null);
+    modulesApi.list({ student_id: studentId })
+      .then(setModules)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [studentId]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (studentId) {
+      load();
+    }
+  }, [studentId, load]);
 
   const filtered = modules.filter(m =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||

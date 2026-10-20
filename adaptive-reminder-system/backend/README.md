@@ -302,6 +302,19 @@ black app/
 | ENV                 | dev         | dev or production                                                                                |
 | EMOTION_PROVIDER    | mock        | mock, replay, or http                                                                            |
 | EMOTION_SERVICE_URL | -           | URL for Mihiraj's service. See `docs/api-contract.md` for the expected cue and activity payload. |
+| VAPID_PUBLIC_KEY         | -           | Public browser push key exposed to the frontend configuration                         |
+| VAPID_PRIVATE_KEY        | -           | Private VAPID signing key; keep secret and configure only in the runtime environment |
+| VAPID_CONTACT_EMAIL      | -           | `mailto:` contact used in VAPID claims                                              |
+
+Web Push delivery is best-effort. Reminders and scheduler decisions are persisted
+even when push configuration is missing or a provider is unavailable. Expired
+subscriptions (HTTP 404/410) are removed automatically. The in-app reminder
+queue remains the fallback delivery channel.
+
+Scheduling decisions persist `scheduling_latency_ms`, action, allowed actions,
+policy source, context, and scores. Reminder feedback persists the reward. These
+fields support later measurement of action distributions, fallback frequency,
+latency, engagement, and duplicate prevention.
 
 ## Next Steps (Day 2)
 

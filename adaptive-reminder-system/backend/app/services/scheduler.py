@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from time import perf_counter
 from typing import Any, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -15,6 +16,7 @@ from app.models.sm2 import item_from_mongo, process_item
 from app.services.bandit_service import load_student_bandit
 from app.services.content_personalization_service import ContentPersonalizationService
 from app.services.emotion_provider import create_emotion_provider
+from app.services.push_delivery import deliver_reminder_push
 
 _rule_scheduler = AdaptiveScheduler()
 _content_service = ContentPersonalizationService()
@@ -53,7 +55,7 @@ async def _time_since_reminder(db: AsyncIOMotorDatabase, student_id: str, now: d
 
 async def _deliver_due_delays(
     db: AsyncIOMotorDatabase, student_id: str, now: datetime
-) -> int:
+) -> tuple[int, dict[str, int]]:
     result = await db.reminders.update_many(
         {
             "student_id": student_id,
@@ -62,7 +64,16 @@ async def _deliver_due_delays(
         },
         {"$set": {"status": "SENT", "sent_at": now}},
     )
-    return result.modified_count
+    push_totals = {"attempted": 0, "delivered": 0, "failed": 0, "expired": 0}
+    if getattr(db, "push_subscriptions", None) is not None:
+        due = await db.reminders.find(
+            {"student_id": student_id, "status": "SENT", "sent_at": now}
+        ).to_list(None)
+        for reminder in due:
+            delivery = await deliver_reminder_push(db, student_id, reminder)
+            for key, value in delivery.items():
+                push_totals[key] += value
+    return result.modified_count, push_totals
 
 
 async def run_scheduling_tick(
@@ -73,10 +84,11 @@ async def run_scheduling_tick(
     now: Optional[datetime] = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
+    started_at = perf_counter()
     provider = provider or create_emotion_provider()
     signal = await provider.read(student_id)
     assessment = assess_learning_readiness(signal)
-    delivered_delays = await _deliver_due_delays(db, student_id, now)
+    delivered_delays, push_totals = await _deliver_due_delays(db, student_id, now)
     items = await db.review_items.find({"student_id": student_id}).to_list(None)
     try:
         policy: LinUCB = await load_student_bandit(db, student_id)
@@ -152,6 +164,7 @@ async def run_scheduling_tick(
             "context": context.to_dict(),
             "readiness_tier": assessment.readiness_tier.value,
             "created_at": now,
+            "scheduling_latency_ms": round((perf_counter() - started_at) * 1000, 3),
         }
         await db.scheduler_decisions.insert_one(decision_record)
 
@@ -169,8 +182,7 @@ async def run_scheduling_tick(
             continue
 
         scheduled_at = now if action == ReminderAction.SEND else now + timedelta(hours=1)
-        await db.reminders.insert_one(
-            {
+        reminder = {
                 "student_id": student_id,
                 "item_key": document.get("item_key", item.item_id),
                 "item_title": document.get("title", document.get("topic", item.item_id)),
@@ -191,8 +203,32 @@ async def run_scheduling_tick(
                 "sent_at": now if action == ReminderAction.SEND else None,
                 "responded_at": None,
                 "status": "SENT" if action == ReminderAction.SEND else "SCHEDULED",
+                "push_delivery_status": "pending" if action == ReminderAction.SEND else "scheduled",
             }
-        )
+        await db.reminders.insert_one(reminder)
+        if action == ReminderAction.SEND and getattr(db, "push_subscriptions", None) is not None:
+            delivery = await deliver_reminder_push(db, student_id, reminder)
+            for key, value in delivery.items():
+                push_totals[key] += value
+            if hasattr(db.reminders, "update_one"):
+                await db.reminders.update_one(
+                    {
+                        "student_id": student_id,
+                        "item_key": reminder["item_key"],
+                        "status": "SENT",
+                    },
+                    {
+                        "$set": {
+                            "push_delivery_status": (
+                                "delivered" if delivery["delivered"] else "failed"
+                            ),
+                            "push_delivery": delivery,
+                            "push_delivered_at": now
+                            if delivery["delivered"]
+                            else None,
+                        }
+                    },
+                )
         reminders_created += 1
 
     return {
@@ -209,6 +245,7 @@ async def run_scheduling_tick(
         "readiness_score": assessment.readiness_score,
         "readiness_tier": assessment.readiness_tier.value,
         "content_type": assessment.content_type,
+        "push_delivery": push_totals,
     }
 
 

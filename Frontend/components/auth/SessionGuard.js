@@ -40,7 +40,14 @@ export default function SessionGuard({ children }) {
       })
       .then((profile) => {
         if (!cancelled) {
-          setStudent(profile);
+          const sid = profile?.student_id || profile?._id || profile?.id;
+          const normalized = {
+            ...profile,
+            id: sid,
+            _id: sid,
+            student_id: sid,
+          };
+          setStudent(normalized);
           setChecking(false);
         }
       })

@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { modulesApi, compareApi } from '../../../../lib/summarizer-api';
+import { useSession } from '../../../../components/auth/SessionGuard';
 import styles from './compare.module.css';
 
 export default function ComparePage() {
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
   const [modules, setModules] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [selectedModule, setSelectedModule] = useState('');
@@ -15,11 +18,12 @@ export default function ComparePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    modulesApi.list().then((mods) => {
+    if (!studentId) return;
+    modulesApi.list({ student_id: studentId }).then((mods) => {
       setModules(mods);
       if (mods.length > 0) setSelectedModule(mods[0].id);
     }).catch(() => {});
-  }, []);
+  }, [studentId]);
 
   useEffect(() => {
     if (!selectedModule) return;

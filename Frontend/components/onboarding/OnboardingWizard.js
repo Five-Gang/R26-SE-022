@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { modulesApi, documentsApi } from '../../lib/summarizer-api';
 import { useOnboarding } from '../../context/OnboardingContext';
+import { useSession } from '../../components/auth/SessionGuard';
 import styles from './OnboardingWizard.module.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -18,6 +19,8 @@ const STEPS = [
 
 export default function OnboardingWizard() {
   const router = useRouter();
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
   const { showWizard, markSetupComplete, dismissWizard, refreshSetupStatus } = useOnboarding();
 
   const [stepIndex, setStepIndex]       = useState(0);
@@ -56,6 +59,7 @@ export default function OnboardingWizard() {
     setCreating(true); setCreateError(null);
     try {
       const mod = await modulesApi.create({
+        student_id: studentId,
         code: form.code.trim().toUpperCase(),
         name: form.name.trim(),
         description: form.description.trim() || undefined,

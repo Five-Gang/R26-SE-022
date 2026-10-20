@@ -230,6 +230,15 @@ class TestMongoConversion:
         assert item.item_id == "DBMS_01"
         assert item.repetitions == 3
         assert item.interval_days == 10.5
+
+    def test_item_from_mongo_accepts_mongo_datetime(self):
+        stored = datetime(2026, 10, 19, 12, 0, 0)
+
+        item = item_from_mongo(
+            {"item_key": "DBMS_01", "last_reviewed": stored}
+        )
+
+        assert item.last_reviewed == stored.replace(tzinfo=timezone.utc)
     
     def test_item_to_mongo_update(self):
         """Convert StudyItem to MongoDB update dict."""

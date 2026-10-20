@@ -44,6 +44,7 @@ export default function StudyQueuePage() {
   const [message, setMessage] = useState('');
   const [schedulerStatus, setSchedulerStatus] = useState('');
   const [notificationStatus, setNotificationStatus] = useState('default');
+  const [pushStatus, setPushStatus] = useState('unknown');
   const [preferences, setPreferences] = useState({ frequency: '60', quietStart: '22', quietEnd: '8' });
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -187,22 +188,29 @@ export default function StudyQueuePage() {
     if (token && vapidKey && 'serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: vapidKeyToBuffer(vapidKey),
-        });
-        await fetch(`${API_URL}/api/v1/push/subscribe`, {
+        const subscription = await registration.pushManager.getSubscription()
+          || await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: vapidKeyToBuffer(vapidKey),
+          });
+        const response = await fetch(`${API_URL}/api/v1/push/subscribe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify(subscription.toJSON()),
         });
+        if (!response.ok) throw new Error('Push subscription was rejected by the backend');
+        setPushStatus('subscribed');
         setMessage('Push notifications are enabled for Reminder One.');
       } catch (error) {
-        setMessage('Browser alerts are enabled, but push subscription needs configuration.');
+        setPushStatus('unavailable');
+        setMessage(error?.name === 'AbortError'
+          ? 'Browser alerts are enabled. Web Push is unavailable in private browsing; use a normal browser window for background push notifications.'
+          : 'Browser alerts are enabled, but push subscription could not be registered.');
       }
       return;
     }
 
+    setPushStatus('unavailable');
     setMessage('Browser alerts are enabled. Push delivery needs the VAPID key and backend service worker configuration.');
   };
 
@@ -222,6 +230,12 @@ export default function StudyQueuePage() {
       if (!response.ok) throw new Error('Scheduler request failed');
       const result = await response.json();
       setSchedulerStatus(`${result.reminders_created} reminders created from ${result.items_processed} study items. ${result.decision_reason || result.status}`);
+      if (result.reminders_created > 0 && notificationStatus === 'granted') {
+        new Notification('AuraLearn reminder', {
+          body: 'A new adaptive study reminder is ready.',
+          tag: 'auralearn-scheduler',
+        });
+      }
       await loadReminders();
     } catch (error) {
       setSchedulerStatus('The live scheduler is unavailable. Your current queue is unchanged.');
@@ -276,7 +290,11 @@ export default function StudyQueuePage() {
                     </div>
                     <div className={styles.controlActions}>
                       <button className={styles.secondaryAction} onClick={enableNotifications}>
-                        {notificationStatus === 'granted' ? 'Alerts enabled' : 'Enable alerts'}
+                        {pushStatus === 'subscribed'
+                          ? 'Push enabled'
+                          : notificationStatus === 'granted'
+                            ? 'Alerts enabled'
+                            : 'Enable alerts'}
                       </button>
                       <button className={styles.secondaryAction} onClick={runSchedulerTick}>Run scheduler</button>
                     </div>

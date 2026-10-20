@@ -32,6 +32,7 @@ class WeekResponse(WeekBase):
 # ── Module Schemas ───────────────────────────────────────────
 
 class ModuleBase(BaseModel):
+    student_id: Optional[str] = None
     code: str = Field(..., min_length=2, max_length=20, examples=["IT2060"])
     name: str = Field(..., min_length=2, max_length=255, examples=["Database Systems"])
     description: Optional[str] = None
