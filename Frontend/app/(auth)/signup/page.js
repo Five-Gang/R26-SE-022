@@ -14,10 +14,10 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const features = [
-    "No configuration needed",
-    "Works with any lecture material",
-    "Smart reminders from day one",
-    "Part of SLIIT research R26-SE-022"
+    "Set up your study space in minutes",
+    "Bring your lecture materials together",
+    "Get smart reminders from day one",
+    "Learn at your own pace"
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function SignupPage() {
         </div>
         
         <div className={styles.footerText}>
-          © 2026 AuraLearn · SLIIT R26-SE-022
+          © 2026 AuraLearn · Learn with clarity. Grow with confidence.
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default function SignupPage() {
       <div className={styles.rightPane}>
         <div className={styles.signupCard}>
           <h2 className={styles.cardTitle}>Create your account</h2>
-          <p className={styles.cardSubtitle}>Join the AuraLearn research cohort.</p>
+          <p className={styles.cardSubtitle}>Start building a study routine that works for you.</p>
           
           <form onSubmit={async (event) => {
             event.preventDefault();
@@ -95,7 +95,7 @@ export default function SignupPage() {
                   type="text" 
                   id="fullName" 
                   className={styles.input} 
-                  placeholder="K.K.G.Y. Mihiraj"
+                  placeholder="Enter your full name"
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   required 
@@ -107,7 +107,7 @@ export default function SignupPage() {
                   type="text" 
                   id="studentId" 
                   className={styles.input} 
-                  placeholder="IT22224552" 
+                  placeholder="Enter your student ID" 
                   required 
                 />
               </div>
@@ -119,7 +119,7 @@ export default function SignupPage() {
                 type="email" 
                 id="email" 
                 className={styles.input} 
-                placeholder="mihiraj@sliit.lk"
+                placeholder="Enter your email address"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
                 required 
@@ -132,7 +132,7 @@ export default function SignupPage() {
                 type="password" 
                 id="password" 
                 className={styles.input} 
-                placeholder="••••••••"
+                placeholder="Create a password"
                 value={form.password}
                 onChange={(event) => setForm({ ...form, password: event.target.value })}
                 required 
@@ -145,7 +145,7 @@ export default function SignupPage() {
                 type="password" 
                 id="confirmPassword" 
                 className={styles.input} 
-                placeholder="••••••••"
+                placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 required 
@@ -155,7 +155,7 @@ export default function SignupPage() {
             <div className={styles.checkboxGroup}>
               <input type="checkbox" id="consent" className={styles.checkbox} required />
               <label htmlFor="consent" className={styles.checkboxLabel}>
-                I consent to participate in the AuraLearn research study
+                I agree to the AuraLearn terms and privacy policy
               </label>
             </div>
             

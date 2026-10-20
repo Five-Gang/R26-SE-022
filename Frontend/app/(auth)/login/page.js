@@ -50,7 +50,7 @@ export default function LoginPage() {
         </div>
         
         <div className={styles.footerText}>
-          © 2026 AuraLearn · SLIIT R26-SE-022
+          © 2026 AuraLearn · Learn with clarity. Grow with confidence.
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 type="email" 
                 id="email" 
                 className={styles.input} 
-                placeholder="mihiraj@sliit.lk"
+                placeholder="Enter your email address"
                 value={credentials.email}
                 onChange={(event) => setCredentials({ ...credentials, email: event.target.value })}
                 required 
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 type="password" 
                 id="password" 
                 className={styles.input} 
-                placeholder="••••••••••"
+                placeholder="Enter your password"
                 value={credentials.password}
                 onChange={(event) => setCredentials({ ...credentials, password: event.target.value })}
                 required 

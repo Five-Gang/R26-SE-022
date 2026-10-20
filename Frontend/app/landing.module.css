@@ -6,7 +6,9 @@
 /* ── Container ──────────────────────────────────────────── */
 .container {
   min-height: 100vh;
-  background: var(--color-background);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(15, 118, 110, 0.07), transparent 32rem),
+    var(--color-background);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -44,7 +46,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(248, 250, 252, 0.9);
+  background: rgba(248, 250, 252, 0.84);
   border-bottom: 1px solid var(--color-border);
   backdrop-filter: blur(16px);
   padding: 1.1rem 2rem;
@@ -107,9 +109,10 @@
 
 /* ── Hero ───────────────────────────────────────────────── */
 .hero {
+  width: 100%;
   text-align: center;
   max-width: 900px;
-  padding: 7rem 2rem 4rem;
+  padding: 6.5rem 2rem 4.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -125,7 +128,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: rgba(15, 118, 110, 0.08);
+  background-color: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(15, 118, 110, 0.2);
   color: var(--color-accent);
   padding: 0.45rem 1.1rem;
@@ -151,7 +154,7 @@
 }
 
 .title {
-  font-size: clamp(2.6rem, 5.5vw, 4.5rem);
+  font-size: clamp(2.8rem, 5.5vw, 4.75rem);
   font-weight: 800;
   color: var(--color-primary);
   line-height: 1.08;
@@ -218,7 +221,7 @@
 .statsBar {
   display: flex;
   margin-top: 4rem;
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 1.2rem 1.5rem;
@@ -230,7 +233,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.25rem 2rem;
+  padding: 0.25rem 1.75rem;
 }
 
 .statItem:not(:last-child) {
@@ -251,13 +254,14 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 0.15rem;
+  white-space: nowrap;
 }
 
 /* ── Features Section ───────────────────────────────────── */
 .featuresSection {
   width: 100%;
   max-width: 1280px;
-  padding: 3rem 2rem 7rem;
+  padding: 3rem 2rem 7.5rem;
 }
 
 .sectionLabel {
@@ -319,7 +323,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
   margin-bottom: 1.2rem;
 }
 
@@ -377,7 +383,8 @@
   .navLinks { display: none; }
   .title { font-size: 2.6rem; letter-spacing: -1.5px; }
   .featuresGrid { grid-template-columns: 1fr; }
-  .statsBar { flex-wrap: wrap; gap: 1rem; }
+  .statsBar { flex-wrap: wrap; gap: 1rem 0; justify-content: center; }
   .statItem { border-right: none !important; }
+  .statLabel { white-space: normal; }
   .hero { padding: 5rem 1.5rem 3rem; }
 }
