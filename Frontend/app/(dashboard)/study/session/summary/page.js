@@ -121,7 +121,6 @@ export default function SummaryPage() {
         </div>
         <div className={styles.actions}>
           <button className={styles.btnOutline} onClick={saveNotes}>💾 Save Notes</button>
-          <button className={styles.btnPrimary} onClick={() => router.push('/study/quiz')}>Start Quiz →</button>
         </div>
       </div>
 
