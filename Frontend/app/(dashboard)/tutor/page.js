@@ -295,9 +295,29 @@ export default function TutorPage() {
   const [analytics, setAnalytics]                   = useState(null);
   const [showAnalytics, setShowAnalytics]           = useState(false);
   const [uploadingSlide, setUploadingSlide]         = useState(false);
+  const [uploadProgress, setUploadProgress]         = useState(null); // null | 'uploading' | 'chunking' | 'done'
+  const [pdfStats, setPdfStats]                     = useState({}); // { [moduleCode]: { pdfs: number, chunks: number, files: string[] } }
   const [conversationHistory, setConversationHistory] = useState([]);
 
   const chatEndRef = useRef(null);
+
+  /** Fetch per-file chunk stats from the tutor backend and group by module_code */
+  const fetchPdfStats = async () => {
+    try {
+      const res = await fetch(`${TUTOR_API}/api/materials/per-file`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const grouped = {};
+      for (const f of (data.files || [])) {
+        const key = f.module_code || '__untagged__';
+        if (!grouped[key]) grouped[key] = { pdfs: 0, chunks: 0, files: [] };
+        grouped[key].pdfs += 1;
+        grouped[key].chunks += f.chunks;
+        grouped[key].files.push(f.filename);
+      }
+      setPdfStats(grouped);
+    } catch { /* silently ignore */ }
+  };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
@@ -318,6 +338,9 @@ export default function TutorPage() {
       .catch(() => {
         modulesApi.list().then(m => setModules(m || [])).catch(() => {});
       });
+
+    // Load initial chunk stats
+    fetchPdfStats();
   }, []);
 
   const loadModuleMaterials = async (mod) => {
@@ -498,16 +521,24 @@ export default function TutorPage() {
           <div className={styles.sideSection}>
             <div className={styles.sideSectionTitle}>📚 Your Modules</div>
             <div className={styles.moduleList}>
-              {modules.map(mod => (
-                <button
-                  key={mod.code}
-                  className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
-                  onClick={() => handleSelectModule(mod)}
-                >
-                  <span className={styles.moduleCode}>{mod.code}</span>
-                  <span className={styles.moduleName}>{mod.name}</span>
-                </button>
-              ))}
+              {modules.map(mod => {
+                const stats = pdfStats[mod.code];
+                return (
+                  <button
+                    key={mod.code}
+                    className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
+                    onClick={() => handleSelectModule(mod)}
+                  >
+                    <span className={styles.moduleCode}>{mod.code}</span>
+                    <span className={styles.moduleName}>{mod.name}</span>
+                    {stats && (
+                      <span className={styles.moduleChunkBadge}>
+                        📄 {stats.pdfs} PDF{stats.pdfs !== 1 ? 's' : ''} · {stats.chunks} chunks
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -524,8 +555,17 @@ export default function TutorPage() {
 
         <div className={styles.sideSection}>
           <div className={styles.sideSectionTitle}>📤 Upload to Tutor</div>
-          <label className={styles.uploadTutorBtn}>
-            <span>{uploadingSlide ? '⏳ Ingesting PDF…' : '📄 + Upload PDF Material'}</span>
+          {/* Progress indicator shown during chunking */}
+          {uploadProgress && uploadProgress !== 'done' && (
+            <div className={styles.uploadProgress}>
+              <span className={styles.uploadProgressDot} />
+              <span className={styles.uploadProgressLabel}>
+                {uploadProgress === 'uploading' ? '📤 Uploading PDF…' : '⚙️ Chunking & indexing…'}
+              </span>
+            </div>
+          )}
+          <label className={`${styles.uploadTutorBtn} ${uploadingSlide ? styles.uploadTutorBtnDisabled : ''}`}>
+            <span>{uploadingSlide ? '⏳ Processing…' : '📄 + Upload PDF Material'}</span>
             <input
               type="file"
               accept=".pdf"
@@ -535,25 +575,39 @@ export default function TutorPage() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 setUploadingSlide(true);
+                setUploadProgress('uploading');
                 try {
                   const formData = new FormData();
                   formData.append('file', file);
+                  // Tag with current module code if a module is selected
+                  if (selectedModule?.code) {
+                    formData.append('module_code', selectedModule.code);
+                  }
+                  setUploadProgress('chunking');
                   const res = await fetch(`${TUTOR_API}/api/upload`, {
                     method: 'POST',
                     body: formData,
                   });
                   const json = await res.json();
                   if (!res.ok) throw new Error(json.detail || 'Upload failed');
+
+                  // Refresh chunk stats after successful upload
+                  await fetchPdfStats();
+
+                  const chunks = json.chunks_created ?? json.documents_count ?? '?';
                   setMessages(prev => [...prev, {
                     role: 'ai',
-                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor! You can now ask questions about this document.`,
+                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor!\n\n📊 **${chunks} chunks** created from this document.${selectedModule?.code ? ` Tagged to module **${selectedModule.code}**.` : ''}\n\nYou can now ask questions about this document.`,
                     confidence_level: 'HIGH'
                   }]);
+                  setUploadProgress('done');
                 } catch (err) {
                   alert('Upload error: ' + err.message);
+                  setUploadProgress(null);
                 } finally {
                   setUploadingSlide(false);
                   e.target.value = '';
+                  setTimeout(() => setUploadProgress(null), 3000);
                 }
               }}
             />
