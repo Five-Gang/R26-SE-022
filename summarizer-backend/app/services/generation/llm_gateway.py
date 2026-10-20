@@ -28,6 +28,8 @@ class LLMResponse:
 
 # Cost per 1M tokens (as of 2026)
 COST_TABLE = {
+    "gemini-3.6-flash": {"input": 0.15, "output": 0.60},
+    "gemini-3.5-flash-lite": {"input": 0.075, "output": 0.30},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
     "gpt-4o-mini": {"input": 0.15, "output": 0.60},
     "gpt-4o": {"input": 2.50, "output": 10.00},

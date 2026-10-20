@@ -40,12 +40,13 @@ async function request(path, options = {}) {
 // ── Modules ──────────────────────────────────────────────────
 
 export const modulesApi = {
-  /** List all modules, optionally filter by department, year, semester */
+  /** List all modules, optionally filter by department, year, semester, student_id */
   list: (params = {}) => {
     const q = new URLSearchParams();
     if (params.department) q.set('department', params.department);
     if (params.year) q.set('year', params.year);
     if (params.semester) q.set('semester', params.semester);
+    if (params.student_id) q.set('student_id', params.student_id);
     return request(`/modules?${q}`);
   },
 
@@ -118,6 +119,9 @@ export const documentsApi = {
 
   /** Delete a document */
   delete: (id) => request(`/documents/${id}`, { method: 'DELETE' }),
+
+  /** Reprocess a failed document */
+  reprocess: (id) => request(`/documents/${id}/reprocess`, { method: 'POST' }),
 };
 
 // ── Summaries ────────────────────────────────────────────────

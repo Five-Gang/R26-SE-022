@@ -357,7 +357,7 @@ export default function ModuleDetailPage() {
                     <button
                       className={styles.btnRetry}
                       onClick={async () => {
-                        await fetch(`http://localhost:8001/api/v1/documents/${doc.id}/reprocess`, { method: 'POST' });
+                        await documentsApi.reprocess(doc.id);
                         const updated = await documentsApi.listByModule(id);
                         setDocs(updated);
                       }}

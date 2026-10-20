@@ -28,8 +28,11 @@ router = APIRouter()
 @router.post("", response_model=ModuleResponse, status_code=201)
 async def create_module(data: ModuleCreate, db: AsyncSession = Depends(get_db)):
     """Create a new module."""
-    # Check for duplicate code
-    existing = await db.execute(select(Module).where(Module.code == data.code))
+    # Check for duplicate code for this specific student
+    dup_query = select(Module).where(Module.code == data.code)
+    if data.student_id:
+        dup_query = dup_query.where(Module.student_id == data.student_id)
+    existing = await db.execute(dup_query)
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail=f"Module {data.code} already exists")
 
@@ -45,9 +48,10 @@ async def list_modules(
     department: Optional[str] = None,
     year: Optional[int] = None,
     semester: Optional[int] = None,
+    student_id: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """List all modules with optional filtering, including learning outcomes."""
+    """List modules with optional filtering by student, department, year, semester."""
     query = (
         select(Module)
         .options(
@@ -56,6 +60,11 @@ async def list_modules(
         )
         .order_by(Module.code)
     )
+    if student_id:
+        query = query.where(Module.student_id == student_id)
+    else:
+        # Strict isolation: if no student_id is provided, only return unassigned legacy modules
+        query = query.where(Module.student_id.is_(None))
     if department:
         query = query.where(Module.department == department)
     if year:

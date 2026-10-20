@@ -2,17 +2,18 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { modulesApi, documentsApi } from '../lib/summarizer-api';
+import { useSession } from '../components/auth/SessionGuard';
 
 /**
  * OnboardingContext
  * ─────────────────
  * Tracks whether the user has completed the full initial setup:
- *   1. Created at least one module
+ *   1. Created at least one module (scoped to current student)
  *   2. Uploaded a module outline
  *   3. Uploaded at least one lecture slide  ← required to unlock all features
  *
  * Nav items (Focus, AI Tutor, Reminders, Analytics, Rewards) are gated
- * until a lecture slide exists in at least one module.
+ * until a lecture slide exists in at least one module belonging to this user.
  */
 
 const OnboardingContext = createContext({
@@ -33,9 +34,11 @@ export function useOnboarding() {
   return useContext(OnboardingContext);
 }
 
-const SETUP_KEY = 'auralearn_setup_complete';
-
 export default function OnboardingProvider({ children }) {
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
+  const setupKey = studentId ? `auralearn_setup_complete_${studentId}` : 'auralearn_setup_complete';
+
   const [loading, setLoading]             = useState(true);
   const [moduleCount, setModuleCount]     = useState(0);
   const [hasOutline, setHasOutline]       = useState(false);
@@ -44,14 +47,15 @@ export default function OnboardingProvider({ children }) {
   const [showWizard, setShowWizard]       = useState(false);
 
   /**
-   * Checks:
+   * Checks for the current student:
    *  1. Are there any modules?
    *  2. Does any module have a lecture_slide uploaded?
    * Returns { moduleCount, hasLecture, complete }
    */
   const refreshSetupStatus = useCallback(async () => {
+    if (!studentId) return { count: 0, hasLecture: false, complete: false };
     try {
-      const modules = await modulesApi.list();
+      const modules = await modulesApi.list({ student_id: studentId });
       const mods = Array.isArray(modules) ? modules : modules?.items ?? [];
       const count = mods.length;
       setModuleCount(count);
@@ -59,10 +63,10 @@ export default function OnboardingProvider({ children }) {
       if (count === 0) {
         setHasLecture(false);
         setHasOutline(false);
-        return { count, hasLecture: false, complete: false };
+        return { count: 0, hasLecture: false, complete: false };
       }
 
-      // Check each module for at least one lecture_slide
+      // Check each module of this student for at least one lecture_slide
       let lectureFound = false;
       let outlineFound = false;
       for (const mod of mods) {
@@ -87,11 +91,16 @@ export default function OnboardingProvider({ children }) {
       setHasLecture(false);
       return { count: 0, hasLecture: false, complete: false };
     }
-  }, []);
+  }, [studentId]);
 
-  // On mount: check localStorage (fast path), then ALWAYS verify with API
+  // On student load: check localStorage (fast path), then ALWAYS verify with API
   useEffect(() => {
-    const alreadyDone = localStorage.getItem(SETUP_KEY) === 'true';
+    if (!studentId) {
+      setLoading(false);
+      return;
+    }
+
+    const alreadyDone = localStorage.getItem(setupKey) === 'true';
 
     // Optimistic render from localStorage to avoid flash
     if (alreadyDone) {
@@ -101,24 +110,24 @@ export default function OnboardingProvider({ children }) {
     // Always verify with API — clears stale flags if lecture was deleted
     refreshSetupStatus().then(({ count, hasLecture: lecture, complete }) => {
       if (count === 0 || !lecture) {
-        // Missing module or lecture — reset and show wizard
-        localStorage.removeItem(SETUP_KEY);
+        // Missing module or lecture for this student — reset and show wizard
+        localStorage.removeItem(setupKey);
         setSetupComplete(false);
         setShowWizard(true);
       } else {
         // Fully set up
         setSetupComplete(true);
-        localStorage.setItem(SETUP_KEY, 'true');
+        localStorage.setItem(setupKey, 'true');
       }
       setLoading(false);
     });
-  }, [refreshSetupStatus]);
+  }, [studentId, setupKey, refreshSetupStatus]);
 
   const markSetupComplete = useCallback(() => {
     setSetupComplete(true);
     setShowWizard(false);
-    localStorage.setItem(SETUP_KEY, 'true');
-  }, []);
+    localStorage.setItem(setupKey, 'true');
+  }, [setupKey]);
 
   const dismissWizard = useCallback(() => {
     setShowWizard(false);

@@ -5,7 +5,7 @@ from typing import Optional, Union
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,12 +16,18 @@ class Module(Base):
     """Represents a university module/course unit (e.g., IT2060 - Database Systems)."""
 
     __tablename__ = "modules"
+    __table_args__ = (
+        UniqueConstraint("student_id", "code", name="uq_student_module_code"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
+    student_id: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     course_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
-    code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
+    code: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     credits: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
