@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -72,6 +72,19 @@ export default function SummaryPage() {
     } catch { }
   };
 
+  const saveNotes = useCallback(() => {
+    const text = summary?.summary_text || summary?.content || '';
+    if (!text) return;
+    const title = summary?.module_id ? `Summary_${summary.module_id}` : 'AI_Summary';
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [summary]);
+
   if (loading) return (
     <div className={styles.loadingScreen}>
       <div className={styles.loadingInner}>
@@ -107,13 +120,13 @@ export default function SummaryPage() {
           </span>
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnOutline}>Save Notes</button>
+          <button className={styles.btnOutline} onClick={saveNotes}>💾 Save Notes</button>
           <button className={styles.btnPrimary} onClick={() => router.push('/study/quiz')}>Start Quiz →</button>
         </div>
       </div>
 
       <div className={styles.layout}>
-        {/* Main chat-style column */}
+        {/* Main column (full width — sidebar removed) */}
         <div className={styles.mainCol} ref={contentRef}>
 
           {/* AI message bubble */}
@@ -192,91 +205,44 @@ export default function SummaryPage() {
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className={styles.sideCol}>
-          {/* LO Coverage */}
-          {los.length > 0 && (
-            <div className={styles.sideCard}>
-              <div className={styles.sideCardTitle}>🎯 Learning Outcome Coverage</div>
-              <div className={styles.loList}>
-                {los.map((lo) => (
-                  <div key={lo.lo_code} className={styles.loItem}>
-                    <div className={styles.loHeader}>
-                      <span className={styles.loCode}>{lo.lo_code}</span>
-                      <span
-                        className={styles.bloomTag}
-                        style={{
-                          background: `${BLOOM_COLORS[lo.bloom_level]}18`,
-                          color: BLOOM_COLORS[lo.bloom_level],
-                          borderColor: `${BLOOM_COLORS[lo.bloom_level]}40`,
-                        }}
-                      >
-                        {lo.bloom_level}
-                      </span>
-                      <span className={styles.loPercent}>
-                        {Math.round((lo.coverage_score || 0) * 100)}%
-                      </span>
-                    </div>
-                    <div className={styles.loBarTrack}>
-                      <div
-                        className={styles.loBarFill}
-                        style={{
-                          width: `${Math.round((lo.coverage_score || 0) * 100)}%`,
-                          background: BLOOM_COLORS[lo.bloom_level] || '#0f766e',
-                        }}
-                      />
-                    </div>
-                    {lo.lo_text && <p className={styles.loText}>{lo.lo_text}</p>}
+        {/* LO Coverage — inline below summary (sidebar removed) */}
+        {los.length > 0 && (
+          <div className={styles.sideCard} style={{ marginTop: '24px' }}>
+            <div className={styles.sideCardTitle}>🎯 Learning Outcome Coverage</div>
+            <div className={styles.loList}>
+              {los.map((lo) => (
+                <div key={lo.lo_code} className={styles.loItem}>
+                  <div className={styles.loHeader}>
+                    <span className={styles.loCode}>{lo.lo_code}</span>
+                    <span
+                      className={styles.bloomTag}
+                      style={{
+                        background: `${BLOOM_COLORS[lo.bloom_level]}18`,
+                        color: BLOOM_COLORS[lo.bloom_level],
+                        borderColor: `${BLOOM_COLORS[lo.bloom_level]}40`,
+                      }}
+                    >
+                      {lo.bloom_level}
+                    </span>
+                    <span className={styles.loPercent}>
+                      {Math.round((lo.coverage_score || 0) * 100)}%
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Actions */}
-          <div className={styles.sideCard}>
-            <div className={styles.sideCardTitle}>⚡ Quick Actions</div>
-            <div className={styles.quickActions}>
-              <button
-                className={styles.qaBtn}
-                onClick={() => router.push(`/study/generate?module=${summary.module_id}&type=flashcards`)}
-              >
-                🃏 Generate Flashcards
-              </button>
-              <button
-                className={styles.qaBtn}
-                onClick={() => router.push(`/study/generate?module=${summary.module_id}&type=quiz`)}
-              >
-                🧠 Generate Quiz
-              </button>
-              <button
-                className={styles.qaBtn}
-                onClick={() => router.push(`/study/generate?module=${summary.module_id}`)}
-              >
-                🔄 New Summary
-              </button>
+                  <div className={styles.loBarTrack}>
+                    <div
+                      className={styles.loBarFill}
+                      style={{
+                        width: `${Math.round((lo.coverage_score || 0) * 100)}%`,
+                        background: BLOOM_COLORS[lo.bloom_level] || '#0f766e',
+                      }}
+                    />
+                  </div>
+                  {lo.lo_text && <p className={styles.loText}>{lo.lo_text}</p>}
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Stats */}
-          <div className={styles.sideCard}>
-            <div className={styles.sideCardTitle}>📊 Stats</div>
-            <div className={styles.statsGrid}>
-              <div className={styles.statItem}>
-                <div className={styles.statVal}>{meta.chunks_used || 0}</div>
-                <div className={styles.statLbl}>Chunks used</div>
-              </div>
-              <div className={styles.statItem}>
-                <div className={styles.statVal}>{meta.output_tokens || 0}</div>
-                <div className={styles.statLbl}>Tokens</div>
-              </div>
-              <div className={styles.statItem}>
-                <div className={styles.statVal}>{meta.generation_time_ms ? `${(meta.generation_time_ms / 1000).toFixed(1)}s` : '—'}</div>
-                <div className={styles.statLbl}>Time</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

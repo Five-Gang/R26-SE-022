@@ -57,6 +57,22 @@
 }
 
 .topActions { display: flex; gap: 0.5rem; }
+.actions { display: flex; gap: 0.5rem; }
+.btnOutline {
+  background: white; border: 1px solid #e2e8f0;
+  border-radius: 8px; padding: 0.4rem 0.9rem;
+  font-size: 0.82rem; cursor: pointer; font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 0.15s;
+}
+.btnOutline:hover { border-color: var(--color-accent); color: var(--color-accent); background: #f0fdf4; }
+.btnPrimary {
+  background: var(--color-accent, #0f766e);
+  border: none; border-radius: 8px; padding: 0.4rem 1rem;
+  font-size: 0.82rem; cursor: pointer; font-weight: 600;
+  color: white; transition: background 0.15s;
+}
+.btnPrimary:hover { background: #0d6860; }
 .iconBtn {
   background: white; border: 1px solid #e2e8f0;
   border-radius: 8px; padding: 0.4rem 0.9rem;
@@ -71,10 +87,9 @@
 
 /* ── Main Layout ──────────────────────────────────────── */
 .layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 1.5rem;
-  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
   width: 100%;
@@ -301,10 +316,9 @@
 .statLbl { font-size: 0.68rem; color: var(--color-text-muted); margin-top: 0.15rem; }
 
 /* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .sideCol { order: -1; }
+@media (max-width: 700px) {
   .topBar { padding: 0.75rem 1rem; }
-  .topActions { display: none; }
+  .actions { display: none; }
   .markdownBody { padding: 1.25rem 1.25rem; }
+  .layout { padding: 1rem; }
 }
