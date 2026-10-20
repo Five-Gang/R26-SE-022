@@ -24,7 +24,23 @@ async def get_reminders(
         "student_id": student_id,
         "status": "SENT"
     }).to_list(None)
-    
+
+    item_keys = [reminder.get("item_key") for reminder in reminders if reminder.get("item_key")]
+    review_items = await db.review_items.find(
+        {"student_id": student_id, "item_key": {"$in": item_keys}}
+    ).to_list(None) if item_keys else []
+    items_by_key = {item.get("item_key"): item for item in review_items}
+
+    def linked_value(reminder, item, key, *fallback_keys):
+        value = reminder.get(key)
+        if value is not None:
+            return value
+        for fallback_key in fallback_keys:
+            value = item.get(fallback_key)
+            if value is not None:
+                return value
+        return None
+
     return ReminderQueueResponse(
         reminders=[
             ReminderResponse(
@@ -32,6 +48,19 @@ async def get_reminders(
                 item_key=r["item_key"],
                 item_title=r["item_title"],
                 content_type=r["content_type"],
+                module_id=(
+                    str(linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId"))
+                    if linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId")
+                    else None
+                ),
+                week_number=linked_value(r, items_by_key.get(r["item_key"], {}), "week_number", "weekNumber"),
+                topic=linked_value(r, items_by_key.get(r["item_key"], {}), "topic", "subject"),
+                difficulty_level=linked_value(
+                    r,
+                    items_by_key.get(r["item_key"], {}),
+                    "difficulty_level",
+                    "difficulty",
+                ),
                 readiness_tier=r["readiness_tier"],
                 readiness_score=r["readiness_score"],
                 retention_probability=r["retention_probability"],

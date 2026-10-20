@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './ReminderToast.module.css';
+import { getReminderStudyRoute } from './reminder-navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 const POLL_INTERVAL = 30000;
@@ -60,6 +61,14 @@ export default function ReminderToast() {
     await sendFeedback('DISMISSED');
   };
 
+  const reviewReminder = async () => {
+    const route = getReminderStudyRoute(reminder);
+    if (!route) return;
+    await sendFeedback('ACCEPTED');
+    closeToast();
+    router.push(route);
+  };
+
   const sendFeedback = async (status, grade) => {
     const token = window.localStorage.getItem('access_token');
     if (token && reminder) {
@@ -83,7 +92,9 @@ export default function ReminderToast() {
       <p className={styles.title}>{reminder.item_title || reminder.item_key} is ready for review</p>
       <p className={styles.detail}>A short review now helps protect your long-term recall.</p>
       <div className={styles.actions}>
-        <button className={styles.review} onClick={() => { closeToast(); router.push('/study/flashcards'); }}>Review now</button>
+        <button className={styles.review} onClick={reviewReminder} disabled={!getReminderStudyRoute(reminder)}>
+          Review now
+        </button>
         <button className={styles.snooze} onClick={() => sendFeedback('SNOOZED', 2)}>Snooze</button>
       </div>
     </aside>
