@@ -189,27 +189,29 @@ Do NOT write a textbook. Write notes a student would actually want to read."""
 {chunk_context}
 
 ### Instructions:
-Generate exactly {num_cards} flashcards that help students achieve the listed learning outcomes.
+⚠️ CRITICAL: You MUST generate EXACTLY {num_cards} flashcards. The JSON array MUST contain exactly {num_cards} objects — do NOT stop early.
 
 Rules:
 1. Each flashcard must map to at least one learning outcome.
-2. Mix question types:
+2. Distribute question types evenly across all {num_cards} cards:
    - Definition (What is X?)
    - Comparison (Difference between X and Y?)
    - Application (How would you apply X to scenario Y?)
    - Analysis (Why does X lead to Y?)
-3. Front side: Clear, specific question.
+3. Front side: Clear, specific question based ONLY on the source materials above.
 4. Back side: Concise, accurate answer with source reference.
-5. Order: Progress from simple recall to higher-order thinking.
+5. Use a different concept/topic for each card — do NOT repeat similar questions.
+6. Assign IDs from 1 to {num_cards} sequentially.
 
-### Output Format (JSON array):
-Return ONLY a valid JSON array with objects containing:
-- "id" (number)
+### Output Format:
+Return ONLY a valid JSON array starting with [ and ending with ].
+The array MUST have exactly {num_cards} elements. Each element:
+- "id" (number, 1 through {num_cards})
 - "front" (string: question)
 - "back" (string: answer)
 - "learning_outcome" (string: LO code e.g. "LO1")
 - "bloom_level" (string: e.g. "Remember")
-- "difficulty" (string: Union["easy", Union["medium"], "hard"])
+- "difficulty" (string: "easy", "medium", or "hard")
 - "source" (string: source reference)"""
 
         return [

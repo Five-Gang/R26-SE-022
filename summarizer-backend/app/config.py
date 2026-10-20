@@ -83,7 +83,7 @@ class Settings(BaseSettings):
 
     # Google Gemini
     google_api_key: str = ""
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.5-flash-lite"
 
     # ── Embedding Configuration ──────────────────────────────
     embedding_provider: Literal["openai", "local", "google"] = "openai"

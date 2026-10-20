@@ -213,7 +213,7 @@ class SummaryGenerationOrchestrator:
                 "source_ref": self._build_source_ref(c.metadata),
                 "matched_lo_id": c.matched_lo_id,
             }
-            for c in retrieval_result.chunks[:10]
+            for c in retrieval_result.chunks[:20]  # increased from 10 to give more context
         ]
 
         messages = self.prompt_builder.build_flashcard_prompt(
@@ -225,10 +225,12 @@ class SummaryGenerationOrchestrator:
             num_cards=effective_num,
         )
 
+        print(f"[FLASHCARD DEBUG] requesting {effective_num} cards, using {len(prompt_chunks)} chunks")
+
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.5,
-            max_tokens=8192,
+            max_tokens=16384,  # increased from 8192 to prevent truncation for large card counts
             json_mode=True,
         )
 

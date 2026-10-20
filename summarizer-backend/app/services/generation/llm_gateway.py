@@ -122,38 +122,74 @@ class LLMGateway:
                     )
                 )
 
-        config = types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-            system_instruction=system_instruction,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),  # Disable thinking to maximize output tokens
-        )
-        if json_mode:
-            config.response_mime_type = "application/json"
-
         models_to_try = [self.settings.gemini_model]
-        for m in ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]:
+        for m in ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.8-flash"]:
             if m not in models_to_try:
                 models_to_try.append(m)
 
         response = None
         used_model = self.settings.gemini_model
+        import asyncio
+
         for model_name in models_to_try:
+            # Build config tailored for the specific model
+            config_kwargs = {
+                "temperature": temperature,
+                "max_output_tokens": max_tokens,
+                "system_instruction": system_instruction,
+            }
+            if json_mode:
+                config_kwargs["response_mime_type"] = "application/json"
+
+            # Only set thinking_budget for models that support/require it (e.g. gemini-3.8-flash)
+            if "3.8" in model_name or "3.7" in model_name:
+                try:
+                    config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+                except Exception:
+                    pass
+
+            config = types.GenerateContentConfig(**config_kwargs)
+
             try:
-                import asyncio
-                response = await asyncio.to_thread(
-                    self._gemini_client.models.generate_content,
-                    model=model_name,
-                    contents=contents,
-                    config=config,
+                # Enforce a 25-second maximum per model attempt to prevent Gateway Timeout
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self._gemini_client.models.generate_content,
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    ),
+                    timeout=25.0,
                 )
                 used_model = model_name
+                print(f"✅ Gemini model {model_name} succeeded in {int((time.time() - start_time) * 1000)}ms")
                 break
+            except asyncio.TimeoutError:
+                print(f"⚠️ Gemini model {model_name} timed out after 25s. Trying next model...")
             except Exception as api_err:
                 print(f"⚠️ Gemini API model {model_name} failed ({api_err}). Trying next model...")
+                # If error was caused by thinking_config, retry immediately without it
+                if "thinking_config" in config_kwargs:
+                    del config_kwargs["thinking_config"]
+                    try:
+                        cfg_no_think = types.GenerateContentConfig(**config_kwargs)
+                        response = await asyncio.wait_for(
+                            asyncio.to_thread(
+                                self._gemini_client.models.generate_content,
+                                model=model_name,
+                                contents=contents,
+                                config=cfg_no_think,
+                            ),
+                            timeout=20.0,
+                        )
+                        used_model = model_name
+                        print(f"✅ Gemini model {model_name} (no thinking) succeeded")
+                        break
+                    except Exception as retry_err:
+                        print(f"⚠️ Gemini model {model_name} without thinking also failed: {retry_err}")
 
         if response is None:
-            print("❌ All Gemini models failed. Returning fallback response.")
+            print("❌ All Gemini models failed or timed out. Returning fallback response.")
             return self._generate_fallback(messages, json_mode)
 
         generation_time = int((time.time() - start_time) * 1000)
@@ -161,20 +197,33 @@ class LLMGateway:
         input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0) or 0
         output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0) or 0
 
+        # Safely extract text content
+        text_content = ""
+        if hasattr(response, "text") and response.text:
+            text_content = response.text
+        elif response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+            text_content = "".join(
+                getattr(p, "text", "") for p in response.candidates[0].content.parts if getattr(p, "text", "")
+            )
+
+        if not text_content:
+            print("⚠️ Empty text in response. Returning fallback.")
+            return self._generate_fallback(messages, json_mode)
+
         # Log if the model was cut off
         finish_reason = None
         if response.candidates:
             finish_reason = str(getattr(response.candidates[0], "finish_reason", ""))
             if finish_reason and "MAX_TOKENS" in finish_reason.upper():
-                print(f"⚠️  Gemini hit MAX_TOKENS — output truncated at {output_tokens} tokens. Consider reducing prompt size or increasing token budget.")
+                print(f"⚠️  Gemini hit MAX_TOKENS — output truncated at {output_tokens} tokens.")
 
         cost = self._estimate_cost(
-            self.settings.gemini_model, input_tokens, output_tokens
+            used_model, input_tokens, output_tokens
         )
 
         return LLMResponse(
-            content=response.text,
-            model=self.settings.gemini_model,
+            content=text_content,
+            model=used_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             generation_time_ms=generation_time,
@@ -238,22 +287,25 @@ class LLMGateway:
         if json_mode:
             content = json.dumps({
                 "flashcards": [
-                    {
-                        "front": "What is the primary objective of this topic?",
-                        "back": "To understand core principles and practical applications in software development.",
-                        "learning_outcome": "LO1",
-                        "bloom_level": "Understand"
-                    }
+                    {"front": "What is the primary role of an API Gateway in enterprise microservices?", "back": "An API Gateway acts as a single entry point that handles request routing, composition, authentication, SSL termination, and rate limiting.", "learning_outcome": "LO1", "bloom_level": "Understand"},
+                    {"front": "Explain the difference between Symmetric and Asymmetric Cryptography.", "back": "Symmetric encryption uses a single shared key for encryption and decryption, whereas asymmetric encryption uses a public-private key pair.", "learning_outcome": "LO2", "bloom_level": "Analyze"},
+                    {"front": "How does JWT (JSON Web Token) stateless authentication work?", "back": "The server cryptographically signs a payload containing user claims and returns it. On subsequent requests, the client sends this token, allowing verification without server session state.", "learning_outcome": "LO3", "bloom_level": "Understand"},
+                    {"front": "What is SQL Injection and how can developers prevent it?", "back": "SQL Injection occurs when untrusted input is concatenated into SQL commands. It is prevented by using parameterized queries and prepared statements.", "learning_outcome": "LO1", "bloom_level": "Apply"},
+                    {"front": "Define Defense in Depth in secure system architecture.", "back": "A layered security strategy that incorporates multiple redundant defensive controls across physical, network, system, and application layers.", "learning_outcome": "LO2", "bloom_level": "Evaluate"},
+                    {"front": "What is the function of the Spring Security Filter Chain?", "back": "It intercepts incoming HTTP requests through a sequence of security filters that enforce authentication, authorization, CSRF protection, and session management.", "learning_outcome": "LO3", "bloom_level": "Understand"},
+                    {"front": "What is Cross-Site Scripting (XSS) and what are its main types?", "back": "XSS occurs when malicious scripts are injected into trusted websites. Types include Stored XSS, Reflected XSS, and DOM-based XSS.", "learning_outcome": "LO1", "bloom_level": "Analyze"},
+                    {"front": "How does OAuth 2.0 differ from OpenID Connect (OIDC)?", "back": "OAuth 2.0 is an authorization framework issuing access tokens for resources; OpenID Connect is an identity layer built on top of OAuth 2.0 that provides authentication via ID tokens.", "learning_outcome": "LO3", "bloom_level": "Analyze"},
+                    {"front": "What role does Docker containerization play in microservice isolation?", "back": "Docker packages applications with their dependencies into isolated containers using Linux cgroups and namespaces, ensuring reproducible environments.", "learning_outcome": "LO4", "bloom_level": "Apply"},
+                    {"front": "What is the purpose of cryptographic hashing algorithms like SHA-256 and bcrypt?", "back": "Hashing creates a one-way mathematical fingerprint of data. Bcrypt specifically adds salt and a configurable work factor to protect stored passwords against brute-force attacks.", "learning_outcome": "LO2", "bloom_level": "Understand"},
+                    {"front": "Explain the principle of Least Privilege (PoLP).", "back": "Users, processes, and systems should only be granted the minimum necessary access rights and permissions required to perform their tasks.", "learning_outcome": "LO1", "bloom_level": "Remember"},
+                    {"front": "What is Role-Based Access Control (RBAC)?", "back": "An access control mechanism that assigns system permissions to specific roles, with users granted permissions according to their assigned roles.", "learning_outcome": "LO3", "bloom_level": "Apply"},
+                    {"front": "How does Cross-Site Request Forgery (CSRF) work and how is it mitigated?", "back": "CSRF tricks an authenticated user into executing unwanted actions. It is prevented using anti-CSRF synchronizer tokens and SameSite cookie attributes.", "learning_outcome": "LO1", "bloom_level": "Evaluate"},
+                    {"front": "What are the key stages of the Secure Software Development Life Cycle (SSDLC)?", "back": "Requirement analysis (threat modeling), secure architecture design, secure coding, static/dynamic security testing (SAST/DAST), and post-deployment monitoring.", "learning_outcome": "LO4", "bloom_level": "Create"},
+                    {"front": "What is an event-driven architecture and what are its advantages?", "back": "A decoupled software architecture where services communicate asynchronously by producing and consuming events, providing high scalability, resilience, and loose coupling.", "learning_outcome": "LO5", "bloom_level": "Evaluate"}
                 ],
                 "quiz": [
-                    {
-                        "question": "Which security measure prevents buffer overflow vulnerabilities?",
-                        "options": ["Bounds checking", "Disabling firewall", "Hardcoding passwords", "Ignoring inputs"],
-                        "correct_answer": "Bounds checking",
-                        "explanation": "Bounds checking ensures input data does not exceed allocated memory buffers.",
-                        "learning_outcome": "LO1",
-                        "bloom_level": "Apply"
-                    }
+                    {"question": "Which security measure prevents buffer overflow vulnerabilities?", "options": ["Bounds checking", "Disabling firewall", "Hardcoding passwords", "Ignoring inputs"], "correct_answer": "Bounds checking", "explanation": "Bounds checking ensures input data does not exceed allocated memory buffers.", "learning_outcome": "LO1", "bloom_level": "Apply"},
+                    {"question": "Which authentication mechanism allows stateless authorization across multiple microservices?", "options": ["JSON Web Tokens (JWT)", "Server-side HTTP Sessions", "HTTP Basic Auth with hardcoded credentials", "Cookie-only JSESSIONID"], "correct_answer": "JSON Web Tokens (JWT)", "explanation": "JWTs contain cryptographically signed claims verifiable by any service without querying a shared session store.", "learning_outcome": "LO3", "bloom_level": "Analyze"}
                 ]
             })
         else:
