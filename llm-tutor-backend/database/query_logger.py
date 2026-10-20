@@ -306,6 +306,12 @@ class QueryLogger:
             medium_total = conf_dist.get("MEDIUM", 0)
             low_total    = conf_dist.get("LOW", 0)
 
+            total_aligned = (
+                (alignment_check["high_aligned"] or 0) +
+                (alignment_check["medium_aligned"] or 0) +
+                (alignment_check["low_aligned"] or 0)
+            )
+
             def safe_pct(num, denom):
                 return round((num / denom) * 100, 1) if denom > 0 else None
 
@@ -370,6 +376,7 @@ class QueryLogger:
 
                 # Confidence-Response Alignment (proposal metric)
                 "confidence_response_alignment": {
+                    "overall_alignment_pct":         safe_pct(total_aligned, total),
                     "high_confidence_correct_pct":   safe_pct(alignment_check["high_aligned"],   high_total),
                     "medium_confidence_correct_pct": safe_pct(alignment_check["medium_aligned"], medium_total),
                     "low_confidence_correct_pct":    safe_pct(alignment_check["low_aligned"],    low_total),

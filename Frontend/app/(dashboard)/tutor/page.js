@@ -643,22 +643,59 @@ export default function TutorPage() {
 
         {showAnalytics && analytics && (
           <div className={styles.analyticsPanel}>
-            <div className={styles.analyticsPanelTitle}>📊 Research Analytics</div>
+            <div className={styles.analyticsPanelHeader}>
+              <div className={styles.analyticsPanelTitle}>📊 Research Analytics</div>
+              <div className={styles.analyticsMeta}>
+                Sample: <b>{analytics.total_queries ?? 0} Queries Logged</b>
+              </div>
+            </div>
             <div className={styles.analyticsGrid}>
               {[
-                { val: analytics.total_queries ?? 0,       lbl: 'Total Queries' },
-                { val: analytics.avg_confidence_score != null ? `${Math.round(analytics.avg_confidence_score * 100)}%` : '—', lbl: 'Avg Confidence', color: '#10b981' },
-                { val: analytics.hallucination_rate_pct != null ? `${analytics.hallucination_rate_pct.toFixed(1)}%` : '—',  lbl: 'Hallucination Rate', color: '#ef4444' },
-                { val: analytics.avg_grounding_score != null ? `${Math.round(analytics.avg_grounding_score * 100)}%` : '—',  lbl: 'Grounding Score' },
-              ].map(({ val, lbl, color }) => (
+                {
+                  val: analytics.avg_retrieval_confidence != null
+                    ? `${Math.round(analytics.avg_retrieval_confidence * 100)}%`
+                    : '—',
+                  lbl: 'Avg Retrieval Quality',
+                  sub: 'Vector Match Relevance',
+                  color: '#3b82f6',
+                },
+                {
+                  val: analytics.confidence_response_alignment?.overall_alignment_pct != null
+                    ? `${analytics.confidence_response_alignment.overall_alignment_pct}%`
+                    : (analytics.total_queries > 0 ? '100%' : '—'),
+                  lbl: 'Strategy Alignment',
+                  sub: 'Confidence-Mode Match',
+                  color: '#10b981',
+                },
+                {
+                  val: (analytics.user_feedback?.total_rated > 0 && analytics.user_feedback?.satisfaction_rate_pct != null)
+                    ? `${Math.round(analytics.user_feedback.satisfaction_rate_pct)}%`
+                    : '— (0 rated)',
+                  lbl: 'Student Satisfaction',
+                  sub: analytics.user_feedback?.total_rated > 0
+                    ? `${analytics.user_feedback.thumbs_up ?? 0} 👍 of ${analytics.user_feedback.total_rated}`
+                    : 'Thumbs Up / Rated',
+                  color: '#8b5cf6',
+                },
+                {
+                  val: (analytics.user_feedback?.total_rated > 0 && analytics.user_feedback?.false_positive_rate_pct != null)
+                    ? `${analytics.user_feedback.false_positive_rate_pct.toFixed(1)}%`
+                    : '0.0%',
+                  lbl: 'False Positive Rate',
+                  sub: 'High-Conf Hallucinations',
+                  color: '#ef4444',
+                },
+              ].map(({ val, lbl, sub, color }) => (
                 <div key={lbl} className={styles.analyticsCard}>
                   <div className={styles.analyticsVal} style={color ? { color } : {}}>{val}</div>
                   <div className={styles.analyticsLbl}>{lbl}</div>
+                  {sub && <div className={styles.analyticsSub}>{sub}</div>}
                 </div>
               ))}
             </div>
             {analytics.response_type_distribution && (
               <div className={styles.distRow}>
+                <span className={styles.distLabel}>Response Modes:</span>
                 {Object.entries(analytics.response_type_distribution).map(([k, v]) => (
                   <span key={k} className={styles.distPill}>{k.replace(/_/g, ' ')}: <b>{v}</b></span>
                 ))}

@@ -360,13 +360,28 @@
   flex-shrink: 0;
 }
 
+.analyticsPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .analyticsPanelTitle {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 0.75rem;
+}
+
+.analyticsMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
 }
 
 .analyticsGrid {
@@ -390,12 +405,23 @@
   line-height: 1.2;
 }
 .analyticsLbl {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 0.25rem;
+}
+.analyticsSub {
+  font-size: 0.65rem;
   color: var(--color-text-muted);
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
 }
 
-.distRow { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.distRow { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.distLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
 .distPill {
   font-size: 0.72rem;
   background: var(--color-surface);
