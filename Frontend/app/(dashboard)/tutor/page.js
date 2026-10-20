@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { modulesApi } from '../../../lib/summarizer-api';
+import { useSession } from '../../../components/auth/SessionGuard';
 import styles from './tutor.module.css';
 
 const TUTOR_API      = process.env.NEXT_PUBLIC_TUTOR_API_URL      || 'http://localhost:8002';
@@ -299,6 +300,9 @@ export default function TutorPage() {
   const [pdfStats, setPdfStats]                     = useState({}); // { [moduleCode]: { pdfs: number, chunks: number, files: string[] } }
   const [conversationHistory, setConversationHistory] = useState([]);
 
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
+
   const chatEndRef = useRef(null);
 
   /** Fetch per-file chunk stats from the tutor backend and group by module_code */
@@ -326,22 +330,19 @@ export default function TutorPage() {
       .then(r => setBackendOnline(r.ok))
       .catch(() => setBackendOnline(false));
 
-    fetch(`${SUMMARIZER_API}/api/v1/modules`)
+    const q = studentId ? `?student_id=${encodeURIComponent(studentId)}` : '';
+    fetch(`${SUMMARIZER_API}/api/v1/modules${q}`)
       .then(r => r.ok ? r.json() : [])
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setModules(data);
-        } else {
-          modulesApi.list().then(m => setModules(m || [])).catch(() => {});
-        }
+        setModules(Array.isArray(data) ? data : []);
       })
       .catch(() => {
-        modulesApi.list().then(m => setModules(m || [])).catch(() => {});
+        setModules([]);
       });
 
     // Load initial chunk stats
     fetchPdfStats();
-  }, []);
+  }, [studentId]);
 
   const loadModuleMaterials = async (mod) => {
     setLoadingMaterials(true);

@@ -1,24 +1,9 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import styles from './rewards.module.css';
 
 export default function RewardsPage() {
-  const pathname = usePathname();
-
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
-  ];
-
   const badges = [
     { id: 1, icon: '🔥', title: '3-Day Streak', desc: 'Studied for 3 consecutive days.', unlocked: true },
     { id: 2, icon: '🎯', title: 'Focus Master', desc: 'Maintained 80%+ focus for an hour.', unlocked: true },
@@ -40,23 +25,6 @@ export default function RewardsPage() {
 
   return (
     <div className={styles.container}>
-      
-      <aside className={styles.sidebar}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link 
-              key={item.name} 
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </aside>
-
       <main className={styles.main}>
         
         <h1 className={styles.pageTitle}>Rewards & Achievements</h1>

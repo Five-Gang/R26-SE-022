@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
@@ -10,7 +9,6 @@ import { useFocus } from '../../../context/FocusContext';
 import styles from './focus.module.css';
 
 export default function FocusMonitorPage() {
-  const pathname = usePathname();
   const { 
     isMonitoring, 
     sessionSeconds, 
@@ -21,17 +19,6 @@ export default function FocusMonitorPage() {
     setShowConsentModal,
     videoRef
   } = useFocus();
-
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'Focus Monitor', path: '/focus-monitor', icon: '🎯' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
-  ];
 
   const handleConfirmStart = async () => {
     setShowConsentModal(false);
@@ -65,23 +52,6 @@ export default function FocusMonitorPage() {
 
   return (
     <div className={styles.container}>
-      {/* Sidebar Navigation */}
-      <aside className={styles.sidebar}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link 
-              key={item.name} 
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </aside>
-
       {/* Main Workspace */}
       <main className={styles.main}>
         

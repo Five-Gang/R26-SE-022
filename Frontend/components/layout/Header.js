@@ -28,7 +28,6 @@ export default function Header() {
     { name: 'Focus',     path: '/focus-monitor', icon: '🎯', gated: true },
     { name: 'AI Tutor',  path: '/tutor',     icon: '🤖', gated: true },
     { name: 'Analytics', path: '/analytics', icon: '📈', gated: true },
-    { name: 'Rewards',   path: '/rewards',   icon: '🏆', gated: true },
   ];
 
   // Close dropdown when clicking outside

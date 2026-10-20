@@ -8,6 +8,7 @@ import OnboardingProvider from '../../context/OnboardingContext';
 import OnboardingWizard from '../../components/onboarding/OnboardingWizard';
 import FloatingFocusWidget from '../../components/layout/FloatingFocusWidget';
 import EmotionInterventionToast from '../../components/reminders/EmotionInterventionToast';
+import ReminderToast from '../../components/reminders/ReminderToast';
 
 export default function DashboardLayout({ children }) {
   return (
@@ -25,6 +26,8 @@ export default function DashboardLayout({ children }) {
             <FloatingFocusWidget />
             {/* Emotion-aware adaptive intervention notifications */}
             <EmotionInterventionToast />
+            {/* SM-2 spaced-repetition reminder toasts */}
+            <ReminderToast />
           </div>
         </OnboardingProvider>
       </FocusProvider>

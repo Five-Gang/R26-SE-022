@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Legend, PieChart, Pie, Cell 
@@ -20,20 +19,7 @@ const DEMO_SESSIONS = [
 ];
 
 export default function AnalyticsPage() {
-  const pathname = usePathname();
   const { student } = useSession();
-
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-    { name: 'Study', path: '/study', icon: '📚' },
-    { name: 'Focus Monitor', path: '/focus-monitor', icon: '🎯' },
-    { name: 'AI Tutor', path: '/tutor', icon: '🤖' },
-    { name: 'Materials', path: '/materials', icon: '📁' },
-    { name: 'Reminders', path: '/study/queue', icon: '⏰' },
-    { name: 'Analytics', path: '/analytics', icon: '📈' },
-    { name: 'Rewards', path: '/rewards', icon: '🏆' },
-    { name: 'Settings', path: '/settings', icon: '⚙️' },
-  ];
 
   // Dynamic user session state
   const [rawSessions, setRawSessions] = useState([]);
@@ -396,23 +382,6 @@ export default function AnalyticsPage() {
   return (
     <div className={styles.container}>
       
-      {/* Sidebar Navigation */}
-      <aside className={styles.sidebar}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link 
-              key={item.name} 
-              href={item.path}
-              className={`${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </aside>
-
       {/* Main Analytics Content */}
       <main className={styles.main}>
         
