@@ -57,7 +57,7 @@ export default function ArchitecturePage() {
         <div className={styles.moduleCard}>
           <div className={`${styles.iconWrapper} ${styles.iconTeal}`}>⏰</div>
           <h2 className={`${styles.moduleTitle} ${styles.textTeal}`}>Adaptive Reminders</h2>
-          <div className={styles.studentId}>IT22XXXXXX - ARS Module</div>
+          <div className={styles.studentId}>IT22371690 - Adaptive Reminders</div>
           <ul className={`${styles.featureList} ${styles.bulletTeal}`}>
             <li className={styles.featureItem}>SM-2 spaced rep</li>
             <li className={styles.featureItem}>Emotion feed input</li>

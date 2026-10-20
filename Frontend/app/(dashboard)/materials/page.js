@@ -25,7 +25,7 @@ export default function MaterialsPage() {
   const [uploadError, setUploadError] = useState(null);
   const fileRef = useRef();
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+  const API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
 
   useEffect(() => {
     const token = window.localStorage.getItem('access_token');
