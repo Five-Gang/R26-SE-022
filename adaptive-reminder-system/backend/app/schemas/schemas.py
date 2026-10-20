@@ -42,6 +42,10 @@ class ReminderResponse(BaseModel):
     item_key: str
     item_title: str
     content_type: str
+    module_id: Optional[str] = None
+    week_number: Optional[int] = None
+    topic: Optional[str] = None
+    difficulty_level: Optional[str] = None
     readiness_tier: str
     readiness_score: float
     retention_probability: float
