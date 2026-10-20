@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from retrieval.retriever import get_retriever
 
 class Embedder:
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", chunk_size: int = 120, chunk_overlap: int = 25):
         self.model = SentenceTransformer(model_name)
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -24,9 +24,11 @@ class Embedder:
     def create_chunks(self, text: str) -> List[str]:
         words = text.split()
         chunks = []
-        for i in range(0, len(words), self.chunk_size - self.chunk_overlap):
+        step = max(1, self.chunk_size - self.chunk_overlap)
+        for i in range(0, len(words), step):
             chunk = " ".join(words[i:i + self.chunk_size])
-            chunks.append(chunk)
+            if len(chunk.strip()) > 20:
+                chunks.append(chunk)
         return chunks
 
     def embed_and_store(self, file_path: str) -> Dict:
@@ -44,7 +46,11 @@ class Embedder:
             embeddings = self.model.encode(chunks, convert_to_numpy=True)
             
             retriever = get_retriever()
-            collection_data = retriever.collection
+            # Deduplicate: remove any previous chunks for this exact file
+            collection_data = [
+                d for d in retriever.collection
+                if d.get("metadata", {}).get("filename") != filename
+            ]
             
             for i, (chunk, emb) in enumerate(zip(chunks, embeddings)):
                 collection_data.append({

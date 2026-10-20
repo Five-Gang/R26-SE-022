@@ -120,6 +120,24 @@
   letter-spacing: 0;
 }
 
+.uploadTutorBtn {
+  display: block;
+  margin: 0.4rem 1.25rem 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.uploadTutorBtn:hover {
+  background: rgba(99, 102, 241, 0.16);
+}
+
 /* Module List */
 .moduleList {
   display: flex;

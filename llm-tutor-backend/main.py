@@ -264,7 +264,7 @@ async def chat(request: ChatRequest):
             has_real_results = True
             print(f" Module context injected from summarizer ({len(request.module_context)} chars)")
 
-        # 2b. Add real vector store hits (skip any that are already in sources)
+        # 2b. Add real vector store hits (append all chunks to context for complete knowledge)
         recorded_filenames = {s["filename"] for s in sources}
         for r in real_retrieval_results:
             if "content" in r and "error" not in r:
@@ -274,10 +274,11 @@ async def chat(request: ChatRequest):
                     or r.get("source")
                     or "Course Document"
                 )
+                # Append all matching chunks to context so the LLM has complete context
+                context_parts.append(
+                    f"[Source: {source_name}]\n{r['content']}"
+                )
                 if source_name not in recorded_filenames:
-                    context_parts.append(
-                        f"[Source: {source_name}]\n{r['content']}"
-                    )
                     sources.append({
                         "filename": source_name,
                         "content": r["content"][:300],
@@ -301,8 +302,8 @@ async def chat(request: ChatRequest):
             conversation_history=conv_history
         )
 
-        # If API key is missing, return configuration notice directly
-        if llm_response.startswith("⚠️ **Gemini API Key Required:"):
+        # If API key is missing or API call returned an error, return notice directly
+        if llm_response.startswith("⚠️ **"):
             return {
                 "response": llm_response,
                 "confidence": {
@@ -312,7 +313,7 @@ async def chat(request: ChatRequest):
                     "grounding_score": 0.0
                 },
                 "response_type": "clarification_request",
-                "response_label": "API Key Required",
+                "response_label": "System Notice",
                 "sources": sources,
                 "conversation_history": conv_history,
                 "log_id": None

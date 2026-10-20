@@ -6,6 +6,7 @@ Handles direct cloud communication with Google Gemini for grounded response gene
 import os
 import requests
 import json
+import time
 from typing import List, Dict, Optional, Any
 from config.settings import settings
 
@@ -156,34 +157,61 @@ Please provide an accurate response grounded ONLY in the above course materials.
             }
         }
 
-        try:
-            resp = requests.post(
-                endpoint,
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=60
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                candidates = data.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        return parts[0].get("text", "").strip()
-                return "Based on the provided course materials, I could not generate a response."
-            else:
-                err_msg = resp.text
-                try:
-                    err_json = resp.json()
-                    err_msg = err_json.get("error", {}).get("message", err_msg)
-                except Exception:
-                    pass
-                return f"⚠️ **Google Gemini API Error ({resp.status_code}):** {err_msg}"
+        # Resilient multi-model retry strategy (primary -> fallback if 503/429 occurs)
+        models_to_try = [clean_model]
+        for fallback in ["gemini-2.5-flash", "gemini-2.0-flash"]:
+            if fallback not in models_to_try:
+                models_to_try.append(fallback)
 
-        except requests.Timeout:
-            return "⚠️ **Gemini API Timeout:** The request timed out. Please try asking again."
-        except Exception as e:
-            return f"⚠️ **Gemini API Error:** {str(e)}"
+        last_error = ""
+        for model_candidate in models_to_try:
+            endpoint = f"{self.gemini_api_url}/models/{model_candidate}:generateContent?key={self.api_key}"
+            for attempt in range(2):
+                try:
+                    resp = requests.post(
+                        endpoint,
+                        json=payload,
+                        headers={"Content-Type": "application/json"},
+                        timeout=45
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            if parts:
+                                return parts[0].get("text", "").strip()
+                        return "Based on the provided course materials, I could not generate a response."
+                    
+                    # 503 = high demand / spikes; 429 = rate limit -> retry or fall back
+                    elif resp.status_code in (503, 429):
+                        err_msg = resp.text
+                        try:
+                            err_json = resp.json()
+                            err_msg = err_json.get("error", {}).get("message", err_msg)
+                        except Exception:
+                            pass
+                        last_error = f"Google Gemini API Error ({resp.status_code}): {err_msg}"
+                        print(f"[LLM Engine] Model {model_candidate} returned {resp.status_code} on attempt {attempt+1}. Retrying / falling back...")
+                        time.sleep(1.5)
+                        continue
+                    else:
+                        err_msg = resp.text
+                        try:
+                            err_json = resp.json()
+                            err_msg = err_json.get("error", {}).get("message", err_msg)
+                        except Exception:
+                            pass
+                        last_error = f"Google Gemini API Error ({resp.status_code}): {err_msg}"
+                        break
+                except requests.Timeout:
+                    last_error = "Gemini API Timeout: The request timed out."
+                    time.sleep(1.0)
+                except Exception as e:
+                    last_error = f"Gemini API Error: {str(e)}"
+                    time.sleep(1.0)
+
+        return f"⚠️ **{last_error}**"
 
     def generate_multiple(
         self,

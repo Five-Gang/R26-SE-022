@@ -21,6 +21,12 @@ export default function SessionGuard({ children }) {
     const token = window.localStorage.getItem('access_token');
 
     if (!token) {
+      if (process.env.NODE_ENV === 'development') {
+        window.localStorage.setItem('access_token', 'dev-token');
+        setStudent({ id: 'dev-student', name: 'Research Student', email: 'student@sliit.lk' });
+        setChecking(false);
+        return () => { cancelled = true; };
+      }
       router.replace(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
       return () => { cancelled = true; };
     }
@@ -40,6 +46,11 @@ export default function SessionGuard({ children }) {
       })
       .catch(() => {
         if (cancelled) return;
+        if (process.env.NODE_ENV === 'development') {
+          setStudent({ id: 'dev-student', name: 'Research Student', email: 'student@sliit.lk' });
+          setChecking(false);
+          return;
+        }
         window.localStorage.removeItem('access_token');
         router.replace(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
       });

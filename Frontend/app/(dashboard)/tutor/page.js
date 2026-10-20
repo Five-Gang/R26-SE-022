@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { modulesApi } from '../../../lib/summarizer-api';
 import styles from './tutor.module.css';
 
 const TUTOR_API      = process.env.NEXT_PUBLIC_TUTOR_API_URL      || 'http://localhost:8002';
@@ -293,6 +294,7 @@ export default function TutorPage() {
   const [backendOnline, setBackendOnline]           = useState(null);
   const [analytics, setAnalytics]                   = useState(null);
   const [showAnalytics, setShowAnalytics]           = useState(false);
+  const [uploadingSlide, setUploadingSlide]         = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
 
   const chatEndRef = useRef(null);
@@ -306,22 +308,50 @@ export default function TutorPage() {
 
     fetch(`${SUMMARIZER_API}/api/v1/modules`)
       .then(r => r.ok ? r.json() : [])
-      .then(data => setModules(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setModules(data);
+        } else {
+          modulesApi.list().then(m => setModules(m || [])).catch(() => {});
+        }
+      })
+      .catch(() => {
+        modulesApi.list().then(m => setModules(m || [])).catch(() => {});
+      });
   }, []);
 
   const loadModuleMaterials = async (mod) => {
     setLoadingMaterials(true);
     setModuleDetails(null);
     setModuleSummaries([]);
-    const [details, summaries] = await Promise.all([
+    let [details, summaries] = await Promise.all([
       fetchModuleDetails(mod.id),
       fetchModuleSummaries(mod.id, 5),
     ]);
+
+    if (!details) {
+      try {
+        details = await modulesApi.get(mod.id);
+      } catch { /* ignore */ }
+    }
+
+    if (!summaries || summaries.length === 0) {
+      if (details) {
+        summaries = [
+          {
+            id: 'summary-' + (mod.code || 'mod'),
+            content_format: 'markdown',
+            week_number: 1,
+            content: `Core module curriculum for ${mod.name} (${mod.code}): ${details.description || ''}. Weekly Topics: ${details.weeks?.map(w => 'Week ' + w.week_number + ': ' + w.topic).join('; ') || 'Lectures'}. Learning Outcomes: ${details.learning_outcomes?.map(l => '[' + l.lo_code + '] ' + l.text).join('; ') || 'N/A'}`
+          }
+        ];
+      }
+    }
+
     setModuleDetails(details);
-    setModuleSummaries(summaries);
+    setModuleSummaries(summaries || []);
     setLoadingMaterials(false);
-    return { details, summaries };
+    return { details, summaries: summaries || [] };
   };
 
   const sendMessage = async () => {
@@ -491,6 +521,44 @@ export default function TutorPage() {
             </div>
           </div>
         )}
+
+        <div className={styles.sideSection}>
+          <div className={styles.sideSectionTitle}>📤 Upload to Tutor</div>
+          <label className={styles.uploadTutorBtn}>
+            <span>{uploadingSlide ? '⏳ Ingesting PDF…' : '📄 + Upload PDF Material'}</span>
+            <input
+              type="file"
+              accept=".pdf"
+              hidden
+              disabled={uploadingSlide}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploadingSlide(true);
+                try {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  const res = await fetch(`${TUTOR_API}/api/upload`, {
+                    method: 'POST',
+                    body: formData,
+                  });
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json.detail || 'Upload failed');
+                  setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor! You can now ask questions about this document.`,
+                    confidence_level: 'HIGH'
+                  }]);
+                } catch (err) {
+                  alert('Upload error: ' + err.message);
+                } finally {
+                  setUploadingSlide(false);
+                  e.target.value = '';
+                }
+              }}
+            />
+          </label>
+        </div>
 
         <button className={styles.analyticsBtn} onClick={loadAnalytics}>
           📊 {showAnalytics ? 'Hide' : 'View'} Analytics
