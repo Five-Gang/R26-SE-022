@@ -26,16 +26,26 @@ export default function GeneratePage() {
   const docId    = searchParams.get('doc');
   const moduleId = searchParams.get('module');
   const typeParam = searchParams.get('type'); // pre-select from module page cards
+  const weekParam = searchParams.get('week');
+  const queryParam = searchParams.get('query');
+  const levelParam = searchParams.get('level');
+  const cardsParam = searchParams.get('cards');
 
   const [mod, setMod] = useState(null);
   const [weeks, setWeeks] = useState([]);
   const [outputType, setOutputType] = useState(
     ['summary','flashcards','quiz'].includes(typeParam) ? typeParam : 'summary'
   );
-  const [weekNumber, setWeekNumber] = useState('');
-  const [summaryLevel, setSummaryLevel] = useState('standard');
-  const [query, setQuery] = useState('');
-  const [numFlashcards, setNumFlashcards] = useState(15);
+  const [weekNumber, setWeekNumber] = useState(weekParam || '');
+  const [summaryLevel, setSummaryLevel] = useState(
+    ['beginner', 'standard', 'advanced', 'exam_focused', 'lo_focused'].includes(levelParam)
+      ? levelParam
+      : 'standard'
+  );
+  const [query, setQuery] = useState(queryParam || '');
+  const [numFlashcards, setNumFlashcards] = useState(
+    Math.min(50, Math.max(5, Number(cardsParam) || 15))
+  );
   const [numQuestions, setNumQuestions] = useState(10);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);

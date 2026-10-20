@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './queue.module.css';
+import { getReminderStudyRoute } from '../../../../components/reminders/reminder-navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
@@ -143,6 +144,16 @@ export default function StudyQueuePage() {
     } catch (error) {
       setMessage('The reminder could not be updated. Please try again.');
     }
+  };
+
+  const reviewReminder = async (row) => {
+    const route = getReminderStudyRoute(row);
+    if (!route) {
+      setMessage('This reminder has no linked study module yet.');
+      return;
+    }
+    await sendFeedback(row.reminder_id, 'ACCEPTED');
+    router.push(route);
   };
 
   const savePreferences = async (nextPreferences) => {
@@ -371,7 +382,12 @@ export default function StudyQueuePage() {
                 <td className={styles.td}>
                   {row.status === 'review' ? (
                     <div className={styles.actionGroup}>
-                      <button className={`${styles.btnAction} ${styles.btnReview}`} onClick={() => router.push('/study/flashcards')}>Review</button>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnReview}`}
+                        onClick={() => reviewReminder(row)}
+                      >
+                        Review
+                      </button>
                       <button className={`${styles.btnAction} ${styles.btnSnooze}`} onClick={() => sendFeedback(row.reminder_id, 'SNOOZED', 2)}>Snooze</button>
                     </div>
                   ) : (
