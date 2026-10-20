@@ -65,6 +65,7 @@ export default function QuizPage() {
   const [timeLeft, setTimeLeft] = useState(300); // 5 mins
   const [loading, setLoading] = useState(Boolean(summaryId));
   const [loadError, setLoadError] = useState(null);
+  const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
     if (!summaryId) return;
@@ -146,7 +147,12 @@ export default function QuizPage() {
           }
         });
         const scorePct = Math.round((correctCount / questions.length) * 100);
-        router.push(`/study/complete?score=${scorePct}&total=${questions.length}&correct=${correctCount}`);
+        const durationMinutes = Math.max(1, Math.round((Date.now() - startTime) / 60000));
+        router.push(
+          `/study/complete?score=${scorePct}&total=${questions.length}&correct=${correctCount}&time=${durationMinutes}${
+            summaryId ? `&summary=${summaryId}` : ''
+          }`
+        );
       }
     }
   };
