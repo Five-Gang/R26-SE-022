@@ -64,7 +64,7 @@ class ContentPersonalizationService:
                 "message": "Our adaptive learning model detected signs of frustration and mental fatigue. To prevent cognitive overload and protect memory consolidation, we recommend taking a 3-minute breather or switching from high-difficulty tests to a Guided Review.",
                 "reason": "Frustration signals cognitive overload; active recall is temporarily paused to protect retention.",
                 "action_label": "Take 3-min Break",
-                "suggested_route": "/study/flashcards",
+                "suggested_route": "/study",
                 "severity": "high",
             }
         elif em == "Bored":
@@ -72,10 +72,10 @@ class ContentPersonalizationService:
                 "intervention_required": True,
                 "activity": "Micro-Break or Interactive Quiz",
                 "title": "Attention & Alertness Dip",
-                "message": "Our focus model observed decreased engagement and alertness. Our adaptive scheduler recommends stepping away for a 2-minute stretch or switching to an interactive micro-quiz to re-energize your focus.",
-                "reason": "Boredom indicates low arousal and attentional drift; an interactive modality switch or brief pause restores optimal alertness.",
-                "action_label": "Try 2-min Micro-Quiz",
-                "suggested_route": "/study/quiz",
+                "message": "Our focus model observed decreased engagement and alertness. Our adaptive scheduler recommends stepping away for a 2-minute stretch or returning to the study workspace when you are ready.",
+                "reason": "Boredom indicates low arousal and attentional drift; a brief pause or study-mode change can help restore focus.",
+                "action_label": "Open Study",
+                "suggested_route": "/study",
                 "severity": "medium",
             }
         elif em == "Confused":
@@ -108,6 +108,6 @@ class ContentPersonalizationService:
                 "message": "You are currently in an optimal cognitive state. Keep up the great work!",
                 "reason": "High attention and readiness detected; ideal for active spaced repetition.",
                 "action_label": "Continue Study",
-                "suggested_route": "/study/flashcards",
+                "suggested_route": "/study",
                 "severity": "low",
             }

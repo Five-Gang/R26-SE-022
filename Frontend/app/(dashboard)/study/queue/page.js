@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './queue.module.css';
 import { getReminderStudyRoute } from '../../../../components/reminders/reminder-navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
 
 function vapidKeyToBuffer(key) {
   const padding = '='.repeat((4 - (key.length % 4)) % 4);

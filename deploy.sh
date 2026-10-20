@@ -368,9 +368,10 @@ ENVEOF
 # ── Frontend/.env.local ──────────────────────────────────────────────────
 cat > "$APP_DIR/Frontend/.env.local" <<ENVEOF
 NEXT_PUBLIC_SUMMARIZER_API_URL=http://${VM_IP}:8000
-NEXT_PUBLIC_API_URL=http://${VM_IP}:8001
+NEXT_PUBLIC_API_URL=/api/ars
 NEXT_PUBLIC_TUTOR_API_URL=http://${VM_IP}:8002
 NEXT_PUBLIC_EMOTION_API_URL=http://${VM_IP}:8004
+ARS_BACKEND_URL=http://127.0.0.1:8001
 ENVEOF
 
 success "All .env files written"

@@ -50,7 +50,13 @@ class ReplayProvider(EmotionProvider):
 
     async def read(self, student_id: str) -> LearningSignal:
         if not self.data:
-            return await MockProvider().read(student_id)
+            return signal_from_payload(
+                {},
+                source="replay-unavailable",
+                default_activity=ActivityType.UNKNOWN,
+                default_session_active=False,
+                default_content_in_focus=False,
+            )
         result = self.data[self.idx % len(self.data)]
         self.idx += 1
         return signal_from_payload(
@@ -106,6 +112,13 @@ def create_emotion_provider() -> EmotionProvider:
         provider: EmotionProvider = ReplayProvider()
     elif settings.EMOTION_PROVIDER == "http":
         provider = HttpProvider()
-    else:
+    elif settings.EMOTION_PROVIDER == "mock":
+        if settings.ENV == "production":
+            raise RuntimeError("EMOTION_PROVIDER=mock is not allowed in production")
         provider = MockProvider()
+    else:
+        raise ValueError(
+            f"Unsupported EMOTION_PROVIDER: {settings.EMOTION_PROVIDER}. "
+            "Expected mock, replay, or http."
+        )
     return ControlledEmotionProvider(provider)
