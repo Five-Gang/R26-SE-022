@@ -26,33 +26,52 @@ export default function SummaryPage() {
   const [displayedContent, setDisplayedContent] = useState('');
 
   useEffect(() => {
-    const id = searchParams.get('summary') || searchParams.get('id');
-    if (!id) {
-      setLoading(false);
-      return;
+    let id = searchParams.get('summary') || searchParams.get('id');
+    if (!id && typeof window !== 'undefined') {
+      id = sessionStorage.getItem('last_summary_id');
     }
-    setSummaryId(id);
 
     const fetchSummary = async () => {
       try {
-        const data = await summariesApi.get(id);
-        setSummary(data);
-        // Simulate streaming render of summary text
-        const text = data.summary_text || data.content || '';
-        if (text) {
-          setStreaming(true);
-          let i = 0;
-          const step = () => {
-            i += 12;
-            setDisplayedContent(text.slice(0, i));
-            if (i < text.length) {
-              requestAnimationFrame(step);
-            } else {
-              setDisplayedContent(text);
-              setStreaming(false);
-            }
-          };
-          requestAnimationFrame(step);
+        let data = null;
+        if (id) {
+          data = await summariesApi.get(id);
+        } else {
+          // Resilient fallback: fetch the most recent summary if no ID is in URL
+          const recentList = await summariesApi.list(null, 'summary', 1);
+          if (Array.isArray(recentList) && recentList.length > 0) {
+            id = recentList[0].id;
+            data = await summariesApi.get(id);
+          }
+        }
+
+        if (data) {
+          const resolvedId = id || data.id;
+          setSummary(data);
+          setSummaryId(resolvedId);
+          if (typeof window !== 'undefined' && resolvedId) {
+            sessionStorage.setItem('last_summary_id', resolvedId);
+          }
+
+          // Render summary text
+          const text = data.summary_text || data.content || '';
+          if (text) {
+            setStreaming(true);
+            let i = 0;
+            const step = () => {
+              i += 12;
+              setDisplayedContent(text.slice(0, i));
+              if (i < text.length) {
+                requestAnimationFrame(step);
+              } else {
+                setDisplayedContent(text);
+                setStreaming(false);
+              }
+            };
+            requestAnimationFrame(step);
+          }
+        } else {
+          setSummary(null);
         }
       } catch {
         setSummary(null);
