@@ -228,7 +228,7 @@ class SummaryGenerationOrchestrator:
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.5,
-            max_tokens=3000,
+            max_tokens=8192,
             json_mode=True,
         )
 
@@ -315,7 +315,7 @@ class SummaryGenerationOrchestrator:
         llm_response = await self.llm.generate(
             messages=messages,
             temperature=0.7,
-            max_tokens=3000,
+            max_tokens=8192,
             json_mode=True,
         )
 

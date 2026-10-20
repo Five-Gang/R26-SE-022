@@ -131,21 +131,29 @@ class LLMGateway:
         if json_mode:
             config.response_mime_type = "application/json"
 
-        try:
-            import asyncio
-            response = await asyncio.to_thread(
-                self._gemini_client.models.generate_content,
-                model=self.settings.gemini_model,
-                contents=contents,
-                config=config,
-            )
-        except Exception as api_err:
-            import traceback
-            print(f"❌ Gemini API call FAILED — model={self.settings.gemini_model}")
-            print(f"   Error type : {type(api_err).__name__}")
-            print(f"   Error msg  : {api_err}")
-            traceback.print_exc()
-            print("⚠️  Returning fallback response (NOT real LLM output).")
+        models_to_try = [self.settings.gemini_model]
+        for m in ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]:
+            if m not in models_to_try:
+                models_to_try.append(m)
+
+        response = None
+        used_model = self.settings.gemini_model
+        for model_name in models_to_try:
+            try:
+                import asyncio
+                response = await asyncio.to_thread(
+                    self._gemini_client.models.generate_content,
+                    model=model_name,
+                    contents=contents,
+                    config=config,
+                )
+                used_model = model_name
+                break
+            except Exception as api_err:
+                print(f"⚠️ Gemini API model {model_name} failed ({api_err}). Trying next model...")
+
+        if response is None:
+            print("❌ All Gemini models failed. Returning fallback response.")
             return self._generate_fallback(messages, json_mode)
 
         generation_time = int((time.time() - start_time) * 1000)

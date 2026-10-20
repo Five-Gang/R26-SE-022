@@ -62,6 +62,8 @@ class SummaryResponse(BaseModel):
     learning_outcomes_covered: list[LOCoverageInfo] = []
     citations: list[CitationInfo] = []
     questions: Optional[list[dict]] = None      # for quiz output
+    quiz: Optional[list[dict]] = None           # alias for quiz output
+    quiz_questions: Optional[list[dict]] = None # alias for quiz output
     flashcards: Optional[list[dict]] = None     # for flashcard output
     metadata: GenerationMetadata
     created_at: datetime

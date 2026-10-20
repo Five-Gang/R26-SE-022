@@ -205,6 +205,8 @@ async def generate_summary(
             "chunks_used": 0,
         }),
         questions=pipeline_result.get("questions"),
+        quiz=pipeline_result.get("questions"),
+        quiz_questions=pipeline_result.get("questions"),
         flashcards=pipeline_result.get("flashcards"),
         created_at=output.created_at,
     )
@@ -279,6 +281,8 @@ async def get_summary(summary_id: uuid.UUID, db: AsyncSession = Depends(get_db))
         citations=citations_list,
         flashcards=flashcards,
         questions=questions,
+        quiz=questions,
+        quiz_questions=questions,
         metadata={
             "model": output.llm_model or "unknown",
             "input_tokens": output.input_tokens or 0,

@@ -58,25 +58,53 @@ export default function QuizPage() {
   const searchParams = useSearchParams();
   const summaryId = searchParams.get('summary') || searchParams.get('id');
 
-  const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
+  const [questions, setQuestions] = useState(summaryId ? [] : DEFAULT_QUESTIONS);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 mins
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(summaryId));
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     if (!summaryId) return;
     setLoading(true);
+    setLoadError(null);
     summariesApi.get(summaryId)
       .then((res) => {
-        if (res?.quiz && Array.isArray(res.quiz) && res.quiz.length > 0) {
-          setQuestions(res.quiz);
+        let loaded = [];
+        if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+          loaded = res.questions;
+        } else if (res?.quiz && Array.isArray(res.quiz) && res.quiz.length > 0) {
+          loaded = res.quiz;
         } else if (res?.quiz_questions && Array.isArray(res.quiz_questions) && res.quiz_questions.length > 0) {
-          setQuestions(res.quiz_questions);
+          loaded = res.quiz_questions;
+        } else if (res?.content) {
+          try {
+            const parsed = typeof res.content === 'string' ? JSON.parse(res.content) : res.content;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              loaded = parsed;
+            } else if (parsed?.questions && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+              loaded = parsed.questions;
+            } else if (parsed?.quiz && Array.isArray(parsed.quiz) && parsed.quiz.length > 0) {
+              loaded = parsed.quiz;
+            }
+          } catch (e) {
+            console.error('Failed to parse quiz content JSON:', e);
+          }
+        }
+
+        if (loaded.length > 0) {
+          setQuestions(loaded);
+          setTimeLeft(Math.max(300, loaded.length * 60));
+        } else {
+          setLoadError('No questions were found for this quiz session. Please generate a new quiz.');
         }
       })
-      .catch((err) => console.error('Failed to load quiz:', err))
+      .catch((err) => {
+        console.error('Failed to load quiz:', err);
+        setLoadError(err.message || 'Failed to load quiz');
+      })
       .finally(() => setLoading(false));
   }, [summaryId]);
 
@@ -136,6 +164,32 @@ export default function QuizPage() {
     return (
       <div className={styles.container}>
         <div style={{ padding: '3rem', textAlign: 'center' }}>Loading Quiz Questions…</div>
+      </div>
+    );
+  }
+
+  if (loadError || questions.length === 0) {
+    return (
+      <div className={styles.container}>
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <p style={{ color: '#ef4444', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+            {loadError || 'No quiz questions available.'}
+          </p>
+          <button
+            onClick={() => router.push('/study/generate')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#6366f1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+          >
+            ← Back to Study Generator
+          </button>
+        </div>
       </div>
     );
   }
