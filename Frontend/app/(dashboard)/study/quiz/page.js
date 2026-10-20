@@ -156,7 +156,13 @@ export default function QuizPage() {
       setCurrent((c) => c - 1);
       setRevealed(false);
     } else {
-      router.push('/study/session/summary');
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else if (summaryId) {
+        router.push(`/study/session/summary?summary=${summaryId}`);
+      } else {
+        router.push('/study/session/summary');
+      }
     }
   };
 
@@ -198,9 +204,35 @@ export default function QuizPage() {
     <div className={styles.container}>
       {/* Top Bar */}
       <div className={styles.topBar}>
-        <div className={styles.progressInfo}>
-          Question <strong>{current + 1}</strong> of {questions.length}
-          {q?.learning_outcome && <span className={styles.loTag}>{q.learning_outcome}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else if (summaryId) {
+                router.push(`/study/session/summary?summary=${summaryId}`);
+              } else {
+                router.push('/study/session/summary');
+              }
+            }}
+            style={{
+              background: '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              color: '#334155',
+              padding: '0.35rem 0.75rem',
+              borderRadius: '6px',
+              fontWeight: 600,
+              transition: 'background 0.15s',
+            }}
+          >
+            ← Back
+          </button>
+          <div className={styles.progressInfo}>
+            Question <strong>{current + 1}</strong> of {questions.length}
+            {q?.learning_outcome && <span className={styles.loTag}>{q.learning_outcome}</span>}
+          </div>
         </div>
         <div className={styles.progressBars}>
           {questions.map((_, i) => (
