@@ -37,7 +37,7 @@ class LLMEngine:
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
     ):
-        self.model_name = model_name or settings.llm_model or "gemini-3.5-flash"
+        self.model_name = model_name or settings.llm_model or "gemini-3.6-flash"
         self.api_key = api_key or settings.gemini_api_key
         self.gemini_api_url = gemini_api_url or settings.gemini_api_url
         self.temperature = temperature if temperature is not None else settings.llm_temperature
@@ -159,7 +159,7 @@ Please provide an accurate response grounded ONLY in the above course materials.
 
         # Resilient multi-model retry strategy (primary -> fallback if 503/429 occurs)
         models_to_try = [clean_model]
-        for fallback in ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite"]:
+        for fallback in ["gemini-2.5-flash", "gemini-2.0-flash"]:
             if fallback not in models_to_try:
                 models_to_try.append(fallback)
 

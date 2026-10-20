@@ -156,7 +156,7 @@ async function request(path, options = {}) {
 // ── Modules ──────────────────────────────────────────────────
 
 export const modulesApi = {
-  /** List all modules, optionally filter by department, year, semester, student_id */
+  /** List all modules, optionally filter by department, year, semester */
   list: async (params = {}) => {
     try {
       const q = new URLSearchParams();
@@ -343,9 +343,6 @@ export const documentsApi = {
       return { success: true };
     }
   },
-
-  /** Reprocess a failed document */
-  reprocess: (id) => request(`/documents/${id}/reprocess`, { method: 'POST' }),
 };
 
 // ── Summaries ────────────────────────────────────────────────

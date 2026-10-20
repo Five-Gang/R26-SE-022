@@ -295,29 +295,9 @@ export default function TutorPage() {
   const [analytics, setAnalytics]                   = useState(null);
   const [showAnalytics, setShowAnalytics]           = useState(false);
   const [uploadingSlide, setUploadingSlide]         = useState(false);
-  const [uploadProgress, setUploadProgress]         = useState(null); // null | 'uploading' | 'chunking' | 'done'
-  const [pdfStats, setPdfStats]                     = useState({}); // { [moduleCode]: { pdfs: number, chunks: number, files: string[] } }
   const [conversationHistory, setConversationHistory] = useState([]);
 
   const chatEndRef = useRef(null);
-
-  /** Fetch per-file chunk stats from the tutor backend and group by module_code */
-  const fetchPdfStats = async () => {
-    try {
-      const res = await fetch(`${TUTOR_API}/api/materials/per-file`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const grouped = {};
-      for (const f of (data.files || [])) {
-        const key = f.module_code || '__untagged__';
-        if (!grouped[key]) grouped[key] = { pdfs: 0, chunks: 0, files: [] };
-        grouped[key].pdfs += 1;
-        grouped[key].chunks += f.chunks;
-        grouped[key].files.push(f.filename);
-      }
-      setPdfStats(grouped);
-    } catch { /* silently ignore */ }
-  };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
@@ -338,9 +318,6 @@ export default function TutorPage() {
       .catch(() => {
         modulesApi.list().then(m => setModules(m || [])).catch(() => {});
       });
-
-    // Load initial chunk stats
-    fetchPdfStats();
   }, []);
 
   const loadModuleMaterials = async (mod) => {
@@ -521,24 +498,16 @@ export default function TutorPage() {
           <div className={styles.sideSection}>
             <div className={styles.sideSectionTitle}>📚 Your Modules</div>
             <div className={styles.moduleList}>
-              {modules.map(mod => {
-                const stats = pdfStats[mod.code];
-                return (
-                  <button
-                    key={mod.code}
-                    className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
-                    onClick={() => handleSelectModule(mod)}
-                  >
-                    <span className={styles.moduleCode}>{mod.code}</span>
-                    <span className={styles.moduleName}>{mod.name}</span>
-                    {stats && (
-                      <span className={styles.moduleChunkBadge}>
-                        📄 {stats.pdfs} PDF{stats.pdfs !== 1 ? 's' : ''} · {stats.chunks} chunks
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {modules.map(mod => (
+                <button
+                  key={mod.code}
+                  className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
+                  onClick={() => handleSelectModule(mod)}
+                >
+                  <span className={styles.moduleCode}>{mod.code}</span>
+                  <span className={styles.moduleName}>{mod.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -555,17 +524,8 @@ export default function TutorPage() {
 
         <div className={styles.sideSection}>
           <div className={styles.sideSectionTitle}>📤 Upload to Tutor</div>
-          {/* Progress indicator shown during chunking */}
-          {uploadProgress && uploadProgress !== 'done' && (
-            <div className={styles.uploadProgress}>
-              <span className={styles.uploadProgressDot} />
-              <span className={styles.uploadProgressLabel}>
-                {uploadProgress === 'uploading' ? '📤 Uploading PDF…' : '⚙️ Chunking & indexing…'}
-              </span>
-            </div>
-          )}
-          <label className={`${styles.uploadTutorBtn} ${uploadingSlide ? styles.uploadTutorBtnDisabled : ''}`}>
-            <span>{uploadingSlide ? '⏳ Processing…' : '📄 + Upload PDF Material'}</span>
+          <label className={styles.uploadTutorBtn}>
+            <span>{uploadingSlide ? '⏳ Ingesting PDF…' : '📄 + Upload PDF Material'}</span>
             <input
               type="file"
               accept=".pdf"
@@ -575,39 +535,25 @@ export default function TutorPage() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 setUploadingSlide(true);
-                setUploadProgress('uploading');
                 try {
                   const formData = new FormData();
                   formData.append('file', file);
-                  // Tag with current module code if a module is selected
-                  if (selectedModule?.code) {
-                    formData.append('module_code', selectedModule.code);
-                  }
-                  setUploadProgress('chunking');
                   const res = await fetch(`${TUTOR_API}/api/upload`, {
                     method: 'POST',
                     body: formData,
                   });
                   const json = await res.json();
                   if (!res.ok) throw new Error(json.detail || 'Upload failed');
-
-                  // Refresh chunk stats after successful upload
-                  await fetchPdfStats();
-
-                  const chunks = json.chunks_created ?? json.documents_count ?? '?';
                   setMessages(prev => [...prev, {
                     role: 'ai',
-                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor!\n\n📊 **${chunks} chunks** created from this document.${selectedModule?.code ? ` Tagged to module **${selectedModule.code}**.` : ''}\n\nYou can now ask questions about this document.`,
+                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor! You can now ask questions about this document.`,
                     confidence_level: 'HIGH'
                   }]);
-                  setUploadProgress('done');
                 } catch (err) {
                   alert('Upload error: ' + err.message);
-                  setUploadProgress(null);
                 } finally {
                   setUploadingSlide(false);
                   e.target.value = '';
-                  setTimeout(() => setUploadProgress(null), 3000);
                 }
               }}
             />
@@ -643,59 +589,22 @@ export default function TutorPage() {
 
         {showAnalytics && analytics && (
           <div className={styles.analyticsPanel}>
-            <div className={styles.analyticsPanelHeader}>
-              <div className={styles.analyticsPanelTitle}>📊 Research Analytics</div>
-              <div className={styles.analyticsMeta}>
-                Sample: <b>{analytics.total_queries ?? 0} Queries Logged</b>
-              </div>
-            </div>
+            <div className={styles.analyticsPanelTitle}>📊 Research Analytics</div>
             <div className={styles.analyticsGrid}>
               {[
-                {
-                  val: analytics.avg_retrieval_confidence != null
-                    ? `${Math.round(analytics.avg_retrieval_confidence * 100)}%`
-                    : '—',
-                  lbl: 'Avg Retrieval Quality',
-                  sub: 'Vector Match Relevance',
-                  color: '#3b82f6',
-                },
-                {
-                  val: analytics.confidence_response_alignment?.overall_alignment_pct != null
-                    ? `${analytics.confidence_response_alignment.overall_alignment_pct}%`
-                    : (analytics.total_queries > 0 ? '100%' : '—'),
-                  lbl: 'Strategy Alignment',
-                  sub: 'Confidence-Mode Match',
-                  color: '#10b981',
-                },
-                {
-                  val: (analytics.user_feedback?.total_rated > 0 && analytics.user_feedback?.satisfaction_rate_pct != null)
-                    ? `${Math.round(analytics.user_feedback.satisfaction_rate_pct)}%`
-                    : '— (0 rated)',
-                  lbl: 'Student Satisfaction',
-                  sub: analytics.user_feedback?.total_rated > 0
-                    ? `${analytics.user_feedback.thumbs_up ?? 0} 👍 of ${analytics.user_feedback.total_rated}`
-                    : 'Thumbs Up / Rated',
-                  color: '#8b5cf6',
-                },
-                {
-                  val: (analytics.user_feedback?.total_rated > 0 && analytics.user_feedback?.false_positive_rate_pct != null)
-                    ? `${analytics.user_feedback.false_positive_rate_pct.toFixed(1)}%`
-                    : '0.0%',
-                  lbl: 'False Positive Rate',
-                  sub: 'High-Conf Hallucinations',
-                  color: '#ef4444',
-                },
-              ].map(({ val, lbl, sub, color }) => (
+                { val: analytics.total_queries ?? 0,       lbl: 'Total Queries' },
+                { val: analytics.avg_confidence_score != null ? `${Math.round(analytics.avg_confidence_score * 100)}%` : '—', lbl: 'Avg Confidence', color: '#10b981' },
+                { val: analytics.hallucination_rate_pct != null ? `${analytics.hallucination_rate_pct.toFixed(1)}%` : '—',  lbl: 'Hallucination Rate', color: '#ef4444' },
+                { val: analytics.avg_grounding_score != null ? `${Math.round(analytics.avg_grounding_score * 100)}%` : '—',  lbl: 'Grounding Score' },
+              ].map(({ val, lbl, color }) => (
                 <div key={lbl} className={styles.analyticsCard}>
                   <div className={styles.analyticsVal} style={color ? { color } : {}}>{val}</div>
                   <div className={styles.analyticsLbl}>{lbl}</div>
-                  {sub && <div className={styles.analyticsSub}>{sub}</div>}
                 </div>
               ))}
             </div>
             {analytics.response_type_distribution && (
               <div className={styles.distRow}>
-                <span className={styles.distLabel}>Response Modes:</span>
                 {Object.entries(analytics.response_type_distribution).map(([k, v]) => (
                   <span key={k} className={styles.distPill}>{k.replace(/_/g, ' ')}: <b>{v}</b></span>
                 ))}
