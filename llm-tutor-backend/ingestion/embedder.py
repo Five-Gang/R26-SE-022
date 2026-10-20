@@ -1,7 +1,7 @@
 import os
 import uuid
 import PyPDF2
-from typing import List, Dict
+from typing import List, Dict, Optional
 from sentence_transformers import SentenceTransformer
 from retrieval.retriever import get_retriever
 
@@ -31,10 +31,20 @@ class Embedder:
                 chunks.append(chunk)
         return chunks
 
-    def embed_and_store(self, file_path: str) -> Dict:
+    def embed_and_store(self, file_path: str, module_code: Optional[str] = None) -> Dict:
+        """
+        Process a PDF, chunk it, embed chunks, and store in the vector DB.
+
+        Args:
+            file_path:    Absolute path to the PDF file.
+            module_code:  Optional module code (e.g. "SE3020") to tag chunks so that
+                          per-module chunk counts can be queried from the vector store.
+        Returns:
+            dict: { status, filename, chunks_processed } or { status, message } on error.
+        """
         try:
             filename = os.path.basename(file_path)
-            print(f" Processing {filename}...")
+            print(f" Processing {filename}..." + (f" [module: {module_code}]" if module_code else ""))
 
             text = self.process_pdf(file_path)
             if not text.strip():
@@ -53,11 +63,14 @@ class Embedder:
             ]
             
             for i, (chunk, emb) in enumerate(zip(chunks, embeddings)):
+                meta = {"filename": filename, "chunk_index": i}
+                if module_code:
+                    meta["module_code"] = module_code
                 collection_data.append({
                     "id": f"{filename}_{i}_{uuid.uuid4().hex[:8]}",
                     "text": chunk,
                     "embedding": emb.tolist(),
-                    "metadata": {"filename": filename, "chunk_index": i}
+                    "metadata": meta
                 })
                 
             retriever.save_db(collection_data)
