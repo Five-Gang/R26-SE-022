@@ -16,8 +16,8 @@ class IngestionPipeline:
         pdf_folder: Optional[str] = None,
         chroma_dir: Optional[str] = None,
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
-        chunk_size: int = 300,
-        chunk_overlap: int = 50
+        chunk_size: int = 120,
+        chunk_overlap: int = 25
     ):
         """
         Initialize the ingestion pipeline.
@@ -108,7 +108,7 @@ class IngestionPipeline:
 
 
 # Convenience functions for API compatibility
-def ingest_documents(pdf_folder: str, chunk_size: int = 500, chunk_overlap: int = 50) -> int:
+def ingest_documents(pdf_folder: str, chunk_size: int = 120, chunk_overlap: int = 25) -> int:
     """
     Ingest documents from a folder.
     

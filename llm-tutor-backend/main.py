@@ -10,7 +10,7 @@ import sqlite3
 import os
 import sys
 import shutil
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -264,7 +264,7 @@ async def chat(request: ChatRequest):
             has_real_results = True
             print(f" Module context injected from summarizer ({len(request.module_context)} chars)")
 
-        # 2b. Add real vector store hits (skip any that are already in sources)
+        # 2b. Add real vector store hits (append all chunks to context for complete knowledge)
         recorded_filenames = {s["filename"] for s in sources}
         for r in real_retrieval_results:
             if "content" in r and "error" not in r:
@@ -274,10 +274,11 @@ async def chat(request: ChatRequest):
                     or r.get("source")
                     or "Course Document"
                 )
+                # Append all matching chunks to context so the LLM has complete context
+                context_parts.append(
+                    f"[Source: {source_name}]\n{r['content']}"
+                )
                 if source_name not in recorded_filenames:
-                    context_parts.append(
-                        f"[Source: {source_name}]\n{r['content']}"
-                    )
                     sources.append({
                         "filename": source_name,
                         "content": r["content"][:300],
@@ -301,8 +302,8 @@ async def chat(request: ChatRequest):
             conversation_history=conv_history
         )
 
-        # If API key is missing, return configuration notice directly
-        if llm_response.startswith("⚠️ **Gemini API Key Required:"):
+        # If API key is missing or API call returned an error, return notice directly
+        if llm_response.startswith("⚠️ **"):
             return {
                 "response": llm_response,
                 "confidence": {
@@ -312,7 +313,7 @@ async def chat(request: ChatRequest):
                     "grounding_score": 0.0
                 },
                 "response_type": "clarification_request",
-                "response_label": "API Key Required",
+                "response_label": "System Notice",
                 "sources": sources,
                 "conversation_history": conv_history,
                 "log_id": None
@@ -416,9 +417,14 @@ async def chat(request: ChatRequest):
 # ============================================================================
 
 @app.post("/api/upload")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(
+    file: UploadFile = File(...),
+    module_code: Optional[str] = Form(None),
+):
     """
     Upload a PDF file and ingest it into the vector store.
+    Optionally accepts module_code (form field) to tag the resulting chunks so that
+    per-module chunk counts can be surfaced in the sidebar.
     """
     try:
         # Validate file type
@@ -435,10 +441,14 @@ async def upload_pdf(file: UploadFile = File(...)):
             content = await file.read()
             buffer.write(content)
 
-        print(f" Uploaded: {file.filename} ({len(content)} bytes)")
+        print(f" Uploaded: {file.filename} ({len(content)} bytes)"
+              + (f" [module: {module_code}]" if module_code else ""))
 
-        # Run ingestion on the upload directory
-        documents_count = ingest_documents(upload_dir)
+        # Run ingestion on the upload directory (returns total chunks created)
+        from ingestion.embedder import Embedder
+        embedder = Embedder()
+        result = embedder.embed_and_store(file_path, module_code=module_code)
+        chunks_created = result.get("chunks_processed", 0) if result.get("status") == "success" else 0
 
         # Reset retriever to reload collection
         import retrieval.retriever
@@ -446,10 +456,24 @@ async def upload_pdf(file: UploadFile = File(...)):
         global _confidence_scorer
         _confidence_scorer = None
 
+        # Build per-file stats for the response
+        retriever = get_retriever()
+        per_file: dict = {}
+        for doc in retriever.collection:
+            meta = doc.get("metadata", {})
+            fname = meta.get("filename", "unknown")
+            mcode = meta.get("module_code", "")
+            if fname not in per_file:
+                per_file[fname] = {"filename": fname, "chunks": 0, "module_code": mcode}
+            per_file[fname]["chunks"] += 1
+
         return {
             "message": f"Successfully uploaded and ingested {file.filename}",
             "filename": file.filename,
-            "documents_count": documents_count,
+            "chunks_created": chunks_created,
+            "module_code": module_code or "",
+            "per_file_stats": list(per_file.values()),
+            "documents_count": chunks_created,
             "status": "success"
         }
 
@@ -477,6 +501,44 @@ async def get_materials():
             "message": str(e),
             "document_count": 0
         }
+
+
+@app.get("/api/materials/per-file")
+async def get_materials_per_file():
+    """
+    Return per-file chunk counts from the local vector store.
+    Response format:
+      {
+        "files": [
+          { "filename": "foo.pdf", "chunks": 15, "module_code": "SE3020" },
+          ...
+        ],
+        "total_chunks": 42,
+        "total_files": 3
+      }
+    """
+    try:
+        retriever = get_retriever()
+        per_file: dict = {}
+        for doc in retriever.collection:
+            meta = doc.get("metadata", {})
+            fname = meta.get("filename", "unknown")
+            mcode = meta.get("module_code", "")
+            if fname not in per_file:
+                per_file[fname] = {"filename": fname, "chunks": 0, "module_code": mcode}
+            per_file[fname]["chunks"] += 1
+            # update module_code if present
+            if mcode and not per_file[fname]["module_code"]:
+                per_file[fname]["module_code"] = mcode
+
+        files = list(per_file.values())
+        return {
+            "files": files,
+            "total_chunks": sum(f["chunks"] for f in files),
+            "total_files": len(files),
+        }
+    except Exception as e:
+        return {"files": [], "total_chunks": 0, "total_files": 0, "error": str(e)}
 
 
 @app.delete("/api/materials/{filename}")

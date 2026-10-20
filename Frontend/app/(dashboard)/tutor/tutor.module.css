@@ -120,6 +120,24 @@
   letter-spacing: 0;
 }
 
+.uploadTutorBtn {
+  display: block;
+  margin: 0.4rem 1.25rem 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.uploadTutorBtn:hover {
+  background: rgba(99, 102, 241, 0.16);
+}
+
 /* Module List */
 .moduleList {
   display: flex;
@@ -161,7 +179,60 @@
   text-overflow: ellipsis;
 }
 
-/* No Materials */
+/* Per-module chunk/PDF count badge shown below module name */
+.moduleChunkBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 20px;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0;
+  transition: background 0.2s ease;
+}
+.moduleBtnActive .moduleChunkBadge {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: var(--color-accent);
+}
+
+/* Disabled state for upload button while processing */
+.uploadTutorBtnDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Upload progress indicator */
+.uploadProgress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1.25rem 0.25rem;
+  font-size: 0.72rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+.uploadProgressDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  animation: pulse-green 1s infinite;
+}
+.uploadProgressLabel {
+  font-size: 0.72rem;
+  color: var(--color-accent);
+}
+
+
 .noMaterials {
   font-size: 0.78rem;
   color: var(--color-text-muted);
@@ -289,13 +360,28 @@
   flex-shrink: 0;
 }
 
+.analyticsPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .analyticsPanelTitle {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 0.75rem;
+}
+
+.analyticsMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
 }
 
 .analyticsGrid {
@@ -319,12 +405,23 @@
   line-height: 1.2;
 }
 .analyticsLbl {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 0.25rem;
+}
+.analyticsSub {
+  font-size: 0.65rem;
   color: var(--color-text-muted);
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
 }
 
-.distRow { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.distRow { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.distLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
 .distPill {
   font-size: 0.72rem;
   background: var(--color-surface);

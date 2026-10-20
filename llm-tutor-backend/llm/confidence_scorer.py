@@ -87,12 +87,8 @@ class ConfidenceScorer:
         if not similarities:
             return 0.0
 
-        # Weighted average: top results matter more
-        weights = [1.0 / (i + 1) for i in range(len(similarities))]
-        weighted_sum = sum(s * w for s, w in zip(similarities, weights))
-        total_weight = sum(weights)
-
-        return min(1.0, weighted_sum / total_weight)
+        # Take the maximum similarity score among retrieved chunks
+        return min(1.0, max(0.0, float(max(similarities))))
 
     def compute_grounding_score(
         self,
