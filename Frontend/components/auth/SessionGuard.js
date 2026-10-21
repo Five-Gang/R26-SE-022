@@ -63,7 +63,8 @@ export default function SessionGuard({ children }) {
       });
 
     return () => { cancelled = true; };
-  }, [pathname, router]);
+  }, []); // run once on mount only — re-running on pathname change causes redirect loops
+
 
   if (checking || !student) {
     return <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--color-text-secondary)' }}>Checking your student account...</main>;
