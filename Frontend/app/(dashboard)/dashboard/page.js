@@ -453,56 +453,6 @@ export default function DashboardPage() {
           {/* === RIGHT COLUMN: Spaced Repetition Reminders & Cognitive Widget === */}
           <div className={styles.column}>
 
-            {/* Cognitive Readiness Status Widget (Mihiraj's Component) */}
-            <div className={styles.cognitiveBox}>
-              <div className={styles.cognitiveHeader}>
-                <span className={styles.cognitiveTitle}>Cognitive & Affect Status</span>
-                <div className={styles.liveIndicator}>
-                  <span className={styles.liveDot} style={{ background: isMonitoring ? '#10B981' : '#94A3B8' }}></span>
-                  <span>{isMonitoring ? 'LIVE MONITORING' : 'STANDBY'}</span>
-                </div>
-              </div>
-
-              <div className={styles.cognitiveMetricRow}>
-                <div className={styles.cognitiveMetric}>
-                  <span className={styles.cognitiveValue}>
-                    {isMonitoring ? `${focusData?.attentionScore || 0}%` : `${totalStudyStats.avgAttention}%`}
-                  </span>
-                  <span className={styles.cognitiveLabel}>Attention</span>
-                </div>
-                <div className={styles.cognitiveMetric}>
-                  <span className={styles.cognitiveValue} style={{ fontSize: '0.95rem' }}>
-                    {isMonitoring ? (focusData?.emotion || 'Normal') : totalStudyStats.dominantEmotion}
-                  </span>
-                  <span className={styles.cognitiveLabel}>Affect State</span>
-                </div>
-                <div className={styles.cognitiveMetric}>
-                  <span className={styles.cognitiveValue} style={{ fontSize: '0.95rem' }}>
-                    {isMonitoring ? (focusData?.fatigueLevel || 'Low') : 'Optimal'}
-                  </span>
-                  <span className={styles.cognitiveLabel}>Fatigue</span>
-                </div>
-              </div>
-
-              <Link
-                href="/focus-monitor"
-                style={{
-                  textAlign: 'center',
-                  background: '#FFFFFF',
-                  color: '#065F46',
-                  fontWeight: '700',
-                  fontSize: '0.82rem',
-                  padding: '0.65rem 1rem',
-                  borderRadius: '10px',
-                  textDecoration: 'none',
-                  border: '1px solid #A7F3D0',
-                  marginTop: '0.25rem',
-                  transition: 'background 0.2s ease',
-                }}
-              >
-                {isMonitoring ? 'Open Live Focus View →' : 'Launch Attention Camera →'}
-              </Link>
-            </div>
 
             {/* Upcoming Adaptive Reminders */}
             <div className={styles.card}>
