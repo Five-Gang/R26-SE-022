@@ -1,0 +1,179 @@
+.container {
+  padding: 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--color-border);
+  width: 100%;
+  padding: 4rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.subheading {
+  color: var(--color-text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  text-align: center;
+  max-width: 85%;
+  margin-bottom: 3rem;
+}
+
+.statsRow {
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.statCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 1rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+}
+
+.statGreen {
+  background-color: #E6F7EC; /* Very light, tinted green */
+  color: #15803D;
+}
+
+.statBlue {
+  background-color: #EFF6FF; /* Very light blue */
+  color: #0284C7;
+}
+
+.statOrange {
+  background-color: #FFF7ED; /* Very light orange */
+  color: #EA580C;
+}
+
+.statValue {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.alertBox {
+  width: 100%;
+  background-color: #F0FDF4; /* Very light green */
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.alertTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #16A34A; /* Green */
+}
+
+.alertBody {
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.btnOutline {
+  flex: 1;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  padding: 1.1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.btnOutline:hover {
+  background-color: #FAFAFA;
+}
+
+.btnPrimary {
+  flex: 1;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: white;
+  padding: 1.1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.btnPrimary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+@media (max-width: 768px) {
+  .statsRow {
+    flex-direction: column;
+  }
+  .actionsRow {
+    flex-direction: column;
+  }
+  .card {
+    padding: 2.5rem 1.5rem;
+  }
+}

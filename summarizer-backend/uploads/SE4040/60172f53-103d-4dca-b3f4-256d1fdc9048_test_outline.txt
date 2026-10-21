@@ -1,0 +1,13 @@
+Module Code: SE4040
+Module Name: Secure Software Development
+Credits: 4
+
+Learning Outcomes:
+LO1: Analyze software vulnerabilities including buffer overflows and injection attacks.
+LO2: Design secure software architecture using threat modeling.
+LO3: Implement cryptography and authentication in software systems.
+
+Module Content:
+Week 1: Introduction to Software Security
+Week 2: Memory Safety and Buffer Overflows
+Week 3: Web Vulnerabilities and Injection

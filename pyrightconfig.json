@@ -1,0 +1,8 @@
+{
+  "extraPaths": [
+    "./Backend",
+    "./adaptive-reminder-system/backend",
+    "./summarizer-backend",
+    "./llm-tutor-backend"
+  ]
+}

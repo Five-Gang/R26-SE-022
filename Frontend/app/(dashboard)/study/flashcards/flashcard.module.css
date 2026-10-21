@@ -1,0 +1,210 @@
+.container {
+  padding: 3rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+
+.cardMeta {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ── Flip card ───────────────────────── */
+.flashcard {
+  width: 100%;
+  min-height: 400px;
+  cursor: pointer;
+  perspective: 1000px;
+}
+.flashcardInner {
+  position: relative;
+  width: 100%; height: 100%; min-height: 400px;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flashcardFlipped .flashcardInner { transform: rotateY(180deg); }
+.flashcardFront, .flashcardBack {
+  position: absolute; inset: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  padding: 2.5rem; display: flex; flex-direction: column; align-items: center;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.flashcardBack { transform: rotateY(180deg); background: #f0fdf4; border-color: #bbf7d0; }
+
+/* Progress bar top */
+.progressOuter { width: 100%; height: 5px; background: var(--color-border); border-radius: 99px; overflow: hidden; margin-bottom: 1.25rem; }
+.progressInner { height: 100%; background: var(--color-accent); border-radius: 99px; transition: width 0.4s ease; }
+
+.badge {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.question {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  max-width: 85%;
+  margin: auto;
+}
+
+.answer {
+  color: var(--color-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  text-align: center;
+  margin: auto;
+  max-width: 90%;
+}
+
+.sourceTag {
+  font-size: 0.75rem; color: var(--color-text-muted); margin-top: auto;
+}
+
+.loTag {
+  background: #f0f9ff; color: #0369a1; font-size: 0.72rem; font-weight: 600;
+  padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid #bae6fd; margin-left: 0.5rem;
+}
+
+.hintText {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin-top: auto;
+}
+
+.actionsContainer {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+
+.btnAgain {
+  background-color: #FEF2F2;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+
+.btnAgain:hover {
+  background-color: #FEE2E2;
+}
+
+.btnHard {
+  background-color: #FEF9C3;
+  border-color: #FDE047;
+  color: #D97706;
+}
+
+.btnHard:hover {
+  background-color: #FEF08A;
+}
+
+.btnEasy {
+  background-color: #F0FDF4;
+  border-color: #86EFAC;
+  color: #16A34A;
+}
+
+.btnEasy:hover {
+  background-color: #DCFCE7;
+}
+
+.progressSection {
+  margin-top: 3rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.progressStats {
+  font-size: 0.75rem; color: var(--color-text-secondary);
+  text-align: center; margin-top: 1rem;
+}
+
+/* Done screen */
+.doneCard {
+  text-align: center; padding: 3rem 2rem;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); max-width: 480px; width: 100%;
+  margin: 2rem auto; box-shadow: var(--shadow-card);
+}
+.doneIcon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+.doneTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem; }
+.doneSub { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+.doneStats { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
+.doneStat { display: flex; flex-direction: column; align-items: center; font-size: 0.82rem; font-weight: 600; gap: 0.2rem; }
+.doneStat span { font-size: 1.75rem; font-weight: 800; }
+.doneActions { display: flex; gap: 0.75rem; justify-content: center; }
+.btnOutline { background: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.65rem 1.2rem; font-weight: 600; cursor: pointer; font-size: 0.875rem; }
+.btnPrimary { background: var(--color-accent); color: white; border: none; border-radius: var(--radius-md); padding: 0.65rem 1.4rem; font-weight: 600; cursor: pointer; font-size: 0.875rem; }
+.btnBack { background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.6rem 1.2rem; cursor: pointer; margin-top: 0.75rem; }
+
+/* States */
+.stateCenter { text-align: center; padding: 5rem 2rem; color: var(--color-text-secondary); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .actionsContainer {
+    flex-direction: column;
+  }
+  .flashcard {
+    min-height: 350px;
+    padding: 1.5rem;
+  }
+  .question {
+    font-size: 1.25rem;
+    max-width: 100%;
+  }
+}

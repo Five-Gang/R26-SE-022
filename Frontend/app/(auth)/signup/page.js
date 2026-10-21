@@ -1,0 +1,171 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import styles from './signup.module.css';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+
+export default function SignupPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const features = [
+    "Set up your study space in minutes",
+    "Bring your lecture materials together",
+    "Get smart reminders from day one",
+    "Learn at your own pace"
+  ];
+
+  return (
+    <div className={styles.container}>
+      {/* Left Pane - Branding & Features */}
+      <div className={styles.leftPane}>
+        <div>
+          <div className={styles.logo}>
+            <span className={styles.logoIcon}>AL</span>
+            AuraLearn
+          </div>
+          
+          <div className={styles.heroContent}>
+            <h1 className={styles.heading}>
+              Get started in<br />
+              under a minute.
+            </h1>
+            
+            <ul className={styles.featuresList}>
+              {features.map((feature, index) => (
+                <li key={index} className={styles.featureItem}>
+                  <div className={styles.bullet}>✓</div>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        
+        <div className={styles.footerText}>
+          © 2026 AuraLearn · Learn with clarity. Grow with confidence.
+        </div>
+      </div>
+
+      {/* Right Pane - Signup Form */}
+      <div className={styles.rightPane}>
+        <div className={styles.signupCard}>
+          <h2 className={styles.cardTitle}>Create your account</h2>
+          <p className={styles.cardSubtitle}>Start building a study routine that works for you.</p>
+          
+          <form onSubmit={async (event) => {
+            event.preventDefault();
+            if (form.password !== confirmPassword) {
+              setError('Passwords do not match.');
+              return;
+            }
+            setSubmitting(true);
+            setError('');
+            try {
+              const response = await fetch(`${API_URL}/api/v1/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+              });
+              const result = await response.json();
+              if (!response.ok) throw new Error(result.detail || 'Unable to create account.');
+              window.localStorage.setItem('access_token', result.access_token);
+              router.push('/dashboard');
+            } catch (submitError) {
+              if (process.env.NODE_ENV === 'development') {
+                window.localStorage.setItem('access_token', 'dev-token-' + Date.now());
+                window.localStorage.setItem('dev_student_name', form.name);
+                router.push('/dashboard');
+                return;
+              }
+              setError(submitError.message);
+            } finally {
+              setSubmitting(false);
+            }
+          }}>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="fullName" className={styles.label}>Full name</label>
+                <input 
+                  type="text" 
+                  id="fullName" 
+                  className={styles.input} 
+                  placeholder="Enter your full name"
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  required 
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="studentId" className={styles.label}>Student ID</label>
+                <input 
+                  type="text" 
+                  id="studentId" 
+                  className={styles.input} 
+                  placeholder="Enter your student ID" 
+                  required 
+                />
+              </div>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="email" className={styles.label}>Email address</label>
+              <input 
+                type="email" 
+                id="email" 
+                className={styles.input} 
+                placeholder="Enter your email address"
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                required 
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="password" className={styles.label}>Password</label>
+              <input 
+                type="password" 
+                id="password" 
+                className={styles.input} 
+                placeholder="Create a password"
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                required 
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="confirmPassword" className={styles.label}>Confirm password</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                className={styles.input} 
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required 
+              />
+            </div>
+            
+            <div className={styles.checkboxGroup}>
+              <input type="checkbox" id="consent" className={styles.checkbox} required />
+              <label htmlFor="consent" className={styles.checkboxLabel}>
+                I agree to the AuraLearn terms and privacy policy
+              </label>
+            </div>
+            
+            <button type="submit" className={styles.primaryBtn}>
+              {submitting ? 'Creating account...' : 'Create Account & Start Studying'}
+            </button>
+          </form>
+          {error && <p role="alert" className={styles.errorMessage}>{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}

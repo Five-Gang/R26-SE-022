@@ -1,0 +1,138 @@
+.overlayContainer {
+  min-height: calc(100vh - 64px);
+  width: 100%;
+  background-color: #7A899C; /* The grayish-blue overlay background from screenshot */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modal {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 520px;
+  padding: 3rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.iconWrapper {
+  width: 64px;
+  height: 64px;
+  background-color: #F8FAFC;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.description {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.benefitsList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.benefitIcon {
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.benefitContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.benefitTitle {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.benefitDesc {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.btnAccept {
+  width: 100%;
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+  margin-bottom: 1rem;
+}
+
+.btnAccept:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.btnDecline {
+  width: 100%;
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btnDecline:hover {
+  background-color: #FAFAFA;
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 600px) {
+  .modal {
+    padding: 2rem;
+  }
+}

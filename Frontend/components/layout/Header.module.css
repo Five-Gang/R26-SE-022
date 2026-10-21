@@ -1,0 +1,455 @@
+/* ============================================
+   HEADER — AuraLearn
+   ============================================ */
+
+.header {
+  background-color: var(--color-primary);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 1rem;
+}
+
+/* ── Logo ─────────────────────────────────── */
+.leftSection {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: #F8FAFC;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  transition: opacity 0.2s;
+}
+
+.logo:hover {
+  opacity: 0.85;
+}
+
+.logoIcon {
+  background: linear-gradient(135deg, #0F766E, #14B8A6);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.logoText {
+  color: #F8FAFC;
+}
+
+/* ── Desktop Nav ──────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  color: #F8FAFC;
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.navLink.active {
+  background-color: rgba(15, 118, 110, 0.25);
+  color: #5EEAD4;
+  font-weight: 600;
+}
+
+/* Locked nav items (setup not complete) */
+.navLink.locked {
+  opacity: 0.45;
+  cursor: pointer;
+  position: relative;
+}
+
+.navLink.locked:hover {
+  opacity: 0.65;
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #F87171;
+}
+
+.lockIcon {
+  font-size: 0.65rem;
+  margin-left: 2px;
+  opacity: 0.8;
+}
+
+/* "Complete Setup" pill in nav bar */
+.setupBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.15));
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #FCD34D;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.875rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  animation: pulseSetup 2.5s ease infinite;
+}
+
+.setupBanner:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(239, 68, 68, 0.25));
+  transform: scale(1.03);
+}
+
+@keyframes pulseSetup {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3); }
+  50%       { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+}
+
+/* Setup status chip in dropdown */
+.setupStatusChip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  margin-top: 0.35rem;
+  display: inline-block;
+}
+
+/* Setup menu item */
+.setupMenuItem {
+  color: #FCD34D !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+.setupMenuItem:hover {
+  background: rgba(245, 158, 11, 0.16) !important;
+}
+
+/* Mobile setup button */
+.mobileSetupBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  color: #FCD34D;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.mobileSetupBtn:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(239, 68, 68, 0.2));
+}
+
+.navIcon {
+  font-size: 0.9rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.navLabel {
+  /* Always visible on desktop */
+}
+
+/* ── Right section ────────────────────────── */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Settings icon shortcut */
+.settingsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 1rem;
+  text-decoration: none;
+  color: #94A3B8;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.settingsBtn:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #F8FAFC;
+}
+
+/* ── Avatar / Dropdown ────────────────────── */
+.avatarWrapper {
+  position: relative;
+}
+
+.avatar {
+  background: linear-gradient(135deg, #0F766E, #14B8A6);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+}
+
+.avatar:hover,
+.avatar.open {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.35);
+  border-color: rgba(94, 234, 212, 0.5);
+}
+
+/* Dropdown panel */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background-color: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.55);
+  padding: 0.5rem;
+  z-index: 200;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.dropdownHeader {
+  padding: 0.6rem 0.75rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.4rem;
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  font-size: 0.75rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  color: #CBD5E1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.menuItem:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #F8FAFC;
+}
+
+.logoutItem {
+  color: #F87171;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.65rem;
+}
+
+.logoutItem:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #FCA5A5;
+}
+
+.menuIcon {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Mobile Hamburger ─────────────────────── */
+.mobileMenuBtn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  gap: 5px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.mobileMenuBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.hamburger,
+.hamburger::before,
+.hamburger::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background-color: #94A3B8;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+
+.hamburger {
+  position: relative;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+.hamburger::before { top: -5px; }
+.hamburger::after  { top:  5px; }
+
+.hamburgerOpen { background-color: transparent; }
+.hamburgerOpen::before {
+  transform: translateY(5px) rotate(45deg);
+  background-color: #F8FAFC;
+}
+.hamburgerOpen::after {
+  transform: translateY(-5px) rotate(-45deg);
+  background-color: #F8FAFC;
+}
+
+/* ── Mobile Nav Drawer ───────────────────── */
+.mobileNav {
+  display: none;
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background-color: #1A2537;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.75rem 1rem;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 99;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.mobileNavLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #94A3B8;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+
+.mobileNavLink:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #F8FAFC;
+}
+
+.mobileNavLink.active {
+  background-color: rgba(15, 118, 110, 0.2);
+  color: #5EEAD4;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 900px) {
+  .nav {
+    display: none;
+  }
+  .mobileMenuBtn {
+    display: flex;
+  }
+  .mobileNav {
+    display: flex;
+  }
+  .settingsBtn {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 0 1rem;
+  }
+}

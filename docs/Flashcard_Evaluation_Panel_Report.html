@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quality Assurance & Cross-Model Benchmark Report — LOA-ESS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --primary-light: #1e293b;
+      --accent: #0d9488;
+      --accent-light: #ccfbf1;
+      --accent-dark: #0f766e;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Sticky Control Bar */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .top-bar-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-live {
+      background: #0d9488;
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* Layout Container */
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* Academic Header */
+    .header-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 40px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .header-card::after {
+      content: "";
+      position: absolute;
+      top: -40%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(13, 148, 136, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .sub-tag {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #2dd4bf;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .main-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .header-desc {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      max-width: 860px;
+      margin-bottom: 24px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.85rem;
+    }
+    .meta-item span { color: #94a3b8; display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .meta-item strong { color: #f1f5f9; font-weight: 600; font-size: 0.95rem; }
+
+    /* 3-Step Summary Card for Easy Explaining */
+    .explain-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+    .explain-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .explain-step {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid var(--accent);
+    }
+    .step-num {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--accent-dark);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .step-heading {
+      font-size: 1.0rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: 0.88rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    /* Metric Cards Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .stat-card.highlight {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .stat-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .stat-card.highlight .stat-val { color: var(--accent-dark); }
+    .stat-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .stat-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+    .badge-green { background: var(--success-bg); color: var(--success); }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+
+    /* Section Styling */
+    .section-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Comparison Table */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      color: #1e293b;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .col-highlight {
+      background: #f0fdfa !important;
+      font-weight: 600;
+    }
+    th.col-highlight {
+      background: #ccfbf1 !important;
+      color: var(--accent-dark);
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .pill-success { background: #d1fae5; color: #065f46; }
+    .pill-warning { background: #fef3c7; color: #92400e; }
+    .pill-danger { background: #fee2e2; color: #991b1b; }
+    .pill-neutral { background: #f1f5f9; color: #475569; }
+
+    /* Visual Bars */
+    .bar-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 36px;
+      background: #fff;
+      padding: 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 90px;
+      align-items: center;
+      gap: 16px;
+    }
+    .bar-label { font-weight: 700; font-size: 0.85rem; color: #334155; }
+    .bar-track {
+      background: #e2e8f0;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+    .bar-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      transition: width 0.3s ease;
+    }
+    .seg-remember { background: #64748b; }
+    .seg-understand { background: #3b82f6; }
+    .seg-apply { background: #06b6d4; }
+    .seg-analyze { background: #8b5cf6; }
+    .seg-evaluate { background: #10b981; }
+
+    /* Side-by-Side Qualitative Cards */
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .case-box {
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .case-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .case-model { font-weight: 800; font-size: 0.95rem; }
+    .case-q {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #0f172a;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .case-a {
+      font-size: 0.88rem;
+      color: #334155;
+      line-height: 1.5;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .case-citation {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent-dark);
+      background: var(--accent-light);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-weight: 600;
+    }
+    .case-flaw {
+      font-size: 0.82rem;
+      color: #b91c1c;
+      background: #fef2f2;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* Print Specific Styles */
+    @media print {
+      .top-bar { display: none !important; }
+      body { background: #fff !important; font-size: 11pt; }
+      .container { max-width: 100% !important; padding: 0 !important; }
+      .header-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; color: #000 !important; background: #fff !important; padding: 20px !important; }
+      .header-card * { color: #000 !important; }
+      .explain-card { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
+      .table-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
+      .stat-card { border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+      .case-box { page-break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+      .bar-container { page-break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & Export Bar -->
+  <header class="top-bar">
+    <div class="top-bar-title">
+      <span>R26-SE-022 Quality Assurance & Evaluation Report</span>
+      <span class="badge-live">Benchmarked</span>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-outline" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <a href="file:///Users/kavindugayashan/Desktop/Rp-AI%20summarzior/untitled%20folder/LLM%20comparison%20dataset.xlsx" class="btn btn-primary">📊 Open Dataset Excel</a>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Academic Header -->
+    <section class="header-card">
+      <div class="sub-tag">Research Evaluation & Cross-Model Benchmark</div>
+      <h1 class="main-title">Quality Assurance & Comparative Benchmark of Educational Flashcards</h1>
+      <p class="header-desc">
+        A multi-dimensional evaluation measuring Correctness, Cognitive Difficulty, Duplication, and Educational Relevance across the LOA-ESS pipeline against leading commercial models (xAI Grok, Anthropic Claude 4.6, and OpenAI ChatGPT).
+      </p>
+      <div class="meta-grid">
+        <div class="meta-item"><span>Project ID</span><strong>R26-SE-022</strong></div>
+        <div class="meta-item"><span>Architecture</span><strong>LOA-ESS Pipeline</strong></div>
+        <div class="meta-item"><span>Evaluator Protocol</span><strong>Independent LLM Judge & Vector NLP</strong></div>
+        <div class="meta-item"><span>Dataset Reference</span><strong>LLM comparison dataset.xlsx</strong></div>
+      </div>
+    </section>
+
+    <!-- 3-Step Summary Card (Makes it effortless to present) -->
+    <section class="explain-card">
+      <div class="explain-title">
+        <span>⚡ Three Core Evaluation Pillars (How Quality Is Verified)</span>
+      </div>
+      <div class="explain-grid">
+        <div class="explain-step">
+          <div class="step-num">Pillar 1</div>
+          <div class="step-heading">1. Correctness & Grounding</div>
+          <p class="step-desc">
+            Verified through slide-level citations and factual accuracy scoring. <strong>93.3% of LOA-ESS cards</strong> cite exact lecture slides with numerical data, compared to <strong>0% in commercial LLMs</strong>.
+          </p>
+        </div>
+        <div class="explain-step">
+          <div class="step-num">Pillar 2</div>
+          <div class="step-heading">2. Difficulty & Bloom's Depth</div>
+          <p class="step-desc">
+            Measured against Bloom's Revised Taxonomy. ChatGPT is <strong>80% locked into Level 1 (Remember)</strong> definitions, while LOA-ESS delivers <strong>40% high-order analysis and evaluation</strong>.
+          </p>
+        </div>
+        <div class="explain-step">
+          <div class="step-num">Pillar 3</div>
+          <div class="step-heading">3. Duplication & Redundancy</div>
+          <p class="step-desc">
+            Measured via pairwise cosine distance. ChatGPT exhibited <strong>20% concept duplication</strong> across its deck. LOA-ESS achieves <strong>0% duplication</strong> by partitioning across Learning Outcomes.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card highlight">
+        <div class="stat-label">Source Citation Grounding</div>
+        <div class="stat-val">93.3%</div>
+        <div class="stat-sub">14 / 15 cards cite exact lecture slides</div>
+        <span class="stat-badge badge-green">0.0% in Grok, Claude & ChatGPT</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">High-Order Depth (Bloom 4-5)</div>
+        <div class="stat-val">40.0%</div>
+        <div class="stat-sub">Analyze & Evaluate cognitive depth</div>
+        <span class="stat-badge badge-blue">ChatGPT has only 13.3%</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Semantic Duplication</div>
+        <div class="stat-val">0.0%</div>
+        <div class="stat-sub">Zero redundant cards across deck</div>
+        <span class="stat-badge badge-green">ChatGPT has 20% duplication</span>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-label">Composite ERS Metric</div>
+        <div class="stat-val">0.912</div>
+        <div class="stat-sub">Pedagogical relevance index</div>
+        <span class="stat-badge badge-green">+119.8% over ChatGPT (0.415)</span>
+      </div>
+    </div>
+
+    <!-- Section: Core Table -->
+    <h2 class="section-title">📊 Empirical Head-to-Head Comparison Matrix</h2>
+    <p class="section-desc">Computed across the 15 flashcards per model in <code>LLM comparison dataset.xlsx</code>.</p>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Evaluation Dimension</th>
+            <th class="col-highlight">My Model (LOA-ESS)</th>
+            <th>xAI Grok</th>
+            <th>Anthropic Claude 4.6</th>
+            <th>OpenAI ChatGPT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Verifiable Slide Citations</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">93.3% (14/15)</span></td>
+            <td><span class="pill pill-danger">0.0% (0/14)</span></td>
+            <td><span class="pill pill-danger">0.0% (0/15)</span></td>
+            <td><span class="pill pill-danger">0.0% (0/15)</span></td>
+          </tr>
+          <tr>
+            <td><strong>2. High-Order Difficulty (Analyze + Evaluate)</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">40.0% (6 cards)</span></td>
+            <td><span class="pill pill-warning">14.3% (2 cards)</span></td>
+            <td><span class="pill pill-neutral">26.7% (4 cards)</span></td>
+            <td><span class="pill pill-danger">13.3% (2 cards)</span></td>
+          </tr>
+          <tr>
+            <td><strong>3. Low-Level Recall Bias (Level 1 Remember)</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">33.3% (Balanced)</span></td>
+            <td><span class="pill pill-warning">50.0% (High)</span></td>
+            <td><span class="pill pill-warning">46.7% (High)</span></td>
+            <td><span class="pill pill-danger">80.0% (Severe skew)</span></td>
+          </tr>
+          <tr>
+            <td><strong>4. Intra-Deck Redundancy Rate</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">0.0% (0 pairs)</span></td>
+            <td><span class="pill pill-warning">14.3% (2 pairs)</span></td>
+            <td><span class="pill pill-neutral">6.7% (1 pair)</span></td>
+            <td><span class="pill pill-danger">20.0% (3 pairs)</span></td>
+          </tr>
+          <tr>
+            <td><strong>5. Valid Question Format (`?`)</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">93.3%</span></td>
+            <td><span class="pill pill-danger">42.9% (8 headers)</span></td>
+            <td><span class="pill pill-success">100.0%</span></td>
+            <td><span class="pill pill-warning">93.3% (Numbered)</span></td>
+          </tr>
+          <tr>
+            <td><strong>6. Card Quota Completed</strong></td>
+            <td class="col-highlight"><span class="pill pill-success">15 / 15 (100%)</span></td>
+            <td><span class="pill pill-danger">14 / 15 (Dropped 1)</span></td>
+            <td><span class="pill pill-success">15 / 15 (100%)</span></td>
+            <td><span class="pill pill-success">15 / 15 (100%)</span></td>
+          </tr>
+          <tr>
+            <td><strong>7. Average Explanatory Length</strong></td>
+            <td class="col-highlight"><strong>27.9 words</strong> (Concise)</td>
+            <td>27.4 words</td>
+            <td>44.5 words (Verbose)</td>
+            <td><span class="pill pill-warning">10.3 words (Shallow)</span></td>
+          </tr>
+          <tr>
+            <td><strong>8. Composite ERS Score (0.00 - 1.00)</strong></td>
+            <td class="col-highlight"><strong>0.912</strong></td>
+            <td>0.475</td>
+            <td>0.600</td>
+            <td><strong>0.415</strong> (Baseline)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section: Bloom's Taxonomy Visual Bars -->
+    <h2 class="section-title">🧠 Bloom's Taxonomy Difficulty Breakdown</h2>
+    <p class="section-desc">Comparison of cognitive level distributions: ChatGPT is heavily trapped at Level 1 Remember, whereas LOA-ESS achieves an active pedagogical distribution.</p>
+
+    <div class="bar-container">
+      <div style="display:flex; gap:16px; font-size:0.78rem; font-weight:700; margin-bottom:8px; flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#64748b;display:inline-block;border-radius:2px;"></span> Level 1: Remember</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#3b82f6;display:inline-block;border-radius:2px;"></span> Level 2: Understand</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#06b6d4;display:inline-block;border-radius:2px;"></span> Level 3: Apply</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#8b5cf6;display:inline-block;border-radius:2px;"></span> Level 4: Analyze</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#10b981;display:inline-block;border-radius:2px;"></span> Level 5: Evaluate</span>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">My Model (LOA-ESS)</div>
+        <div class="bar-track">
+          <div class="bar-segment seg-remember" style="width: 33.3%;">33%</div>
+          <div class="bar-segment seg-understand" style="width: 20.0%;">20%</div>
+          <div class="bar-segment seg-apply" style="width: 6.7%;">7%</div>
+          <div class="bar-segment seg-analyze" style="width: 20.0%;">20%</div>
+          <div class="bar-segment seg-evaluate" style="width: 20.0%;">20%</div>
+        </div>
+        <div style="font-weight:700;font-size:0.85rem;color:#10b981;">Balanced</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Claude 4.6</div>
+        <div class="bar-track">
+          <div class="bar-segment seg-remember" style="width: 46.7%;">47%</div>
+          <div class="bar-segment seg-understand" style="width: 26.7%;">27%</div>
+          <div class="bar-segment seg-apply" style="width: 0%;"></div>
+          <div class="bar-segment seg-analyze" style="width: 26.7%;">27%</div>
+          <div class="bar-segment seg-evaluate" style="width: 0%;"></div>
+        </div>
+        <div style="font-weight:700;font-size:0.85rem;color:#8b5cf6;">Moderate</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">xAI Grok</div>
+        <div class="bar-track">
+          <div class="bar-segment seg-remember" style="width: 50.0%;">50%</div>
+          <div class="bar-segment seg-understand" style="width: 35.7%;">36%</div>
+          <div class="bar-segment seg-apply" style="width: 0%;"></div>
+          <div class="bar-segment seg-analyze" style="width: 14.3%;">14%</div>
+          <div class="bar-segment seg-evaluate" style="width: 0%;"></div>
+        </div>
+        <div style="font-weight:700;font-size:0.85rem;color:#f59e0b;">Shallow</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">OpenAI ChatGPT</div>
+        <div class="bar-track">
+          <div class="bar-segment seg-remember" style="width: 80.0%;">80%</div>
+          <div class="bar-segment seg-understand" style="width: 6.7%;">7%</div>
+          <div class="bar-segment seg-apply" style="width: 0%;"></div>
+          <div class="bar-segment seg-analyze" style="width: 13.3%;">13%</div>
+          <div class="bar-segment seg-evaluate" style="width: 0%;"></div>
+        </div>
+        <div style="font-weight:700;font-size:0.85rem;color:#ef4444;">80% Level 1</div>
+      </div>
+    </div>
+
+    <!-- Section: Qualitative Evidence -->
+    <h2 class="section-title">🔍 Concrete Card Evidence from `LLM comparison dataset.xlsx`</h2>
+    <p class="section-desc">Direct excerpts demonstrating qualitative differences between curriculum-anchored generation and generic outputs.</p>
+
+    <div class="case-grid">
+      <!-- Card 1: My LLM -->
+      <div class="case-box">
+        <div class="case-header">
+          <span class="case-model" style="color:var(--accent-dark);">My Model (LOA-ESS) — Row 8</span>
+          <span class="pill pill-success">Bloom: Evaluate</span>
+        </div>
+        <div class="case-q">"Why does fixing requirement problems early in the SDLC cost significantly less than fixing them later?"</div>
+        <div class="case-a">
+          "Early focus on security reduces operational vulnerabilities and costly late-stage patches; data shows late fixes can cost up to <strong>$2.5 million compared to $0.5 million</strong> early on."
+        </div>
+        <span class="case-citation">📌 Introduction to Software Security (3).pptx, Slide 19</span>
+      </div>
+
+      <!-- Card 2: ChatGPT Duplication -->
+      <div class="case-box">
+        <div class="case-header">
+          <span class="case-model" style="color:#ef4444;">ChatGPT — Rows 9 & 10</span>
+          <span class="pill pill-danger">20% Duplication Flaw</span>
+        </div>
+        <div class="case-q">"5. What are the three tiers in a 3-tier architecture?"</div>
+        <div class="case-a">"Client tier, middle tier, and data tier."</div>
+        <div class="case-q" style="margin-top:10px;">"6. What does each tier do?"</div>
+        <div class="case-a">"Client: sends requests. Middle: processes business logic. Data: stores persistent info."</div>
+        <div class="case-flaw">⚠️ Redundant Fragmentation: Splits 1 concept into 2 shallow cards with prefix numbers.</div>
+      </div>
+
+      <!-- Card 3: Grok Header Bug -->
+      <div class="case-box">
+        <div class="case-header">
+          <span class="case-model" style="color:#f59e0b;">xAI Grok — Row 10</span>
+          <span class="pill pill-warning">57.1% Non-Question Flaw</span>
+        </div>
+        <div class="case-q">"The three main tiers in a classic 3-tier architecture"</div>
+        <div class="case-a">
+          "Client / Presentation tier – User interface<br>
+          Middle / Logic / Business tier – Business logic & processing<br>
+          Data tier – Persistent data store"
+        </div>
+        <div class="case-flaw">⚠️ Malformed Prompt: Output is a raw slide header, not an interrogative flashcard question.</div>
+      </div>
+
+      <!-- Card 4: Claude Syntax Bug -->
+      <div class="case-box">
+        <div class="case-header">
+          <span class="case-model" style="color:#8b5cf6;">Claude 4.6 — Row 17</span>
+          <span class="pill pill-warning">Syntax Stripping Bug</span>
+        </div>
+        <div class="case-q">"Which JAX-RS annotation is used to specify that a method handles HTTP GET requests?"</div>
+        <div class="case-a">
+          "<strong>is the JAX-RS annotation</strong> used to mark a method as handling HTTP GET requests..."
+        </div>
+        <div class="case-flaw">⚠️ Stripping Error: Omitted the actual annotation token (<code>@GET</code>) during formatting.</div>
+      </div>
+    </div>
+
+    <!-- Section: Novel ERS Metric -->
+    <h2 class="section-title">📐 Academic Justification: The Novel ERS Metric</h2>
+    <p class="section-desc">Formula and weightings designed for Research Contribution RC4, establishing a verifiable educational index.</p>
+
+    <div class="bar-container" style="background:#f8fafc;">
+      <p style="font-family:'JetBrains Mono',monospace; font-size:1.05rem; color:#0f766e; font-weight:700; margin-bottom:12px;">
+        ERS = 0.40 × LOCS + 0.30 × BAS + 0.20 × SGR + 0.10 × Coherence
+      </p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; font-size:0.85rem; color:#334155;">
+        <div><strong>LOCS (40%):</strong> Learning Outcome Coverage Score across target syllabus.</div>
+        <div><strong>BAS (30%):</strong> Bloom's Alignment Score comparing cognitive depth to target LO verb.</div>
+        <div><strong>SGR (20%):</strong> Source Grounding Rate checking verifiable slide provenance.</div>
+        <div><strong>Coherence (10%):</strong> Absence of malformed headers or numbering artifacts.</div>
+      </div>
+    </div>
+
+  </main>
+
+</body>
+</html>
