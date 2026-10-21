@@ -28,4 +28,4 @@ async def disconnect_db() -> None:
         _client.close()
 
 def get_db() -> AsyncIOMotorDatabase:
-    return _client[settings.MONGODB_DB]
+    return _client[settings.MONGODB_DB] # type: ignore
