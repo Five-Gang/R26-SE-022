@@ -29,7 +29,7 @@ export default function FloatingFocusWidget() {
       </div>
 
       <div className={styles.scoreBadge}>
-        🎯 {focusData.attentionScore}% Focus
+        🎯 {focusData.emotion || 'Detecting…'}
       </div>
 
       <div className={styles.timer}>

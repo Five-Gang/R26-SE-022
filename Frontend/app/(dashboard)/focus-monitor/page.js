@@ -13,17 +13,10 @@ export default function FocusMonitorPage() {
     isMonitoring, 
     sessionSeconds, 
     focusData, 
-    startMonitoring, 
     stopMonitoring,
-    showConsentModal,
     setShowConsentModal,
     videoRef
   } = useFocus();
-
-  const handleConfirmStart = async () => {
-    setShowConsentModal(false);
-    await startMonitoring();
-  };
 
   const formatTimer = (secs) => {
     const mins = Math.floor(secs / 60);
@@ -121,13 +114,6 @@ export default function FocusMonitorPage() {
           <>
             {/* Top 4 Active Metric Cards */}
             <div className={styles.activeStatsGrid}>
-              <div className={styles.statCard}>
-                <div className={`${styles.statIconWrap} ${styles.iconTeal}`}>🎯</div>
-                <div>
-                  <div className={styles.statValue}>{focusData.attentionScore || 0}%</div>
-                  <div className={styles.statLabel}>Current Attention Score</div>
-                </div>
-              </div>
 
               <div className={styles.statCard}>
                 <div className={`${styles.statIconWrap} ${styles.iconBlue}`}>🧠</div>
@@ -222,54 +208,18 @@ export default function FocusMonitorPage() {
                 </div>
               </div>
 
-              {/* Right Column: Professional Cognitive Engagement & Real-Time Area Chart */}
+              {/* Right Column: Cognitive Telemetry Cards */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
-                    <span>📈</span> Live Engagement & Attention Trend
+                    <span>🧠</span> Live Cognitive Telemetry
                   </div>
                   <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                     Continuously Synced
                   </span>
                 </div>
 
-                {/* State Banner with Clear Meaning */}
-                <div className={styles.stateBanner}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>CURRENT STATE</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-primary)' }}>{focusData.emotion} State</div>
-                  </div>
-                  <span className={`${styles.stateTag} ${stateBadgeClass}`}>
-                    ● {focusData.attentionScore >= 75 ? 'Optimal Flow' : focusData.attentionScore >= 50 ? 'Moderate Alertness' : 'Attention Dip'}
-                  </span>
-                </div>
-
-                {/* Professional Glowing Area Gradient Chart */}
-                <div style={{ width: '100%', height: 180, marginBottom: '1rem' }}>
-                  <ResponsiveContainer>
-                    <AreaChart data={chartTimelineData} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
-                      <defs>
-                        <linearGradient id="attentionGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0F766E" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#0F766E" stopOpacity={0.0}/>
-                        </linearGradient>
-                        <linearGradient id="fatigueGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0.0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 10 }} />
-                      <YAxis domain={[0, 100]} ticks={[0, 50, 100]} axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 10 }} unit="%" />
-                      <Tooltip formatter={(value) => [`${value}%`]} contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
-                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '5px' }} />
-                      <Area type="monotone" dataKey="attention" name="Attention Level (%)" stroke="#0F766E" strokeWidth={2.5} fillOpacity={1} fill="url(#attentionGradient)" />
-                      <Area type="monotone" dataKey="fatigue" name="Fatigue Index (%)" stroke="#EF4444" strokeWidth={1.5} strokeDasharray="3 3" fillOpacity={1} fill="url(#fatigueGradient)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* 4 Professional Cognitive Telemetry Micro-Cards */}
+                {/* 4 Cognitive Telemetry Micro-Cards */}
                 <div className={styles.cognitiveGrid}>
                   <div className={styles.cognitiveCard}>
                     <span className={styles.cogLabel}>Gaze Target</span>
@@ -312,47 +262,7 @@ export default function FocusMonitorPage() {
 
       </main>
 
-      {/* 3. POPUP MODAL: Interactive Consent / Confirmation Dialog */}
-      {showConsentModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            
-            <div className={styles.modalHeader}>
-              <div className={styles.modalIconWrap}>👁️</div>
-              <h2 className={styles.modalTitle}>Enable Background Focus Monitoring?</h2>
-              <p className={styles.modalSubtitle}>
-                AuraLearn will monitor your eye behavior, alertness, and focus in the background while you study anywhere in the app.
-              </p>
-            </div>
-
-            <div className={styles.modalPoints}>
-              <div className={styles.modalPoint}>
-                <span className={styles.pointIcon}>✓</span>
-                <span><strong>Persistent Background Tracking:</strong> Continues running smoothly as you switch between study pages.</span>
-              </div>
-              <div className={styles.modalPoint}>
-                <span className={styles.pointIcon}>✓</span>
-                <span><strong>Auto-Save on Tab Close:</strong> If you exit or close the browser, your session is automatically logged.</span>
-              </div>
-              <div className={styles.modalPoint}>
-                <span className={styles.pointIcon}>✓</span>
-                <span><strong>100% In-Memory Privacy:</strong> No photos or recordings are ever saved or uploaded.</span>
-              </div>
-            </div>
-
-            <div className={styles.modalActions}>
-              <button className={styles.btnConfirm} onClick={handleConfirmStart}>
-                Allow & Start Session
-              </button>
-              <button className={styles.btnCancel} onClick={() => setShowConsentModal(false)}>
-                Cancel
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
+
 }

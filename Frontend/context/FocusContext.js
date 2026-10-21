@@ -2,12 +2,164 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
+// --- inline styles for the focus-prompt banner (no extra CSS file needed) ---
+const promptStyles = {
+  overlay: {
+    position: 'fixed',
+    bottom: '86px',          // sits just above the FloatingFocusWidget
+    right: '24px',
+    zIndex: 1100,
+    animation: 'slideUpPrompt 0.35s ease-out',
+  },
+  banner: {
+    background: 'linear-gradient(135deg, #0F766E 0%, #0D9488 100%)',
+    borderRadius: '16px',
+    boxShadow: '0 12px 40px rgba(15,118,110,0.35)',
+    padding: '1rem 1.25rem',
+    minWidth: '320px',
+    maxWidth: '360px',
+    color: '#fff',
+    fontFamily: 'inherit',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: '10px',
+    right: '14px',
+    background: 'transparent',
+    border: 'none',
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: '1.1rem',
+    cursor: 'pointer',
+    lineHeight: 1,
+  },
+  icon: { fontSize: '1.6rem', marginBottom: '0.3rem' },
+  title: { margin: '0 0 0.25rem', fontSize: '0.95rem', fontWeight: 700 },
+  subtitle: { margin: '0 0 0.85rem', fontSize: '0.8rem', opacity: 0.85, lineHeight: 1.4 },
+  actionsRow: { display: 'flex', gap: '0.6rem' },
+  btnEnable: {
+    flex: 1,
+    background: '#fff',
+    color: '#0F766E',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '0.45rem 0.75rem',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  btnDismiss: {
+    background: 'rgba(255,255,255,0.2)',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.3)',
+    borderRadius: '10px',
+    padding: '0.45rem 0.75rem',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+};
+
+// --- inline styles for the global consent modal ---
+const consentStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0, left: 0,
+    width: '100vw', height: '100vh',
+    background: 'rgba(15,23,42,0.50)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    animation: 'fadeInConsent 0.2s ease-out',
+  },
+  box: {
+    background: '#fff',
+    borderRadius: '20px',
+    width: '100%',
+    maxWidth: '500px',
+    padding: '2.25rem 2.5rem',
+    boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
+    animation: 'fadeUpConsent 0.3s ease-out',
+    position: 'relative',
+    fontFamily: 'inherit',
+  },
+  iconWrap: {
+    width: 60, height: 60,
+    background: '#F0FDFA',
+    border: '1px solid #CCFBF1',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.75rem',
+    margin: '0 auto 1rem',
+  },
+  header: { textAlign: 'center', marginBottom: '1.5rem' },
+  title: { fontSize: '1.2rem', fontWeight: 700, color: '#0F172A', margin: '0 0 0.4rem' },
+  subtitle: { fontSize: '0.875rem', color: '#64748B', lineHeight: 1.5, margin: 0 },
+  points: { display: 'flex', flexDirection: 'column', gap: '0.85rem', margin: '1.5rem 0' },
+  point: { display: 'flex', alignItems: 'flex-start', gap: '0.7rem', fontSize: '0.85rem', color: '#475569', lineHeight: 1.4 },
+  pointIcon: { color: '#0D9488', fontWeight: 700, flexShrink: 0, marginTop: '1px' },
+  actions: { display: 'flex', gap: '0.85rem', marginTop: '0.5rem' },
+  btnConfirm: {
+    flex: 1,
+    background: '#0D9488',
+    color: '#fff',
+    border: 'none',
+    padding: '0.75rem 1rem',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  btnCancel: {
+    flex: 1,
+    background: 'transparent',
+    color: '#64748B',
+    border: '1px solid #E2E8F0',
+    padding: '0.75rem 1rem',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+};
+
+/* Inject keyframes once */
+if (typeof document !== 'undefined' && !document.getElementById('__focus-prompt-kf__')) {
+  const s = document.createElement('style');
+  s.id = '__focus-prompt-kf__';
+  s.textContent = [
+    '@keyframes slideUpPrompt { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }',
+    '@keyframes fadeInConsent { from{opacity:0} to{opacity:1} }',
+    '@keyframes fadeUpConsent { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }',
+  ].join(' ');
+  document.head.appendChild(s);
+}
+
 const FocusContext = createContext(null);
 
 export function FocusProvider({ children }) {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [showConsentModal, setShowConsentModal] = useState(false);
+  const [showFocusPrompt, setShowFocusPrompt] = useState(false);
+  const promptTimerRef = useRef(null);
+
+  /** Call this from any page (summary/flashcard/quiz generation) to show the banner */
+  const triggerFocusPrompt = useCallback(() => {
+    if (isMonitoring) return; // already running, no need to prompt
+    setShowFocusPrompt(true);
+    // Auto-dismiss after 12 seconds if user ignores it
+    if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
+    promptTimerRef.current = setTimeout(() => setShowFocusPrompt(false), 12000);
+  }, [isMonitoring]);
+
+  const dismissFocusPrompt = useCallback(() => {
+    if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
+    setShowFocusPrompt(false);
+  }, []);
   
   // Real-time Detection State - STRICT 0-INIT STATE
   const [focusData, setFocusData] = useState({
@@ -325,6 +477,20 @@ export function FocusProvider({ children }) {
     };
   }, [saveSessionToStorage]);
 
+  const handleEnableFromPrompt = useCallback(async () => {
+    dismissFocusPrompt();
+    setShowConsentModal(true);
+  }, [dismissFocusPrompt]);
+
+  const handleConfirmConsent = useCallback(async () => {
+    setShowConsentModal(false);
+    await startMonitoring();
+  }, [startMonitoring]);
+
+  const handleCancelConsent = useCallback(() => {
+    setShowConsentModal(false);
+  }, []);
+
   return (
     <FocusContext.Provider value={{
       isMonitoring,
@@ -335,6 +501,7 @@ export function FocusProvider({ children }) {
       startMonitoring,
       stopMonitoring,
       videoRef,
+      triggerFocusPrompt,
     }}>
       {/* Background persistent invisible video and canvas */}
       <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', zIndex: -100 }}>
@@ -343,6 +510,65 @@ export function FocusProvider({ children }) {
       </div>
 
       {children}
+
+      {/* ---- Focus-monitor prompt banner ---- */}
+      {showFocusPrompt && (
+        <div style={promptStyles.overlay}>
+          <div style={{ ...promptStyles.banner, position: 'relative' }}>
+            <button style={promptStyles.closeBtn} onClick={dismissFocusPrompt} aria-label="Dismiss">✕</button>
+            <div style={promptStyles.icon}>🎯</div>
+            <p style={promptStyles.title}>Enable Background Focus Monitoring?</p>
+            <p style={promptStyles.subtitle}>
+              AuraLearn can track your attention &amp; fatigue while you study — running silently in the background without interrupting you.
+            </p>
+            <div style={promptStyles.actionsRow}>
+              <button style={promptStyles.btnEnable} onClick={handleEnableFromPrompt}>
+                📹 Enable Monitor
+              </button>
+              <button style={promptStyles.btnDismiss} onClick={dismissFocusPrompt}>
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Global Consent Modal ---- */}
+      {showConsentModal && (
+        <div style={consentStyles.overlay} onClick={(e) => e.target === e.currentTarget && handleCancelConsent()}>
+          <div style={consentStyles.box}>
+            <div style={consentStyles.header}>
+              <div style={consentStyles.iconWrap}>👁️</div>
+              <h2 style={consentStyles.title}>Enable Background Focus Monitoring?</h2>
+              <p style={consentStyles.subtitle}>
+                AuraLearn will monitor your eye behaviour, alertness, and focus in the background while you study anywhere in the app.
+              </p>
+            </div>
+            <div style={consentStyles.points}>
+              <div style={consentStyles.point}>
+                <span style={consentStyles.pointIcon}>✓</span>
+                <span><strong>Persistent Background Tracking:</strong> Continues running smoothly as you switch between study pages.</span>
+              </div>
+              <div style={consentStyles.point}>
+                <span style={consentStyles.pointIcon}>✓</span>
+                <span><strong>Auto-Save on Tab Close:</strong> If you exit or close the browser, your session is automatically logged.</span>
+              </div>
+              <div style={consentStyles.point}>
+                <span style={consentStyles.pointIcon}>✓</span>
+                <span><strong>100% In-Memory Privacy:</strong> No photos or recordings are ever saved or uploaded.</span>
+              </div>
+            </div>
+            <div style={consentStyles.actions}>
+              <button style={consentStyles.btnConfirm} onClick={handleConfirmConsent}>
+                Allow &amp; Start Session
+              </button>
+              <button style={consentStyles.btnCancel} onClick={handleCancelConsent}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </FocusContext.Provider>
   );
 }
