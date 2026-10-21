@@ -22,8 +22,8 @@ async def get_reminders(
     """Get all SENT reminders for the student."""
     reminders = await db.reminders.find({
         "student_id": student_id,
-        "status": "SENT"
-    }).to_list(None)
+        "status": {"$in": ["SENT", "SCHEDULED"]}
+    }).sort("scheduled_at", 1).to_list(None)
 
     item_keys = [reminder.get("item_key") for reminder in reminders if reminder.get("item_key")]
     review_items = await db.review_items.find(

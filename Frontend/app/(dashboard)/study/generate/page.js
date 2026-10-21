@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { modulesApi, summariesApi } from '../../../../lib/summarizer-api';
+import { useFocus } from '../../../../context/FocusContext';
 import styles from './generate.module.css';
 
 const OUTPUT_TYPES = [
@@ -50,6 +51,8 @@ export default function GeneratePage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
 
+  const { triggerFocusPrompt } = useFocus();
+
   // If no moduleId in URL, redirect back
   useEffect(() => {
     if (!moduleId) { router.replace('/study'); return; }
@@ -65,6 +68,9 @@ export default function GeneratePage() {
     if (!moduleId) return;
     setError(null);
     setGenerating(true);
+    // Prompt the student to enable background focus monitoring
+    // right as generation starts (they have 15-30 seconds while it runs)
+    triggerFocusPrompt();
     try {
       const payload = {
         module_id: moduleId,

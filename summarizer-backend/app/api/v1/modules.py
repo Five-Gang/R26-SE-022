@@ -32,9 +32,11 @@ async def create_module(data: ModuleCreate, db: AsyncSession = Depends(get_db)):
     dup_query = select(Module).where(Module.code == data.code)
     if data.student_id:
         dup_query = dup_query.where(Module.student_id == data.student_id)
+    else:
+        dup_query = dup_query.where(Module.student_id.is_(None))
     existing = await db.execute(dup_query)
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail=f"Module {data.code} already exists")
+        raise HTTPException(status_code=409, detail=f"Module {data.code} already exists for this student")
 
     module = Module(**data.model_dump())
     db.add(module)

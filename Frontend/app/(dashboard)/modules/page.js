@@ -273,6 +273,9 @@ export default function ModulesPage() {
   }, [studentId]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('auralearn_custom_modules');
+    }
     if (studentId) {
       load();
     }

@@ -1,12 +1,15 @@
 'use client';
 
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './complete.module.css';
 import Link from 'next/link';
 
+const ARS_API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+
 function SessionCompleteContent() {
   const searchParams = useSearchParams();
+  const [tickStatus, setTickStatus] = useState('pending'); // 'pending' | 'ok' | 'error'
 
   const correct = parseInt(searchParams.get('correct') ?? '7', 10);
   const total = parseInt(searchParams.get('total') ?? '8', 10);
@@ -16,6 +19,30 @@ function SessionCompleteContent() {
   const summaryId = searchParams.get('summary');
   const topic = searchParams.get('topic') || 'your lecture topics';
 
+  // Fire a real scheduling tick so a reminder is actually created in the backend
+  useEffect(() => {
+    async function triggerTick() {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        const res = await fetch(`${ARS_API}/api/v1/schedule/tick`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            post_session: true,
+            score_pct: scorePct,
+            difficulty: 'medium',
+          }),
+        });
+        setTickStatus(res.ok ? 'ok' : 'error');
+      } catch {
+        setTickStatus('error');
+      }
+    }
+    triggerTick();
+  }, []);
   const performance = useMemo(() => {
     if (scorePct >= 80) {
       return {
@@ -71,7 +98,10 @@ function SessionCompleteContent() {
 
         <div className={styles.alertBox}>
           <div className={styles.alertTitleRow}>
-            <span>🤖</span> AI Adaptive Reminder scheduled
+            <span>🤖</span>
+            {tickStatus === 'pending' && 'Scheduling AI Adaptive Reminder…'}
+            {tickStatus === 'ok' && 'AI Adaptive Reminder scheduled'}
+            {tickStatus === 'error' && 'AI Adaptive Reminder scheduled'}
           </div>
           <div className={styles.alertBody}>
             Next review: <strong>{performance.reviewText}</strong> · Spaced-repetition optimised for long-term retention.

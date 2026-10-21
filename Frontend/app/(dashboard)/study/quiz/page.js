@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { summariesApi } from '../../../../lib/summarizer-api';
 import styles from './quiz.module.css';
 
+const ARS_API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+
 const DEFAULT_QUESTIONS = [
   {
     id: 1,
@@ -139,15 +141,41 @@ export default function QuizPage() {
         setCurrent((c) => c + 1);
         setRevealed(false);
       } else {
-        // Calculate score and navigate to completion page
+        // Calculate score
         let correctCount = 0;
         questions.forEach((quest, idx) => {
-          if (answers[idx] === quest.correct_answer) {
-            correctCount++;
-          }
+          if (answers[idx] === quest.correct_answer) correctCount++;
         });
         const scorePct = Math.round((correctCount / questions.length) * 100);
         const durationMinutes = Math.max(1, Math.round((Date.now() - startTime) / 60000));
+
+        // Register review items in the ARS backend so the scheduler can create reminders
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        if (token) {
+          const upsertPromises = questions.map((quest, idx) => {
+            const isCorrect = answers[idx] === quest.correct_answer;
+            const itemScore = isCorrect ? 100 : Math.max(0, scorePct - 10);
+            return fetch(`${ARS_API}/api/v1/review-items/upsert`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                item_key: quest.id
+                  ? `q-${summaryId || 'default'}-${quest.id}`
+                  : `q-${summaryId || 'default'}-${idx}`,
+                title: quest.question?.slice(0, 120) || `Question ${idx + 1}`,
+                topic: quest.learning_outcome || quest.topic || null,
+                module_id: summaryId || null,
+                difficulty: quest.difficulty || 'medium',
+                quality_percentage: itemScore,
+              }),
+            }).catch(() => null); // never block navigation on API error
+          });
+          // Fire-and-forget; don't await so navigation is instant
+          Promise.allSettled(upsertPromises);
+        }
         router.push(
           `/study/complete?score=${scorePct}&total=${questions.length}&correct=${correctCount}&time=${durationMinutes}${
             summaryId ? `&summary=${summaryId}` : ''

@@ -23,10 +23,14 @@ export default function DashboardPage() {
 
   // Load real data from APIs and local storage
   useEffect(() => {
-    // 1. Fetch real modules from Summarizer Backend (Port 8000)
+    // 1. Fetch real modules for this specific student from Summarizer Backend
     async function fetchModules() {
       try {
-        const res = await fetch(`${SUMMARIZER_API}/api/v1/modules`);
+        const studentId = student?.student_id || student?._id || student?.id;
+        const url = studentId
+          ? `${SUMMARIZER_API}/api/v1/modules?student_id=${encodeURIComponent(studentId)}`
+          : `${SUMMARIZER_API}/api/v1/modules`;
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setModules(Array.isArray(data) ? data : []);

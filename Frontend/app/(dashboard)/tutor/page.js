@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { modulesApi } from '../../../lib/summarizer-api';
+import { useSession } from '../../../components/auth/SessionGuard';
 import styles from './tutor.module.css';
 
 const TUTOR_API      = process.env.NEXT_PUBLIC_TUTOR_API_URL      || 'http://localhost:8002';
@@ -293,9 +295,33 @@ export default function TutorPage() {
   const [backendOnline, setBackendOnline]           = useState(null);
   const [analytics, setAnalytics]                   = useState(null);
   const [showAnalytics, setShowAnalytics]           = useState(false);
+  const [uploadingSlide, setUploadingSlide]         = useState(false);
+  const [uploadProgress, setUploadProgress]         = useState(null); // null | 'uploading' | 'chunking' | 'done'
+  const [pdfStats, setPdfStats]                     = useState({}); // { [moduleCode]: { pdfs: number, chunks: number, files: string[] } }
   const [conversationHistory, setConversationHistory] = useState([]);
 
+  const { student } = useSession();
+  const studentId = student?.student_id || student?._id || student?.id;
+
   const chatEndRef = useRef(null);
+
+  /** Fetch per-file chunk stats from the tutor backend and group by module_code */
+  const fetchPdfStats = async () => {
+    try {
+      const res = await fetch(`${TUTOR_API}/api/materials/per-file`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const grouped = {};
+      for (const f of (data.files || [])) {
+        const key = f.module_code || '__untagged__';
+        if (!grouped[key]) grouped[key] = { pdfs: 0, chunks: 0, files: [] };
+        grouped[key].pdfs += 1;
+        grouped[key].chunks += f.chunks;
+        grouped[key].files.push(f.filename);
+      }
+      setPdfStats(grouped);
+    } catch { /* silently ignore */ }
+  };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
@@ -304,24 +330,52 @@ export default function TutorPage() {
       .then(r => setBackendOnline(r.ok))
       .catch(() => setBackendOnline(false));
 
-    fetch(`${SUMMARIZER_API}/api/v1/modules`)
+    const q = studentId ? `?student_id=${encodeURIComponent(studentId)}` : '';
+    fetch(`${SUMMARIZER_API}/api/v1/modules${q}`)
       .then(r => r.ok ? r.json() : [])
-      .then(data => setModules(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
+      .then(data => {
+        setModules(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setModules([]);
+      });
+
+    // Load initial chunk stats
+    fetchPdfStats();
+  }, [studentId]);
 
   const loadModuleMaterials = async (mod) => {
     setLoadingMaterials(true);
     setModuleDetails(null);
     setModuleSummaries([]);
-    const [details, summaries] = await Promise.all([
+    let [details, summaries] = await Promise.all([
       fetchModuleDetails(mod.id),
       fetchModuleSummaries(mod.id, 5),
     ]);
+
+    if (!details) {
+      try {
+        details = await modulesApi.get(mod.id);
+      } catch { /* ignore */ }
+    }
+
+    if (!summaries || summaries.length === 0) {
+      if (details) {
+        summaries = [
+          {
+            id: 'summary-' + (mod.code || 'mod'),
+            content_format: 'markdown',
+            week_number: 1,
+            content: `Core module curriculum for ${mod.name} (${mod.code}): ${details.description || ''}. Weekly Topics: ${details.weeks?.map(w => 'Week ' + w.week_number + ': ' + w.topic).join('; ') || 'Lectures'}. Learning Outcomes: ${details.learning_outcomes?.map(l => '[' + l.lo_code + '] ' + l.text).join('; ') || 'N/A'}`
+          }
+        ];
+      }
+    }
+
     setModuleDetails(details);
-    setModuleSummaries(summaries);
+    setModuleSummaries(summaries || []);
     setLoadingMaterials(false);
-    return { details, summaries };
+    return { details, summaries: summaries || [] };
   };
 
   const sendMessage = async () => {
@@ -468,16 +522,24 @@ export default function TutorPage() {
           <div className={styles.sideSection}>
             <div className={styles.sideSectionTitle}>📚 Your Modules</div>
             <div className={styles.moduleList}>
-              {modules.map(mod => (
-                <button
-                  key={mod.code}
-                  className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
-                  onClick={() => handleSelectModule(mod)}
-                >
-                  <span className={styles.moduleCode}>{mod.code}</span>
-                  <span className={styles.moduleName}>{mod.name}</span>
-                </button>
-              ))}
+              {modules.map(mod => {
+                const stats = pdfStats[mod.code];
+                return (
+                  <button
+                    key={mod.code}
+                    className={`${styles.moduleBtn} ${selectedModule?.code === mod.code ? styles.moduleBtnActive : ''}`}
+                    onClick={() => handleSelectModule(mod)}
+                  >
+                    <span className={styles.moduleCode}>{mod.code}</span>
+                    <span className={styles.moduleName}>{mod.name}</span>
+                    {stats && (
+                      <span className={styles.moduleChunkBadge}>
+                        📄 {stats.pdfs} PDF{stats.pdfs !== 1 ? 's' : ''} · {stats.chunks} chunks
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -491,6 +553,67 @@ export default function TutorPage() {
             </div>
           </div>
         )}
+
+        <div className={styles.sideSection}>
+          <div className={styles.sideSectionTitle}>📤 Upload to Tutor</div>
+          {/* Progress indicator shown during chunking */}
+          {uploadProgress && uploadProgress !== 'done' && (
+            <div className={styles.uploadProgress}>
+              <span className={styles.uploadProgressDot} />
+              <span className={styles.uploadProgressLabel}>
+                {uploadProgress === 'uploading' ? '📤 Uploading PDF…' : '⚙️ Chunking & indexing…'}
+              </span>
+            </div>
+          )}
+          <label className={`${styles.uploadTutorBtn} ${uploadingSlide ? styles.uploadTutorBtnDisabled : ''}`}>
+            <span>{uploadingSlide ? '⏳ Processing…' : '📄 + Upload PDF Material'}</span>
+            <input
+              type="file"
+              accept=".pdf"
+              hidden
+              disabled={uploadingSlide}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploadingSlide(true);
+                setUploadProgress('uploading');
+                try {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  // Tag with current module code if a module is selected
+                  if (selectedModule?.code) {
+                    formData.append('module_code', selectedModule.code);
+                  }
+                  setUploadProgress('chunking');
+                  const res = await fetch(`${TUTOR_API}/api/upload`, {
+                    method: 'POST',
+                    body: formData,
+                  });
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json.detail || 'Upload failed');
+
+                  // Refresh chunk stats after successful upload
+                  await fetchPdfStats();
+
+                  const chunks = json.chunks_created ?? json.documents_count ?? '?';
+                  setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: `✅ Successfully uploaded and indexed **"${file.name}"** into your AI Tutor!\n\n📊 **${chunks} chunks** created from this document.${selectedModule?.code ? ` Tagged to module **${selectedModule.code}**.` : ''}\n\nYou can now ask questions about this document.`,
+                    confidence_level: 'HIGH'
+                  }]);
+                  setUploadProgress('done');
+                } catch (err) {
+                  alert('Upload error: ' + err.message);
+                  setUploadProgress(null);
+                } finally {
+                  setUploadingSlide(false);
+                  e.target.value = '';
+                  setTimeout(() => setUploadProgress(null), 3000);
+                }
+              }}
+            />
+          </label>
+        </div>
 
         <button className={styles.analyticsBtn} onClick={loadAnalytics}>
           📊 {showAnalytics ? 'Hide' : 'View'} Analytics

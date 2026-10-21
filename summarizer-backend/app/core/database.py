@@ -31,18 +31,22 @@ class Base(DeclarativeBase):
 
 async def init_db():
     """Initialize database (create tables if needed)."""
-    async with engine.begin() as conn:
-        # In production, use Alembic migrations instead
-        from app.models import (  # noqa: F401
-            chunk,
-            document,
-            generated_output,
-            learning_outcome,
-            module,
-            student,
-        )
+    try:
+        async with engine.begin() as conn:
+            # In production, use Alembic migrations instead
+            from app.models import (  # noqa: F401
+                chunk,
+                document,
+                generated_output,
+                learning_outcome,
+                module,
+                student,
+            )
 
-        await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all)
+            print("[LOA-ESS] Database tables initialized!")
+    except Exception as e:
+        print(f"[LOA-ESS] Note: PostgreSQL connection skipped ({e}). Running in offline/dev mode.")
 
 
 async def get_db() -> AsyncSession:

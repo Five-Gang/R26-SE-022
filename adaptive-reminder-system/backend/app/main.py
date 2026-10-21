@@ -7,7 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import settings
 from app.core.jobs import start_scheduler, stop_scheduler
 from app.db.mongo import connect_db, disconnect_db
-from app.api.routes import auth, reminders, reminder_preferences, materials, schedule, push, dev, readiness, sm2, scheduler, content, pipeline, emotion_intervention
+from app.api.routes import auth, reminders, reminder_preferences, materials, schedule, push, dev, readiness, sm2, scheduler, content, pipeline, emotion_intervention, review_items
 
 # Create app
 app = FastAPI(
@@ -44,6 +44,7 @@ app.include_router(push.router)
 app.include_router(dev.router)
 app.include_router(readiness.router)
 app.include_router(emotion_intervention.router)
+app.include_router(review_items.router)
 
 # Lifecycle
 @app.on_event("startup")
