@@ -77,7 +77,12 @@ async def trigger_tick(
     else:
         provider = None  # use the real configured emotion provider
 
-    result = await run_scheduling_tick(student_id, db, provider=provider)
+    result = await run_scheduling_tick(
+        student_id,
+        db,
+        provider=provider,
+        post_session=bool(body and body.post_session),
+    )
 
     return ScheduleTickResponse(
         student_id=student_id,
@@ -93,4 +98,3 @@ async def trigger_tick(
         readiness_tier=result.get("readiness_tier"),
         content_type=result.get("content_type"),
     )
-

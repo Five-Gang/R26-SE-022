@@ -82,6 +82,7 @@ async def run_scheduling_tick(
     *,
     provider=None,
     now: Optional[datetime] = None,
+    post_session: bool = False,
 ) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     started_at = perf_counter()
@@ -151,6 +152,10 @@ async def run_scheduling_tick(
                 priority_score=metrics["priority_score"],
             )
         action = selected if assessment.should_send_recommendation else ReminderAction.SKIP
+        if post_session and action == ReminderAction.SKIP:
+            # A completed quiz must enter the memory-decay schedule even when
+            # the item is not urgent immediately after the successful review.
+            action = ReminderAction.DELAY
         selected_actions.append(action)
         selected_scores.append(scores)
 
@@ -181,7 +186,12 @@ async def run_scheduling_tick(
         if existing:
             continue
 
-        scheduled_at = now if action == ReminderAction.SEND else now + timedelta(hours=1)
+        if action == ReminderAction.SEND:
+            scheduled_at = now
+        elif post_session:
+            scheduled_at = metrics["next_review_date"]
+        else:
+            scheduled_at = now + timedelta(hours=1)
         reminder = {
                 "student_id": student_id,
                 "item_key": document.get("item_key", item.item_id),

@@ -89,9 +89,9 @@ export default function GeneratePage() {
       const result = await summariesApi.generate(payload);
 
       if (outputType === 'flashcards') {
-        router.push(`/study/flashcards?summary=${result.id}`);
+        router.push(`/study/flashcards?summary=${result.id}&module=${encodeURIComponent(moduleId)}`);
       } else if (outputType === 'quiz') {
-        router.push(`/study/quiz?summary=${result.id}`);
+        router.push(`/study/quiz?summary=${result.id}&module=${encodeURIComponent(moduleId)}`);
       } else {
         router.push(`/study/session/summary?summary=${result.id}`);
       }

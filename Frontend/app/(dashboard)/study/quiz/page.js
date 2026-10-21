@@ -59,6 +59,7 @@ export default function QuizPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const summaryId = searchParams.get('summary') || searchParams.get('id');
+  const moduleParam = searchParams.get('module');
 
   const [questions, setQuestions] = useState(summaryId ? [] : DEFAULT_QUESTIONS);
   const [current, setCurrent] = useState(0);
@@ -67,12 +68,11 @@ export default function QuizPage() {
   const [timeLeft, setTimeLeft] = useState(300); // 5 mins
   const [loading, setLoading] = useState(Boolean(summaryId));
   const [loadError, setLoadError] = useState(null);
+  const [moduleId, setModuleId] = useState(moduleParam || null);
   const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
     if (!summaryId) return;
-    setLoading(true);
-    setLoadError(null);
     summariesApi.get(summaryId)
       .then((res) => {
         let loaded = [];
@@ -100,6 +100,7 @@ export default function QuizPage() {
         if (loaded.length > 0) {
           setQuestions(loaded);
           setTimeLeft(Math.max(300, loaded.length * 60));
+          if (!moduleParam && res?.module_id) setModuleId(res.module_id);
         } else {
           setLoadError('No questions were found for this quiz session. Please generate a new quiz.');
         }
@@ -109,7 +110,7 @@ export default function QuizPage() {
         setLoadError(err.message || 'Failed to load quiz');
       })
       .finally(() => setLoading(false));
-  }, [summaryId]);
+  }, [summaryId, moduleParam]);
 
   // Timer countdown
   useEffect(() => {
@@ -133,7 +134,7 @@ export default function QuizPage() {
     return opt === q.correct_answer;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!revealed) {
       setRevealed(true);
     } else {
@@ -171,15 +172,28 @@ export default function QuizPage() {
                 difficulty: quest.difficulty || 'medium',
                 quality_percentage: itemScore,
               }),
-            }).catch(() => null); // never block navigation on API error
+            }).then(async (response) => {
+              if (!response.ok) {
+                const detail = await response.text();
+                throw new Error(`Review item registration failed (${response.status}): ${detail}`);
+              }
+              return response.json();
+            });
           });
-          // Fire-and-forget; don't await so navigation is instant
-          Promise.allSettled(upsertPromises);
+          // Wait until the review items exist before the completion page triggers
+          // the scheduling tick. Otherwise the tick can run against an empty queue.
+          try {
+            await Promise.all(upsertPromises);
+          } catch (error) {
+            console.error('Failed to register quiz review items:', error);
+            setLoadError('Your quiz result could not be scheduled for review. Please try again.');
+            return;
+          }
         }
         router.push(
           `/study/complete?score=${scorePct}&total=${questions.length}&correct=${correctCount}&time=${durationMinutes}${
             summaryId ? `&summary=${summaryId}` : ''
-          }`
+          }${moduleId ? `&module=${encodeURIComponent(moduleId)}` : ''}`
         );
       }
     }
