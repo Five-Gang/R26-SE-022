@@ -184,6 +184,11 @@ async def run_scheduling_tick(
             }
         )
         if existing:
+            if post_session and existing.get("status") == "SCHEDULED":
+                await db.reminders.update_one(
+                    {"_id": existing["_id"]},
+                    {"$set": {"scheduled_at": metrics["next_review_date"]}},
+                )
             continue
 
         if action == ReminderAction.SEND:

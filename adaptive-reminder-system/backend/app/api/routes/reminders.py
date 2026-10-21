@@ -14,6 +14,19 @@ from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
 
+
+def _scheduled_at(reminder: dict) -> datetime:
+    value = reminder.get("scheduled_at") or reminder.get("created_at")
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.now(timezone.utc)
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc)
+
 @router.get("", response_model=ReminderQueueResponse)
 async def get_reminders(
     student_id: str = Depends(get_current_student_id),
@@ -44,10 +57,10 @@ async def get_reminders(
     return ReminderQueueResponse(
         reminders=[
             ReminderResponse(
-                reminder_id=str(r["_id"]),
-                item_key=r["item_key"],
-                item_title=r["item_title"],
-                content_type=r["content_type"],
+                reminder_id=str(r.get("_id", r.get("item_key", ""))),
+                item_key=r.get("item_key", ""),
+                item_title=r.get("item_title") or r.get("title") or r.get("item_key", "Study item"),
+                content_type=r.get("content_type", "GUIDED_REVIEW"),
                 module_id=(
                     str(linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId"))
                     if linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId")
@@ -61,15 +74,15 @@ async def get_reminders(
                     "difficulty_level",
                     "difficulty",
                 ),
-                readiness_tier=r["readiness_tier"],
-                readiness_score=r["readiness_score"],
-                retention_probability=r["retention_probability"],
-                bandit_action=r["bandit_action"],
+                readiness_tier=r.get("readiness_tier", "MEDIUM"),
+                readiness_score=float(r.get("readiness_score", 0.0)),
+                retention_probability=float(r.get("retention_probability", 0.0)),
+                bandit_action=r.get("bandit_action", "DELAY"),
                 activity_type=r.get("activity_type"),
                 engagement_score=r.get("engagement_score"),
                 decision_reason=r.get("decision_reason"),
-                status=r["status"],
-                scheduled_at=r["scheduled_at"],
+                status=r.get("status", "SCHEDULED"),
+                scheduled_at=_scheduled_at(r),
                 sent_at=r.get("sent_at"),
                 responded_at=r.get("responded_at"),
             )
