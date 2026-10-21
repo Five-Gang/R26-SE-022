@@ -176,7 +176,6 @@ export default function QuizPage() {
           // Fire-and-forget; don't await so navigation is instant
           Promise.allSettled(upsertPromises);
         }
-
         router.push(
           `/study/complete?score=${scorePct}&total=${questions.length}&correct=${correctCount}&time=${durationMinutes}${
             summaryId ? `&summary=${summaryId}` : ''

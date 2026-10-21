@@ -43,7 +43,6 @@ function SessionCompleteContent() {
     }
     triggerTick();
   }, []);
-
   const performance = useMemo(() => {
     if (scorePct >= 80) {
       return {
