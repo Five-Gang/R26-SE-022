@@ -152,6 +152,11 @@ export default function QuizPage() {
 
         // Register review items in the ARS backend so the scheduler can create reminders
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        if (!token) {
+          setLoadError('Your session expired. Please sign in again before completing the quiz.');
+          return;
+        }
+
         if (token) {
           const upsertPromises = questions.map((quest, idx) => {
             const isCorrect = answers[idx] === quest.correct_answer;

@@ -24,6 +24,10 @@ function SessionCompleteContent() {
     async function triggerTick() {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        if (!token) {
+          setTickStatus('error');
+          return;
+        }
         const res = await fetch(`${ARS_API}/api/v1/schedule/tick`, {
           method: 'POST',
           headers: {
@@ -36,7 +40,12 @@ function SessionCompleteContent() {
             difficulty: 'medium',
           }),
         });
-        setTickStatus(res.ok ? 'ok' : 'error');
+        if (!res.ok) {
+          setTickStatus('error');
+          return;
+        }
+        const result = await res.json();
+        setTickStatus(result.reminders_created > 0 ? 'ok' : 'error');
       } catch {
         setTickStatus('error');
       }
