@@ -42,7 +42,7 @@ function SessionCompleteContent() {
       }
     }
     triggerTick();
-  }, []);
+  }, [scorePct]);
   const performance = useMemo(() => {
     if (scorePct >= 80) {
       return {
@@ -101,7 +101,7 @@ function SessionCompleteContent() {
             <span>🤖</span>
             {tickStatus === 'pending' && 'Scheduling AI Adaptive Reminder…'}
             {tickStatus === 'ok' && 'AI Adaptive Reminder scheduled'}
-            {tickStatus === 'error' && 'AI Adaptive Reminder scheduled'}
+            {tickStatus === 'error' && 'AI Adaptive Reminder could not be confirmed'}
           </div>
           <div className={styles.alertBody}>
             Next review: <strong>{performance.reviewText}</strong> · Spaced-repetition optimised for long-term retention.

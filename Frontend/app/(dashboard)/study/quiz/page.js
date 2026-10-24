@@ -168,7 +168,7 @@ export default function QuizPage() {
                   : `q-${summaryId || 'default'}-${idx}`,
                 title: quest.question?.slice(0, 120) || `Question ${idx + 1}`,
                 topic: quest.learning_outcome || quest.topic || null,
-                module_id: summaryId || null,
+                module_id: moduleId || null,
                 difficulty: quest.difficulty || 'medium',
                 quality_percentage: itemScore,
               }),

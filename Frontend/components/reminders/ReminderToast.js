@@ -12,6 +12,7 @@ const DISPLAY_TIME = 12000;
 export default function ReminderToast() {
   const router = useRouter();
   const [reminder, setReminder] = useState(null);
+  const [feedbackError, setFeedbackError] = useState(null);
   const hideTimer = useRef(null);
 
   const checkReminders = useCallback(async () => {
@@ -26,7 +27,13 @@ export default function ReminderToast() {
 
       const result = await response.json();
       const now = Date.now();
-      const shown = JSON.parse(window.sessionStorage.getItem('shown_reminders') || '[]');
+      let shown = [];
+      try {
+        const stored = JSON.parse(window.sessionStorage.getItem('shown_reminders') || '[]');
+        shown = Array.isArray(stored) ? stored : [];
+      } catch {
+        window.sessionStorage.removeItem('shown_reminders');
+      }
       const dueReminder = (result.reminders || []).find((item) => {
         const scheduledAt = Date.parse(item.scheduled_at);
         return Number.isFinite(scheduledAt) && scheduledAt <= now && !shown.includes(item.reminder_id);
@@ -34,6 +41,7 @@ export default function ReminderToast() {
 
       if (!dueReminder) return;
       window.sessionStorage.setItem('shown_reminders', JSON.stringify([...shown, dueReminder.reminder_id]));
+      setFeedbackError(null);
       setReminder(dueReminder);
       window.clearTimeout(hideTimer.current);
       hideTimer.current = window.setTimeout(() => setReminder(null), DISPLAY_TIME);
@@ -64,21 +72,41 @@ export default function ReminderToast() {
   const reviewReminder = async () => {
     const route = getReminderStudyRoute(reminder);
     if (!route) return;
-    await sendFeedback('ACCEPTED');
-    closeToast();
-    router.push(route);
+    if (await sendFeedback('ACCEPTED')) {
+      router.push(route);
+    }
   };
 
   const sendFeedback = async (status, grade) => {
     const token = window.localStorage.getItem('access_token');
+    let succeeded = true;
     if (token && reminder) {
       await fetch(`${API_URL}/api/v1/reminders/${reminder.reminder_id}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status, grade }),
-      }).catch(() => undefined);
+      }).then((response) => {
+        if (!response.ok) {
+          throw new Error(`Reminder feedback failed (${response.status})`);
+        }
+      }).catch((error) => {
+        succeeded = false;
+        try {
+          const shown = JSON.parse(window.sessionStorage.getItem('shown_reminders') || '[]');
+          window.sessionStorage.setItem(
+            'shown_reminders',
+            JSON.stringify(Array.isArray(shown)
+              ? shown.filter((id) => id !== reminder.reminder_id)
+              : [])
+          );
+        } catch {
+          window.sessionStorage.removeItem('shown_reminders');
+        }
+        setFeedbackError(error instanceof Error ? error.message : 'Could not update this reminder.');
+      });
     }
-    closeToast();
+    if (succeeded) closeToast();
+    return succeeded;
   };
 
   if (!reminder) return null;
@@ -91,6 +119,7 @@ export default function ReminderToast() {
       </div>
       <p className={styles.title}>{reminder.item_title || reminder.item_key} is ready for review</p>
       <p className={styles.detail}>A short review now helps protect your long-term recall.</p>
+      {feedbackError && <p role="alert">{feedbackError} Please try again.</p>}
       <div className={styles.actions}>
         <button className={styles.review} onClick={reviewReminder} disabled={!getReminderStudyRoute(reminder)}>
           Review now

@@ -100,8 +100,13 @@ async def submit_feedback(
 ):
     """Submit feedback for a reminder and update SM-2."""
     from bson import ObjectId
-    
-    reminder = await db.reminders.find_one({"_id": ObjectId(reminder_id), "student_id": student_id})
+
+    try:
+        database_id = ObjectId(reminder_id)
+    except (TypeError, ValueError):
+        database_id = reminder_id
+
+    reminder = await db.reminders.find_one({"_id": database_id, "student_id": student_id})
     if not reminder:
         raise HTTPException(status_code=404, detail="Reminder not found")
 
@@ -120,7 +125,7 @@ async def submit_feedback(
     now = datetime.now(timezone.utc)
     claimed = await db.reminders.update_one(
         {
-            "_id": ObjectId(reminder_id),
+            "_id": database_id,
             "student_id": student_id,
             "responded_at": None,
             "status": {"$in": ["SENT", "SCHEDULED"]},
