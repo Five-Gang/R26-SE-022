@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './signup.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const API_URL = '/api/ars';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -72,7 +72,10 @@ export default function SignupPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),
               });
-              const result = await response.json();
+              const contentType = response.headers.get('content-type') || '';
+              const result = contentType.includes('application/json')
+                ? await response.json()
+                : { detail: 'The authentication service returned an invalid response.' };
               if (!response.ok) throw new Error(result.detail || 'Unable to create account.');
               window.localStorage.setItem('access_token', result.access_token);
               router.push('/dashboard');

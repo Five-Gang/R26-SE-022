@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useFocus } from '../../context/FocusContext';
 import styles from './EmotionInterventionToast.module.css';
 
-const ARS_API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const ARS_API_URL = '/api/ars';
 
 // How long (seconds) a negative emotion must persist before triggering
 const TRIGGER_SECONDS = 8;
