@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { summariesApi } from '../../../../lib/summarizer-api';
 import styles from './quiz.module.css';
 
-const ARS_API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const ARS_API = '/api/ars';
 
 const DEFAULT_QUESTIONS = [
   {

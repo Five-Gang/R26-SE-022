@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './ReminderToast.module.css';
 import { getReminderStudyRoute } from './reminder-navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const API_URL = '/api/ars';
 const POLL_INTERVAL = 30000;
 const DISPLAY_TIME = 12000;
 

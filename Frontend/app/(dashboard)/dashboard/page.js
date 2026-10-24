@@ -7,7 +7,7 @@ import { useFocus } from '../../../context/FocusContext';
 import styles from './dashboard.module.css';
 
 const SUMMARIZER_API = process.env.NEXT_PUBLIC_SUMMARIZER_API_URL || 'http://localhost:8000';
-const REMINDER_API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const REMINDER_API = '/api/ars';
 
 export default function DashboardPage() {
   const { student } = useSession();

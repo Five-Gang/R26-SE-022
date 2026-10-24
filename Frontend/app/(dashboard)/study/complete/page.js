@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import styles from './complete.module.css';
 import Link from 'next/link';
 
-const ARS_API = process.env.NEXT_PUBLIC_API_URL || '/api/ars';
+const ARS_API = '/api/ars';
 
 function SessionCompleteContent() {
   const searchParams = useSearchParams();
