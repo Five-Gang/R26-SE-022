@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
 import { modulesApi } from '../../../lib/summarizer-api';
 import { useSession } from '../../../components/auth/SessionGuard';
 import styles from './tutor.module.css';
@@ -549,7 +550,7 @@ export default function TutorPage() {
             <div className={styles.sideSectionTitle}>📚 Your Modules</div>
             <div className={styles.noModulesHint}>
               No modules found. Create one in the{' '}
-              <a href="/modules" className={styles.moduleLink}>Modules</a> page.
+              <Link href="/modules" className={styles.moduleLink}>Modules</Link> page.
             </div>
           </div>
         )}

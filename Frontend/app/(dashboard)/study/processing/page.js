@@ -64,7 +64,7 @@ export default function ProcessingPage() {
     poll();
     intervalRef.current = setInterval(poll, 2500);
     return () => clearInterval(intervalRef.current);
-  }, [docId]);
+  }, [docId, moduleId, router]);
 
   const getStepState = (idx) => {
     if (status === 'completed') return 'completed';

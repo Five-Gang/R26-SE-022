@@ -95,32 +95,42 @@ export default function OnboardingProvider({ children }) {
 
   // On student load: check localStorage (fast path), then ALWAYS verify with API
   useEffect(() => {
+    let cancelled = false;
     if (!studentId) {
-      setLoading(false);
-      return;
+      queueMicrotask(() => {
+        if (!cancelled) setLoading(false);
+      });
+      return () => { cancelled = true; };
     }
 
     const alreadyDone = localStorage.getItem(setupKey) === 'true';
 
     // Optimistic render from localStorage to avoid flash
     if (alreadyDone) {
-      setSetupComplete(true);
+      queueMicrotask(() => {
+        if (!cancelled) setSetupComplete(true);
+      });
     }
 
     // Always verify with API — clears stale flags if lecture was deleted
-    refreshSetupStatus().then(({ count, hasLecture: lecture, complete }) => {
-      if (count === 0 || !lecture) {
-        // Missing module or lecture for this student — reset and show wizard
-        localStorage.removeItem(setupKey);
-        setSetupComplete(false);
-        setShowWizard(true);
-      } else {
-        // Fully set up
-        setSetupComplete(true);
-        localStorage.setItem(setupKey, 'true');
-      }
-      setLoading(false);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      refreshSetupStatus().then(({ count, hasLecture: lecture }) => {
+        if (cancelled) return;
+        if (count === 0 || !lecture) {
+          // Missing module or lecture for this student — reset and show wizard
+          localStorage.removeItem(setupKey);
+          setSetupComplete(false);
+          setShowWizard(true);
+        } else {
+          // Fully set up
+          setSetupComplete(true);
+          localStorage.setItem(setupKey, 'true');
+        }
+        setLoading(false);
+      });
     });
+    return () => { cancelled = true; };
   }, [studentId, setupKey, refreshSetupStatus]);
 
   const markSetupComplete = useCallback(() => {

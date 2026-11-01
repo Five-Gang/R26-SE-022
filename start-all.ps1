@@ -4,6 +4,18 @@
 
 $root = $PSScriptRoot
 
+function Resolve-Python([string]$relativePath) {
+    $candidate = Join-Path $root $relativePath
+    if (Test-Path -LiteralPath $candidate) {
+        return $candidate
+    }
+    return "python"
+}
+
+$sharedPython = Resolve-Python ".venv\Scripts\python.exe"
+$adaptivePython = Resolve-Python "adaptive-reminder-system\backend\.venv\Scripts\python.exe"
+$emotionPython = Resolve-Python "Backend\.venv\Scripts\python.exe"
+
 Write-Host "======================================================" -ForegroundColor Cyan
 Write-Host "  Starting AuraLearn Research Services (Minimized)    " -ForegroundColor Cyan
 Write-Host "======================================================" -ForegroundColor Cyan
@@ -16,19 +28,19 @@ if (Test-Path -LiteralPath $nextDev) {
 
 # 1. AI Tutor Backend (Port 8002) - Your Component
 Write-Host "[1/5] Starting AI Tutor Backend on port 8002..." -ForegroundColor Green
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k python main.py" -WorkingDirectory "$root\llm-tutor-backend" -WindowStyle Minimized
+Start-Process -FilePath $sharedPython -ArgumentList "main.py" -WorkingDirectory "$root\llm-tutor-backend" -WindowStyle Minimized
 
 # 2. Adaptive Reminder System Backend (Port 8001)
 Write-Host "[2/5] Starting Adaptive Reminder Backend on port 8001..." -ForegroundColor Green
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k python -m uvicorn app.main:app --host 127.0.0.1 --port 8001" -WorkingDirectory "$root\adaptive-reminder-system\backend" -WindowStyle Minimized
+Start-Process -FilePath $adaptivePython -ArgumentList "-m uvicorn app.main:app --host 127.0.0.1 --port 8001" -WorkingDirectory "$root\adaptive-reminder-system\backend" -WindowStyle Minimized
 
 # 3. Summarizer Backend (Port 8000)
 Write-Host "[3/5] Starting Summarizer Backend on port 8000..." -ForegroundColor Green
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k python -m uvicorn app.main:app --host 127.0.0.1 --port 8000" -WorkingDirectory "$root\summarizer-backend" -WindowStyle Minimized
+Start-Process -FilePath $sharedPython -ArgumentList "-m uvicorn app.main:app --host 127.0.0.1 --port 8000" -WorkingDirectory "$root\summarizer-backend" -WindowStyle Minimized
 
 # 4. Emotion Detection Backend (Port 8004)
 Write-Host "[4/5] Starting Emotion Backend on port 8004..." -ForegroundColor Green
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k python main.py" -WorkingDirectory "$root\Backend" -WindowStyle Minimized
+Start-Process -FilePath $emotionPython -ArgumentList "main.py" -WorkingDirectory "$root\Backend" -WindowStyle Minimized
 
 # 5. Frontend (Port 3000)
 Write-Host "[5/5] Starting Next.js Frontend on port 3000..." -ForegroundColor Green
@@ -36,13 +48,15 @@ Start-Process -FilePath "cmd.exe" -ArgumentList "/k npm run dev" -WorkingDirecto
 
 Write-Host "Waiting for services to finish booting up..." -ForegroundColor Gray
 
-# Dynamically poll until Next.js (port 3000) and AI Tutor (port 8002) are actively listening
+# Dynamically poll until every service is actively listening
 $frontendReady = $false
+$requiredPorts = @(3000, 8000, 8001, 8002, 8004)
 for ($i = 0; $i -lt 45; $i++) {
     Start-Sleep -Seconds 1
-    $conn3000 = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
-    $conn8002 = Get-NetTCPConnection -LocalPort 8002 -State Listen -ErrorAction SilentlyContinue
-    if ($conn3000 -and $conn8002) {
+    $missingPorts = @($requiredPorts | Where-Object {
+        -not (Get-NetTCPConnection -LocalPort $_ -State Listen -ErrorAction SilentlyContinue)
+    })
+    if ($missingPorts.Count -eq 0) {
         $frontendReady = $true
         break
     }

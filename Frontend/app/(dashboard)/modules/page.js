@@ -276,9 +276,9 @@ export default function ModulesPage() {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('auralearn_custom_modules');
     }
-    if (studentId) {
-      load();
-    }
+    if (!studentId) return undefined;
+    const timer = setTimeout(load, 0);
+    return () => clearTimeout(timer);
   }, [studentId, load]);
 
   const filtered = modules.filter(m =>
@@ -401,7 +401,7 @@ export default function ModulesPage() {
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📚</div>
           <p className={styles.emptyText}>No modules yet</p>
-          <p className={styles.emptyHint}>Click <strong>"+ Add Module"</strong> to create your first module and upload an outline.</p>
+          <p className={styles.emptyHint}>Click <strong>&quot;+ Add Module&quot;</strong> to create your first module and upload an outline.</p>
           <button className={styles.btnAddModuleEmpty} onClick={() => setShowCreate(true)}>
             + Add Your First Module
           </button>

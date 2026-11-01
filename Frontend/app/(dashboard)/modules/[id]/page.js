@@ -189,7 +189,7 @@ export default function ModuleDetailPage() {
               <h2 className={styles.outlineTitle}>Set Up Module Outline</h2>
               <p className={styles.outlineDesc}>
                 Upload your module outline document (DOCX or PDF) — AI will automatically extract
-                weekly topics and learning outcomes with Bloom's taxonomy classification.
+                weekly topics and learning outcomes with Bloom&apos;s taxonomy classification.
               </p>
             </div>
           </div>

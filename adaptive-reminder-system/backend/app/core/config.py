@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # MongoDB
-    MONGODB_URL: str
+    MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DB: str = "reminder_db"
 
     # Auth

@@ -66,7 +66,7 @@ export default function RewardsPage() {
 
         {/* Weekly Tracker */}
         <div className={styles.trackerCard}>
-          <h2 className={styles.sectionTitle}>This Week's Consistency</h2>
+          <h2 className={styles.sectionTitle}>This Week&apos;s Consistency</h2>
           <div className={styles.daysGrid}>
             {days.map(day => (
               <div key={day.name} className={styles.dayItem}>

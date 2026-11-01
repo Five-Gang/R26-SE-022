@@ -425,8 +425,8 @@ class EducationAwareChunker:
     def _split_at_exercises(self, text: str) -> list[str]:
         """Split text at exercise/problem boundaries."""
         patterns = [
-            r"\n(?=(?:Union[Exercise, Union[Problem], Union[Task], Union[Question], Activity])\s+\d+)",
-            r"\n(?=\d+\.\s+(?:Union[Exercise, Union[Problem], Union[Task], Question]))",
+            r"\n(?=(?:Exercise|Problem|Task|Question|Activity)\s+\d+)",
+            r"\n(?=\d+\.\s+(?:Exercise|Problem|Task|Question))",
             r"\n(?=Q\d+[.:)])",
         ]
         for pattern in patterns:

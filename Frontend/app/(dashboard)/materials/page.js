@@ -29,7 +29,10 @@ export default function MaterialsPage() {
 
   useEffect(() => {
     const token = window.localStorage.getItem('access_token');
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      queueMicrotask(() => setLoading(false));
+      return;
+    }
 
     Promise.all([
       fetch(`${API}/api/v1/materials`, { headers: { Authorization: `Bearer ${token}` } }),

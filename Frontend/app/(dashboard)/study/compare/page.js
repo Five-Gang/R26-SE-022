@@ -9,7 +9,6 @@ export default function ComparePage() {
   const { student } = useSession();
   const studentId = student?.student_id || student?._id || student?.id;
   const [modules, setModules] = useState([]);
-  const [weeks, setWeeks] = useState([]);
   const [selectedModule, setSelectedModule] = useState('');
   const [selectedWeek, setSelectedWeek] = useState('');
   const [query, setQuery] = useState('');
@@ -25,12 +24,12 @@ export default function ComparePage() {
     }).catch(() => {});
   }, [studentId]);
 
-  useEffect(() => {
-    if (!selectedModule) return;
-    const mod = modules.find(m => m.id === selectedModule);
-    setWeeks(mod?.weeks || []);
+  const weeks = modules.find(m => m.id === selectedModule)?.weeks || [];
+
+  const handleModuleChange = (event) => {
+    setSelectedModule(event.target.value);
     setSelectedWeek('');
-  }, [selectedModule, modules]);
+  };
 
   const run = async () => {
     if (!selectedModule || !query.trim()) return;
@@ -78,7 +77,7 @@ export default function ComparePage() {
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Module</label>
-            <select className={styles.formSelect} value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)}>
+            <select className={styles.formSelect} value={selectedModule} onChange={handleModuleChange}>
               {modules.map((m) => (
                 <option key={m.id} value={m.id}>{m.code} — {m.name}</option>
               ))}

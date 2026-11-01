@@ -23,8 +23,11 @@ export default function SessionGuard({ children }) {
     if (!token) {
       if (process.env.NODE_ENV === 'development') {
         window.localStorage.setItem('access_token', 'dev-token');
-        setStudent({ id: 'dev-student', name: 'Research Student', email: 'student@sliit.lk' });
-        setChecking(false);
+        queueMicrotask(() => {
+          if (cancelled) return;
+          setStudent({ id: 'dev-student', name: 'Research Student', email: 'student@sliit.lk' });
+          setChecking(false);
+        });
         return () => { cancelled = true; };
       }
       router.replace(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
@@ -63,7 +66,9 @@ export default function SessionGuard({ children }) {
       });
 
     return () => { cancelled = true; };
-  }, []); // run once on mount only — re-running on pathname change causes redirect loops
+  // Initialize once on mount to avoid redirect loops when the route changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   if (checking || !student) {

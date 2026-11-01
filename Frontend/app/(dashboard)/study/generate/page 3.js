@@ -49,7 +49,7 @@ export default function GeneratePage() {
         setWeeks(m.weeks || []);
       })
       .catch(() => router.replace('/study'));
-  }, [moduleId]);
+  }, [moduleId, router]);
 
   const handleGenerate = async () => {
     if (!moduleId) return;

@@ -83,7 +83,7 @@ export default function DashboardPage() {
     const handleStorageChange = () => loadFocusSessions();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [student]);
 
   // Compute Time Greeting
   const timeGreeting = useMemo(() => {

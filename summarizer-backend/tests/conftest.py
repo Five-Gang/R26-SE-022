@@ -24,6 +24,20 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture(autouse=True)
+def ensure_event_loop():
+    """Keep synchronous async-test helpers compatible with Python 3.14."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    yield
+
+
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Provide a clean database session for each test."""
