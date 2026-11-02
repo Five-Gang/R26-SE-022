@@ -28,7 +28,7 @@ if (Test-Path -LiteralPath $nextDev) {
 
 # 1. AI Tutor Backend (Port 8002) - Your Component
 Write-Host "[1/5] Starting AI Tutor Backend on port 8002..." -ForegroundColor Green
-Start-Process -FilePath $sharedPython -ArgumentList "main.py" -WorkingDirectory "$root\llm-tutor-backend" -WindowStyle Minimized
+Start-Process -FilePath $sharedPython -ArgumentList "-m uvicorn main:app --host 127.0.0.1 --port 8002" -WorkingDirectory "$root\llm-tutor-backend" -WindowStyle Minimized
 
 # 2. Adaptive Reminder System Backend (Port 8001)
 Write-Host "[2/5] Starting Adaptive Reminder Backend on port 8001..." -ForegroundColor Green

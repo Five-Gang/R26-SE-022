@@ -87,6 +87,8 @@ async def trigger_tick(
     return ScheduleTickResponse(
         student_id=student_id,
         reminders_created=result["reminders_created"],
+        reminders_delivered=result.get("reminders_delivered", 0),
+        active_reminders=result.get("active_reminders", 0),
         items_processed=result["items_processed"],
         status=result["status"],
         decision=result.get("decision"),

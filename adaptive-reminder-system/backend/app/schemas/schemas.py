@@ -86,6 +86,8 @@ class PushSubscription(BaseModel):
 class ScheduleTickResponse(BaseModel):
     student_id: str
     reminders_created: int
+    reminders_delivered: int = 0
+    active_reminders: int = 0
     items_processed: int
     status: str
     decision: Optional[str] = None

@@ -22,6 +22,19 @@ _rule_scheduler = AdaptiveScheduler()
 _content_service = ContentPersonalizationService()
 
 
+def _as_utc_datetime(value: Any, fallback: datetime) -> datetime:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return fallback
+    else:
+        return fallback
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
 async def _feedback_rates(db: AsyncIOMotorDatabase, student_id: str) -> tuple[float, float]:
     total = await db.reminders.count_documents(
         {"student_id": student_id, "status": {"$in": ["ACCEPTED", "SNOOZED", "DISMISSED"]}}
@@ -56,14 +69,28 @@ async def _time_since_reminder(db: AsyncIOMotorDatabase, student_id: str, now: d
 async def _deliver_due_delays(
     db: AsyncIOMotorDatabase, student_id: str, now: datetime
 ) -> tuple[int, dict[str, int]]:
-    result = await db.reminders.update_many(
-        {
+    scheduled = await db.reminders.find(
+        {"student_id": student_id, "status": "SCHEDULED"}
+    ).to_list(None)
+    due = [
+        reminder for reminder in scheduled
+        if _as_utc_datetime(reminder.get("scheduled_at"), now) <= now
+    ]
+    delivered_count = 0
+    for reminder in due:
+        query = {
             "student_id": student_id,
             "status": "SCHEDULED",
-            "scheduled_at": {"$lte": now},
-        },
-        {"$set": {"status": "SENT", "sent_at": now}},
-    )
+            "item_key": reminder.get("item_key"),
+        }
+        if reminder.get("_id") is not None:
+            query["_id"] = reminder["_id"]
+        result = await db.reminders.update_one(
+            query,
+            {"$set": {"status": "SENT", "sent_at": now}},
+        )
+        delivered_count += result.modified_count
+
     push_totals = {"attempted": 0, "delivered": 0, "failed": 0, "expired": 0}
     if getattr(db, "push_subscriptions", None) is not None:
         due = await db.reminders.find(
@@ -73,7 +100,7 @@ async def _deliver_due_delays(
             delivery = await deliver_reminder_push(db, student_id, reminder)
             for key, value in delivery.items():
                 push_totals[key] += value
-    return result.modified_count, push_totals
+    return delivered_count, push_totals
 
 
 async def run_scheduling_tick(
@@ -187,14 +214,16 @@ async def run_scheduling_tick(
             if post_session and existing.get("status") == "SCHEDULED":
                 await db.reminders.update_one(
                     {"_id": existing["_id"]},
-                    {"$set": {"scheduled_at": metrics["next_review_date"]}},
+                    {"$set": {
+                        "scheduled_at": _as_utc_datetime(metrics["next_review_date"], now)
+                    }},
                 )
             continue
 
         if action == ReminderAction.SEND:
             scheduled_at = now
         elif post_session:
-            scheduled_at = metrics["next_review_date"]
+            scheduled_at = _as_utc_datetime(metrics["next_review_date"], now)
         else:
             scheduled_at = now + timedelta(hours=1)
         reminder = {
@@ -250,9 +279,14 @@ async def run_scheduling_tick(
                 )
         reminders_created += 1
 
+    active_reminders = await db.reminders.count_documents(
+        {"student_id": student_id, "status": {"$in": ["SENT", "SCHEDULED"]}}
+    )
     return {
         "student_id": student_id,
-        "reminders_created": reminders_created + delivered_delays,
+        "reminders_created": reminders_created,
+        "reminders_delivered": delivered_delays,
+        "active_reminders": active_reminders,
         "items_processed": len(items),
         "status": "ok",
         "decision": selected_actions[0] if selected_actions else ReminderAction.SKIP,

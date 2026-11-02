@@ -17,7 +17,7 @@ echo ======================================================
 if exist "%ROOT%Frontend\.next\dev" rmdir /s /q "%ROOT%Frontend\.next\dev" >nul 2>&1
 
 echo [1/5] Starting AI Tutor Backend on port 8002...
-start "AI Tutor" /d "%ROOT%llm-tutor-backend" /min "%SHARED_PYTHON%" main.py
+start "AI Tutor" /d "%ROOT%llm-tutor-backend" /min "%SHARED_PYTHON%" -m uvicorn main:app --host 127.0.0.1 --port 8002
 
 echo [2/5] Starting Adaptive Reminder Backend on port 8001...
 start "Reminder Backend" /d "%ROOT%adaptive-reminder-system\backend" /min "%ADAPTIVE_PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8001

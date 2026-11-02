@@ -45,7 +45,11 @@ function SessionCompleteContent() {
           return;
         }
         const result = await res.json();
-        setTickStatus(result.reminders_created > 0 ? 'ok' : 'error');
+        setTickStatus(
+          result.reminders_created > 0 || result.active_reminders > 0
+            ? 'ok'
+            : 'error'
+        );
       } catch {
         setTickStatus('error');
       }

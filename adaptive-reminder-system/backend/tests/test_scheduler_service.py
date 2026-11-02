@@ -60,6 +60,20 @@ class Collection:
     async def insert_one(self, value):
         self.values.append(value)
 
+    async def update_one(self, query, update):
+        modified_count = 0
+        for value in self.values:
+            if all(
+                value.get(key) in expected["$in"]
+                if isinstance(expected, dict) and "$in" in expected
+                else value.get(key) == expected
+                for key, expected in query.items()
+            ):
+                value.update(update["$set"])
+                modified_count += 1
+                break
+        return type("Result", (), {"modified_count": modified_count})()
+
     async def update_many(self, query, update):
         modified = 0
         for value in self.values:
@@ -205,7 +219,7 @@ async def test_delayed_reminder_is_not_delivered_before_due_time():
             "student_id": "student-1",
             "item_key": "item-1",
             "status": "SCHEDULED",
-            "scheduled_at": scheduled_at,
+            "scheduled_at": scheduled_at.isoformat(),
             "sent_at": None,
         }
     )
@@ -225,8 +239,28 @@ async def test_delayed_reminder_is_not_delivered_before_due_time():
         provider=Provider(),
         now=datetime(2026, 10, 12, 13, tzinfo=timezone.utc),
     )
-    assert after_due["reminders_created"] == 1
+    assert after_due["reminders_created"] == 0
+    assert after_due["reminders_delivered"] == 1
     assert db.reminders.values[0]["status"] == "SENT"
+
+
+@pytest.mark.asyncio
+async def test_post_session_creates_a_datetime_scheduled_reminder():
+    db = Database()
+
+    result = await run_scheduling_tick(
+        "student-1",
+        db,
+        provider=Provider(),
+        now=datetime(2026, 10, 12, tzinfo=timezone.utc),
+        post_session=True,
+    )
+
+    assert result["reminders_created"] == 1
+    assert result["active_reminders"] == 1
+    reminder = db.reminders.values[0]
+    assert reminder["status"] in ("SENT", "SCHEDULED")
+    assert isinstance(reminder["scheduled_at"], datetime)
 
 
 @pytest.mark.asyncio
