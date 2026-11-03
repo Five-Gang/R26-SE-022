@@ -150,7 +150,8 @@ export default function QuizPage() {
         const scorePct = Math.round((correctCount / questions.length) * 100);
         const durationMinutes = Math.max(1, Math.round((Date.now() - startTime) / 60000));
 
-        // Register review items in the ARS backend so the scheduler can create reminders
+        // Register one module-level review item so the scheduler creates one
+        // reminder for the completed study session, not one per question.
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
         if (!token) {
           setLoadError('Your session expired. Please sign in again before completing the quiz.');
@@ -158,24 +159,19 @@ export default function QuizPage() {
         }
 
         if (token) {
-          const upsertPromises = questions.map((quest, idx) => {
-            const isCorrect = answers[idx] === quest.correct_answer;
-            const itemScore = isCorrect ? 100 : Math.max(0, scorePct - 10);
-            return fetch(`${ARS_API}/api/v1/review-items/upsert`, {
+          const upsertPromise = fetch(`${ARS_API}/api/v1/review-items/upsert`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
-                item_key: quest.id
-                  ? `q-${summaryId || 'default'}-${quest.id}`
-                  : `q-${summaryId || 'default'}-${idx}`,
-                title: quest.question?.slice(0, 120) || `Question ${idx + 1}`,
-                topic: quest.learning_outcome || quest.topic || null,
+                item_key: `module-${moduleId || summaryId || 'default'}`,
+                title: 'Module review',
+                topic: questions[0]?.learning_outcome || questions[0]?.topic || null,
                 module_id: moduleId || null,
-                difficulty: quest.difficulty || 'medium',
-                quality_percentage: itemScore,
+                difficulty: 'medium',
+                quality_percentage: scorePct,
               }),
             }).then(async (response) => {
               if (!response.ok) {
@@ -184,11 +180,10 @@ export default function QuizPage() {
               }
               return response.json();
             });
-          });
-          // Wait until the review items exist before the completion page triggers
+          // Wait until the module-level review item exists before the completion page triggers
           // the scheduling tick. Otherwise the tick can run against an empty queue.
           try {
-            await Promise.all(upsertPromises);
+            await upsertPromise;
           } catch (error) {
             console.error('Failed to register quiz review items:', error);
             setLoadError('Your quiz result could not be scheduled for review. Please try again.');
