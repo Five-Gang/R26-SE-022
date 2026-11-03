@@ -11,6 +11,7 @@ from app.services.bandit_service import (
     save_student_bandit,
 )
 from datetime import datetime, timezone
+from typing import Optional
 
 router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
 
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
 def _scheduled_at(reminder: dict) -> datetime:
     value = reminder.get("scheduled_at") or reminder.get("created_at")
     if isinstance(value, datetime):
-        return value
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
     if isinstance(value, str):
         try:
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -26,6 +27,97 @@ def _scheduled_at(reminder: dict) -> datetime:
             return datetime.now(timezone.utc)
         return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
     return datetime.now(timezone.utc)
+
+
+def _optional_datetime(value) -> Optional[datetime]:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    return None
+
+
+def _float_value(value, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _optional_int(value) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _text_value(value, default: str) -> str:
+    return value if isinstance(value, str) and value else default
+
+
+def _reminder_response(reminder: dict, items_by_key: dict) -> ReminderResponse:
+    item_key = reminder.get("item_key")
+    item = items_by_key.get(item_key, {})
+
+    def linked_value(key, *fallback_keys):
+        value = reminder.get(key)
+        if value is not None:
+            return value
+        for fallback_key in fallback_keys:
+            value = item.get(fallback_key)
+            if value is not None:
+                return value
+        return None
+
+    topic = linked_value("topic", "subject")
+    return ReminderResponse(
+        reminder_id=str(reminder.get("_id", item_key or "")),
+        item_key=_text_value(item_key, "unknown-item"),
+        item_title=_text_value(
+            reminder.get("item_title") or reminder.get("title") or item.get("title"),
+            _text_value(item_key, "Study item"),
+        ),
+        content_type=_text_value(reminder.get("content_type"), "GUIDED_REVIEW"),
+        module_id=str(linked_value("module_id", "moduleId")) if linked_value("module_id", "moduleId") else None,
+        week_number=_optional_int(linked_value("week_number", "weekNumber")),
+        topic=topic if isinstance(topic, str) else None,
+        difficulty_level=_text_value(
+            linked_value("difficulty_level", "difficulty"),
+            "medium",
+        ),
+        readiness_tier=_text_value(reminder.get("readiness_tier"), "MEDIUM"),
+        readiness_score=_float_value(reminder.get("readiness_score")),
+        retention_probability=_float_value(reminder.get("retention_probability")),
+        bandit_action=_text_value(reminder.get("bandit_action"), "DELAY"),
+        activity_type=(
+            reminder.get("activity_type")
+            if isinstance(reminder.get("activity_type"), str)
+            else None
+        ),
+        engagement_score=(
+            _float_value(reminder.get("engagement_score"))
+            if reminder.get("engagement_score") is not None
+            else None
+        ),
+        decision_reason=(
+            reminder.get("decision_reason")
+            if isinstance(reminder.get("decision_reason"), str)
+            else None
+        ),
+        status=_text_value(reminder.get("status"), "SCHEDULED"),
+        scheduled_at=_scheduled_at(reminder),
+        sent_at=_optional_datetime(reminder.get("sent_at")),
+        responded_at=_optional_datetime(reminder.get("responded_at")),
+    )
+
 
 @router.get("", response_model=ReminderQueueResponse)
 async def get_reminders(
@@ -44,50 +136,8 @@ async def get_reminders(
     ).to_list(None) if item_keys else []
     items_by_key = {item.get("item_key"): item for item in review_items}
 
-    def linked_value(reminder, item, key, *fallback_keys):
-        value = reminder.get(key)
-        if value is not None:
-            return value
-        for fallback_key in fallback_keys:
-            value = item.get(fallback_key)
-            if value is not None:
-                return value
-        return None
-
     return ReminderQueueResponse(
-        reminders=[
-            ReminderResponse(
-                reminder_id=str(r.get("_id", r.get("item_key", ""))),
-                item_key=r.get("item_key", ""),
-                item_title=r.get("item_title") or r.get("title") or r.get("item_key", "Study item"),
-                content_type=r.get("content_type", "GUIDED_REVIEW"),
-                module_id=(
-                    str(linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId"))
-                    if linked_value(r, items_by_key.get(r["item_key"], {}), "module_id", "moduleId")
-                    else None
-                ),
-                week_number=linked_value(r, items_by_key.get(r["item_key"], {}), "week_number", "weekNumber"),
-                topic=linked_value(r, items_by_key.get(r["item_key"], {}), "topic", "subject"),
-                difficulty_level=linked_value(
-                    r,
-                    items_by_key.get(r["item_key"], {}),
-                    "difficulty_level",
-                    "difficulty",
-                ),
-                readiness_tier=r.get("readiness_tier", "MEDIUM"),
-                readiness_score=float(r.get("readiness_score", 0.0)),
-                retention_probability=float(r.get("retention_probability", 0.0)),
-                bandit_action=r.get("bandit_action", "DELAY"),
-                activity_type=r.get("activity_type"),
-                engagement_score=r.get("engagement_score"),
-                decision_reason=r.get("decision_reason"),
-                status=r.get("status", "SCHEDULED"),
-                scheduled_at=_scheduled_at(r),
-                sent_at=r.get("sent_at"),
-                responded_at=r.get("responded_at"),
-            )
-            for r in reminders
-        ],
+        reminders=[_reminder_response(r, items_by_key) for r in reminders],
         count=len(reminders),
     )
 

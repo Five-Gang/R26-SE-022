@@ -40,7 +40,7 @@ function mapReminder(reminder) {
 export default function StudyQueuePage() {
   const router = useRouter();
   const [queueData, setQueueData] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('due');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [schedulerStatus, setSchedulerStatus] = useState('');
